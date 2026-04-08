@@ -133,6 +133,32 @@ struct OfferCardSkeleton: View {
     }
 }
 
+// MARK: - Chat Row Skeleton
+
+/// Placeholder for a single chat conversation row.
+struct ChatRowSkeleton: View {
+    var body: some View {
+        HStack(spacing: 14) {
+            Circle()
+                .fill(MatchaTokens.Colors.elevated)
+                .frame(width: 52, height: 52)
+                .skeleton(isLoading: true)
+
+            VStack(alignment: .leading, spacing: 6) {
+                SkeletonView(cornerRadius: 6, height: 16).frame(width: 120)
+                SkeletonView(cornerRadius: 6, height: 13).frame(width: 180)
+            }
+
+            Spacer()
+
+            SkeletonView(cornerRadius: 6, height: 12).frame(width: 36)
+        }
+        .padding(.horizontal, MatchaTokens.Spacing.large)
+        .padding(.vertical, 12)
+        .accessibilityHidden(true)
+    }
+}
+
 // MARK: - Preview
 
 #Preview("Skeletons") {

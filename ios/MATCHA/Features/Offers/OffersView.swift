@@ -36,6 +36,12 @@ struct OffersView: View {
                         .padding(.top, 8)
                 }
 
+                // Skeleton loading
+                if store.isLoading && store.offers.isEmpty {
+                    offersSkeleton
+                        .padding(.top, 16)
+                }
+
                 // 1. Last Minute
                 if !lastMinuteOffers.isEmpty {
                     lastMinuteSection
@@ -119,15 +125,21 @@ struct OffersView: View {
     private func lastMinuteCard(_ offer: Offer) -> some View {
         ZStack(alignment: .bottom) {
             offerPhoto(offer)
-                .frame(width: 220, height: 280)
+                .frame(width: 240, height: 300)
 
+            // Rich gradient — deeper, more cinematic
             LinearGradient(
-                colors: [.clear, .clear, .black.opacity(0.3), .black.opacity(0.8)],
+                stops: [
+                    .init(color: .clear, location: 0.0),
+                    .init(color: .black.opacity(0.15), location: 0.35),
+                    .init(color: .black.opacity(0.55), location: 0.6),
+                    .init(color: .black.opacity(0.92), location: 1.0),
+                ],
                 startPoint: .top,
                 endPoint: .bottom
             )
 
-            // Top: timer right, barter left (same as bestForYou but with countdown)
+            // Top badges — glass style
             VStack {
                 HStack(alignment: .top) {
                     typeBadge(offer.type)
@@ -136,22 +148,23 @@ struct OffersView: View {
                         CountdownPill(deadline: expiry)
                     }
                 }
-                .padding(10)
+                .padding(12)
                 Spacer()
             }
 
-            // Bottom content (same style as bestForYou)
-            VStack(alignment: .leading, spacing: 6) {
+            // Bottom content — premium layout
+            VStack(alignment: .leading, spacing: 8) {
                 Spacer()
 
                 Text(offer.title.replacingOccurrences(of: "[LAST MINUTE] ", with: ""))
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
+                    .shadow(color: .black.opacity(0.5), radius: 4, y: 2)
 
                 Text(offer.rewardSummary)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(MatchaTokens.Colors.accent)
                     .lineLimit(1)
 
@@ -160,15 +173,23 @@ struct OffersView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 12)
-            .padding(.bottom, 12)
+            .padding(.horizontal, 14)
+            .padding(.bottom, 14)
         }
-        .frame(width: 220, height: 280)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .frame(width: 240, height: 300)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [.white.opacity(0.15), .white.opacity(0.04)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 0.5
+                )
         }
+        .shadow(color: .black.opacity(0.4), radius: 12, y: 6)
     }
 
     // MARK: - Best For You Section
@@ -209,57 +230,68 @@ struct OffersView: View {
 
     private func bestForYouCard(_ offer: Offer) -> some View {
         ZStack(alignment: .bottom) {
-            // Photo fill
             offerPhoto(offer)
-                .frame(width: 220, height: 280)
+                .frame(width: 240, height: 300)
 
-            // Gradient overlay
             LinearGradient(
-                colors: [.clear, .clear, .black.opacity(0.3), .black.opacity(0.8)],
+                stops: [
+                    .init(color: .clear, location: 0.0),
+                    .init(color: .black.opacity(0.15), location: 0.35),
+                    .init(color: .black.opacity(0.55), location: 0.6),
+                    .init(color: .black.opacity(0.92), location: 1.0),
+                ],
                 startPoint: .top,
                 endPoint: .bottom
             )
 
-            // Barter badge — top right
+            // Type badge — top right
             VStack {
                 HStack {
                     Spacer()
                     typeBadge(offer.type)
                 }
-                .padding(10)
+                .padding(12)
                 Spacer()
             }
 
             // Bottom content
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 Spacer()
 
                 Text(offer.title.replacingOccurrences(of: "[LAST MINUTE] ", with: ""))
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
+                    .shadow(color: .black.opacity(0.5), radius: 4, y: 2)
 
                 Text(offer.rewardSummary)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(MatchaTokens.Colors.accent)
                     .lineLimit(1)
 
-                // Slots badge — under text
                 if offer.slotsRemaining > 0 && offer.slotsRemaining <= 5 {
                     slotsBadge(offer.slotsRemaining)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 12)
-            .padding(.bottom, 12)
+            .padding(.horizontal, 14)
+            .padding(.bottom, 14)
         }
-        .frame(width: 220, height: 280)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .frame(width: 240, height: 300)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [.white.opacity(0.15), .white.opacity(0.04)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 0.5
+                )
         }
+        .shadow(color: .black.opacity(0.4), radius: 12, y: 6)
     }
 
     // MARK: - All Offers Section
@@ -427,6 +459,53 @@ struct OffersView: View {
             }
     }
 
+    // MARK: - Skeleton Loading
+
+    private var offersSkeleton: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            // Section header skeleton
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Color.white.opacity(0.08))
+                .frame(width: 120, height: 18)
+                .padding(.horizontal, 20)
+
+            // Card skeletons
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 14) {
+                    ForEach(0..<3, id: \.self) { _ in
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .fill(Color.white.opacity(0.06))
+                            .frame(width: 240, height: 300)
+                            .overlay {
+                                VStack(alignment: .leading, spacing: 10) {
+                                    Spacer()
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .fill(Color.white.opacity(0.08))
+                                        .frame(height: 16)
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .fill(Color.white.opacity(0.05))
+                                        .frame(width: 140, height: 12)
+                                }
+                                .padding(14)
+                            }
+                    }
+                }
+                .padding(.horizontal, 20)
+            }
+
+            // All offers skeleton
+            VStack(spacing: 12) {
+                ForEach(0..<2, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(Color.white.opacity(0.06))
+                        .frame(height: 160)
+                }
+            }
+            .padding(.horizontal, 20)
+        }
+        .redacted(reason: .placeholder)
+    }
+
     // MARK: - Error + Empty
 
     private var errorBanner: some View {
@@ -474,6 +553,7 @@ final class OffersStore {
     var offers: [Offer] = []
     var error: NetworkError?
     var hasLoaded = false
+    var isLoading = false
 
     init(repository: any MatchaRepository) {
         self.repository = repository
@@ -486,7 +566,8 @@ final class OffersStore {
 
     func load() async {
         error = nil
-        hasLoaded = true
+        isLoading = true
+        defer { isLoading = false; hasLoaded = true }
         do {
             offers = try await repository.fetchOffers()
         } catch let networkError as NetworkError {

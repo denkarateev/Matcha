@@ -129,6 +129,35 @@ private struct WelcomeScreen: View {
                         .foregroundStyle(.white.opacity(0.4))
                 }
                 .padding(.top, 2)
+
+                // Pro teaser
+                HStack(spacing: 10) {
+                    Image(systemName: "bolt.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(MatchaTokens.Colors.accent)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("MATCHA Pro")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(.white)
+                        Text("SuperSwipes, unlimited matches, priority feed")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
+
+                    Spacer()
+
+                    Text("Learn more")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(MatchaTokens.Colors.accent)
+                }
+                .padding(12)
+                .background(MatchaTokens.Colors.accent.opacity(0.06), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(MatchaTokens.Colors.accent.opacity(0.2), lineWidth: 0.5)
+                )
+                .padding(.top, 8)
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 40)

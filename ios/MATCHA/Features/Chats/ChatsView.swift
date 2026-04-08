@@ -327,6 +327,11 @@ struct ChatsView: View {
                             switch phase {
                             case .success(let image):
                                 image.resizable().aspectRatio(contentMode: .fill)
+                            case .empty:
+                                ZStack {
+                                    storyAvatarPlaceholder(profile)
+                                    ProgressView().tint(.white.opacity(0.5)).scaleEffect(0.7)
+                                }
                             default:
                                 storyAvatarPlaceholder(profile)
                             }
@@ -449,6 +454,11 @@ struct ChatsView: View {
                             switch phase {
                             case .success(let image):
                                 image.resizable().aspectRatio(contentMode: .fill)
+                            case .empty:
+                                ZStack {
+                                    rowAvatarPlaceholder(chat.partner)
+                                    ProgressView().tint(.white.opacity(0.5))
+                                }
                             default:
                                 rowAvatarPlaceholder(chat.partner)
                             }

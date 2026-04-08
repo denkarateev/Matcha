@@ -721,6 +721,7 @@ struct ChatConversationView: View {
         let text = trimmedMessage
         guard !text.isEmpty, store.canCurrentUserSendFirstMessage else { return }
         messageText = ""
+        MatchaHaptic.light()
         Task {
             await store.sendMessage(text: text)
         }

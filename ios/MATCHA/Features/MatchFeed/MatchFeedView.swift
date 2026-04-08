@@ -28,6 +28,10 @@ struct MatchFeedView: View {
     // Match celebration animation state
     @State private var celebrationAppeared = false
 
+    // Share sheet for post-match sharing
+    @State private var showMatchShareSheet = false
+    @State private var matchShareText = ""
+
     init(repository: any MatchaRepository) {
         self.repository = repository
         _store = State(initialValue: MatchFeedStore(repository: repository))
@@ -112,6 +116,7 @@ struct MatchFeedView: View {
                     matchCelebrationOverlay(matchProfile)
                         .transition(.opacity.animation(MatchaTokens.Animations.matchReveal))
                         .onAppear {
+                            MatchaHaptic.success()
                             celebrationAppeared = false
                             withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
                                 celebrationAppeared = true
@@ -163,6 +168,11 @@ struct MatchFeedView: View {
             shadowActivationSheet
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
+        }
+        // Share sheet for post-match sharing
+        .sheet(isPresented: $showMatchShareSheet) {
+            ShareSheetView(activityItems: [matchShareText])
+                .presentationDetents([.medium])
         }
         // Toast message overlay
         .overlay(alignment: .bottom) {
@@ -254,9 +264,14 @@ struct MatchFeedView: View {
                             switch direction {
                             case .left:
                                 store.skip()
+                                MatchaHaptic.light()
                                 triggerUndoWindow()
-                            case .right: store.interested()
-                            case .super: store.superSwipe()
+                            case .right:
+                                store.interested()
+                                MatchaHaptic.medium()
+                            case .super:
+                                store.superSwipe()
+                                MatchaHaptic.heavy()
                             }
                         },
                         onTap: {
@@ -394,10 +409,9 @@ struct MatchFeedView: View {
     // MARK: - Empty / Loading States
 
     private var loadingState: some View {
-        VStack(spacing: 24) {
-            // Matcha brewing animation
-            MatchaBrewingAnimation()
-                .frame(width: 120, height: 120)
+        VStack(spacing: 16) {
+            ProfileCardSkeleton()
+                .padding(.horizontal, MatchaTokens.Spacing.large)
 
             Text("Brewing your feed…")
                 .font(.subheadline.weight(.medium))
@@ -695,6 +709,26 @@ struct MatchFeedView: View {
                     .accessibilityHint("Dismiss match celebration and continue browsing")
                     .opacity(celebrationAppeared ? 1.0 : 0)
                     .offset(y: celebrationAppeared ? 0 : 20)
+
+                    // Share your match
+                    Button {
+                        let referralCode = NetworkService.shared.currentUserID ?? "matcha"
+                        matchShareText = "Just matched with \(profile.name) on MATCHA! \u{1F375} Join me: https://matcha.app/invite/\(referralCode)"
+                        showMatchShareSheet = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.system(size: 13, weight: .semibold))
+                            Text("Share Your Match")
+                                .font(.subheadline.weight(.semibold))
+                        }
+                        .foregroundStyle(MatchaTokens.Colors.accent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                    }
+                    .accessibilityLabel("Share your match with \(profile.name)")
+                    .opacity(celebrationAppeared ? 1.0 : 0)
+                    .offset(y: celebrationAppeared ? 0 : 15)
                 }
                 .padding(.horizontal, 32)
                 .padding(.bottom, 48)
