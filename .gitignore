@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# iOS
+ios/MATCHA.xcodeproj/xcuserdata/
+ios/MATCHA.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+
+# Data
+*.pickle
+data/
+.env
+
+# Archives
+*.zip
+*.tar.gz
+
+# IDE
+.DS_Store
+.idea/
+*.swp

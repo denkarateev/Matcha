@@ -1,0 +1,554 @@
+import Observation
+import SwiftUI
+
+struct OffersView: View {
+    @State private var store: OffersStore
+    @State private var showCreateOffer = false
+
+    var isBusiness: Bool
+
+    init(repository: any MatchaRepository, isBusiness: Bool = false) {
+        _store = State(initialValue: OffersStore(repository: repository))
+        self.isBusiness = isBusiness
+    }
+
+    private var lastMinuteOffers: [Offer] {
+        store.offers.filter(\.isLastMinute)
+    }
+
+    private var bestForYouOffers: [Offer] {
+        store.offers
+            .filter { !$0.isLastMinute }
+            .prefix(8)
+            .map { $0 }
+    }
+
+    private var allRegularOffers: [Offer] {
+        store.offers.filter { !$0.isLastMinute }
+    }
+
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 0) {
+                // Error
+                if store.error != nil {
+                    errorBanner
+                        .padding(.top, 8)
+                }
+
+                // 1. Last Minute
+                if !lastMinuteOffers.isEmpty {
+                    lastMinuteSection
+                        .padding(.top, 16)
+                }
+
+                // 2. Best for You
+                if !bestForYouOffers.isEmpty {
+                    bestForYouSection
+                        .padding(.top, 24)
+                }
+
+                // 3. All Offers
+                if !allRegularOffers.isEmpty {
+                    allOffersSection
+                        .padding(.top, 28)
+                }
+
+                // 4. Empty state
+                if store.offers.isEmpty && store.hasLoaded {
+                    emptyState
+                        .padding(.top, 60)
+                }
+
+                Color.clear.frame(height: 100)
+            }
+        }
+        .refreshable { await store.load() }
+        .background(Color(hex: 0x050505).ignoresSafeArea())
+        .navigationTitle("Offers")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Color(hex: 0x050505), for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .navigationDestination(for: Offer.self) { offer in
+            OfferDetailView(offer: offer, isBusiness: isBusiness)
+        }
+        .toolbar {
+            if isBusiness {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showCreateOffer = true } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 20))
+                            .foregroundStyle(MatchaTokens.Colors.accent)
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showCreateOffer) {
+            CreateOfferView()
+        }
+        .task { await store.loadIfNeeded() }
+    }
+
+    // MARK: - Last Minute Section
+
+    private var lastMinuteSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Text("\u{1F525}")
+                    .font(.system(size: 16))
+                Text("Last Minute")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(.white)
+            }
+            .padding(.horizontal, 20)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(lastMinuteOffers) { offer in
+                        NavigationLink(value: offer) {
+                            lastMinuteCard(offer)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 20)
+            }
+        }
+    }
+
+    private func lastMinuteCard(_ offer: Offer) -> some View {
+        ZStack(alignment: .bottom) {
+            offerPhoto(offer)
+                .frame(width: 220, height: 280)
+
+            LinearGradient(
+                colors: [.clear, .clear, .black.opacity(0.3), .black.opacity(0.8)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+
+            // Top: timer right, barter left (same as bestForYou but with countdown)
+            VStack {
+                HStack(alignment: .top) {
+                    typeBadge(offer.type)
+                    Spacer()
+                    if let expiry = offer.expiryDate {
+                        CountdownPill(deadline: expiry)
+                    }
+                }
+                .padding(10)
+                Spacer()
+            }
+
+            // Bottom content (same style as bestForYou)
+            VStack(alignment: .leading, spacing: 6) {
+                Spacer()
+
+                Text(offer.title.replacingOccurrences(of: "[LAST MINUTE] ", with: ""))
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+
+                Text(offer.rewardSummary)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(MatchaTokens.Colors.accent)
+                    .lineLimit(1)
+
+                if offer.slotsRemaining > 0 && offer.slotsRemaining <= 5 {
+                    slotsBadge(offer.slotsRemaining)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12)
+            .padding(.bottom, 12)
+        }
+        .frame(width: 220, height: 280)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
+        }
+    }
+
+    // MARK: - Best For You Section
+
+    private var bestForYouSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Best for You")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(.white)
+                    Text("Curated opportunities in Bali")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.white.opacity(0.4))
+                }
+
+                Spacer()
+
+                Text("See All")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(MatchaTokens.Colors.accent)
+            }
+            .padding(.horizontal, 20)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 14) {
+                    ForEach(bestForYouOffers) { offer in
+                        NavigationLink(value: offer) {
+                            bestForYouCard(offer)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 20)
+            }
+        }
+    }
+
+    private func bestForYouCard(_ offer: Offer) -> some View {
+        ZStack(alignment: .bottom) {
+            // Photo fill
+            offerPhoto(offer)
+                .frame(width: 220, height: 280)
+
+            // Gradient overlay
+            LinearGradient(
+                colors: [.clear, .clear, .black.opacity(0.3), .black.opacity(0.8)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+
+            // Barter badge — top right
+            VStack {
+                HStack {
+                    Spacer()
+                    typeBadge(offer.type)
+                }
+                .padding(10)
+                Spacer()
+            }
+
+            // Bottom content
+            VStack(alignment: .leading, spacing: 6) {
+                Spacer()
+
+                Text(offer.title.replacingOccurrences(of: "[LAST MINUTE] ", with: ""))
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+
+                Text(offer.rewardSummary)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(MatchaTokens.Colors.accent)
+                    .lineLimit(1)
+
+                // Slots badge — under text
+                if offer.slotsRemaining > 0 && offer.slotsRemaining <= 5 {
+                    slotsBadge(offer.slotsRemaining)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12)
+            .padding(.bottom, 12)
+        }
+        .frame(width: 220, height: 280)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
+        }
+    }
+
+    // MARK: - All Offers Section
+
+    private var allOffersSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("All Offers")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(.white)
+
+                Text("\(allRegularOffers.count)")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.3))
+
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+
+            LazyVStack(spacing: 12) {
+                ForEach(allRegularOffers) { offer in
+                    NavigationLink(value: offer) {
+                        allOfferCard(offer)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 20)
+        }
+    }
+
+    private func allOfferCard(_ offer: Offer) -> some View {
+        ZStack(alignment: .topLeading) {
+            // Photo fill
+            offerPhoto(offer)
+                .frame(height: 160)
+
+            // Gradient overlay
+            LinearGradient(
+                colors: [.black.opacity(0.1), .black.opacity(0.2), .black.opacity(0.75)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+
+            // Barter badge — top right
+            VStack {
+                HStack {
+                    Spacer()
+                    typeBadge(offer.type)
+                }
+                .padding(10)
+                Spacer()
+            }
+
+            // Bottom content
+            VStack(alignment: .leading, spacing: 4) {
+                Spacer()
+
+                Text(offer.title.replacingOccurrences(of: "[LAST MINUTE] ", with: ""))
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+
+                Text(offer.rewardSummary)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(MatchaTokens.Colors.accent)
+                    .lineLimit(1)
+
+                if offer.slotsRemaining > 0 && offer.slotsRemaining <= 5 {
+                    slotsBadge(offer.slotsRemaining)
+                }
+            }
+            .padding(12)
+        }
+        .frame(height: 160)
+        .frame(maxWidth: .infinity)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.06), lineWidth: 0.5)
+        }
+    }
+
+    // MARK: - Shared Components
+
+    @ViewBuilder
+    private func offerPhoto(_ offer: Offer) -> some View {
+        if let url = offer.coverURL {
+            AsyncImage(url: url) { phase in
+                if case .success(let img) = phase {
+                    img.resizable().aspectRatio(contentMode: .fill)
+                } else {
+                    cardPlaceholder(offer)
+                }
+            }
+        } else {
+            cardPlaceholder(offer)
+        }
+    }
+
+    private func cardPlaceholder(_ offer: Offer) -> some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color(hex: 0x1A2E13), Color(hex: 0x101314)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            Text(String(offer.creator.name.prefix(1)).uppercased())
+                .font(.system(size: 32, weight: .bold, design: .rounded))
+                .foregroundStyle(MatchaTokens.Colors.accent.opacity(0.25))
+        }
+    }
+
+    private func creatorAvatar(_ creator: UserProfile, size: CGFloat) -> some View {
+        ZStack {
+            Circle()
+                .fill(Color.white.opacity(0.06))
+                .frame(width: size, height: size)
+
+            if let url = creator.photoURL {
+                AsyncImage(url: url) { phase in
+                    if case .success(let img) = phase {
+                        img.resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: size, height: size)
+                            .clipShape(Circle())
+                    } else {
+                        initials(creator.name, size: size)
+                    }
+                }
+            } else {
+                initials(creator.name, size: size)
+            }
+        }
+    }
+
+    private func initials(_ name: String, size: CGFloat) -> some View {
+        Text(String(name.prefix(1)).uppercased())
+            .font(.system(size: size * 0.4, weight: .bold, design: .rounded))
+            .foregroundStyle(MatchaTokens.Colors.accent)
+    }
+
+    private func typeBadge(_ type: CollaborationType) -> some View {
+        Text(type.title.uppercased())
+            .font(.system(size: 10, weight: .bold))
+            .foregroundStyle(type == .barter ? Color(hex: 0x050505) : Color(hex: 0x050505))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                type == .barter ? MatchaTokens.Colors.accent : MatchaTokens.Colors.warning,
+                in: Capsule()
+            )
+    }
+
+    private func slotsBadge(_ remaining: Int) -> some View {
+        Text("\(remaining) left")
+            .font(.system(size: 10, weight: .bold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(.black.opacity(0.5), in: Capsule())
+            .overlay {
+                Capsule().strokeBorder(.white.opacity(0.15), lineWidth: 0.5)
+            }
+    }
+
+    // MARK: - Error + Empty
+
+    private var errorBanner: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "wifi.exclamationmark")
+                .font(.system(size: 13))
+            Text("Connection error")
+                .font(.system(size: 14, weight: .medium))
+            Spacer()
+            Button("Retry") { Task { await store.load() } }
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(MatchaTokens.Colors.accent)
+        }
+        .foregroundStyle(.white)
+        .padding(14)
+        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .padding(.horizontal, 20)
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "tag.slash")
+                .font(.system(size: 36))
+                .foregroundStyle(.white.opacity(0.15))
+
+            Text("No offers yet")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(.white)
+
+            Text("Check back soon")
+                .font(.system(size: 14))
+                .foregroundStyle(.white.opacity(0.4))
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Store
+
+@MainActor
+@Observable
+final class OffersStore {
+    private let repository: any MatchaRepository
+
+    var offers: [Offer] = []
+    var error: NetworkError?
+    var hasLoaded = false
+
+    init(repository: any MatchaRepository) {
+        self.repository = repository
+    }
+
+    func loadIfNeeded() async {
+        guard !hasLoaded else { return }
+        await load()
+    }
+
+    func load() async {
+        error = nil
+        hasLoaded = true
+        do {
+            offers = try await repository.fetchOffers()
+        } catch let networkError as NetworkError {
+            self.error = networkError
+            offers = []
+        } catch {
+            self.error = .networkError(error)
+            offers = []
+        }
+    }
+}
+
+// MARK: - Brand Profile
+
+struct BrandProfile: Identifiable {
+    let id: UUID
+    let name: String
+    let category: String
+    let photoURL: URL?
+    let hasBlueCheck: Bool
+
+    init(id: UUID = UUID(), name: String, category: String, photoURL: URL? = nil, hasBlueCheck: Bool = false) {
+        self.id = id
+        self.name = name
+        self.category = category
+        self.photoURL = photoURL
+        self.hasBlueCheck = hasBlueCheck
+    }
+}
+
+// MARK: - Countdown Pill
+
+private struct CountdownPill: View {
+    let deadline: Date
+    @State private var remaining: TimeInterval = 0
+
+    var body: some View {
+        Text(formatted)
+            .font(.system(size: 11, weight: .bold, design: .monospaced))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(.red.opacity(0.7), in: Capsule())
+            .onAppear { remaining = deadline.timeIntervalSinceNow }
+            .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
+                remaining = deadline.timeIntervalSinceNow
+            }
+    }
+
+    private var formatted: String {
+        let r = max(0, remaining)
+        let hours = Int(r) / 3600
+        let minutes = (Int(r) % 3600) / 60
+        let seconds = Int(r) % 60
+        if hours > 0 { return String(format: "%d:%02d:%02d", hours, minutes, seconds) }
+        return String(format: "%d:%02d", minutes, seconds)
+    }
+}
+
+#Preview {
+    NavigationStack {
+        OffersView(repository: MockMatchaRepository())
+    }
+    .preferredColorScheme(.dark)
+}

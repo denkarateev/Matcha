@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: matcha
+      POSTGRES_USER: matcha
+      POSTGRES_PASSWORD: M4tch4_Pr0d_2026!
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U matcha -d matcha"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      DATABASE_URL: postgresql+asyncpg://matcha:M4tch4_Pr0d_2026!@db:5432/matcha
+      REDIS_URL: redis://redis:6379
+      SECRET_KEY: 404e696c4d7f8661b1b685f1da4529e259e56d2ca46d850495715cd6b8939b8c
+      ENVIRONMENT: production
+      ENV: production
+    ports:
+      - "8843:8000"
+    volumes:
+      - /opt/matcha-backend/data:/opt/matcha-backend/data
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "
+        sleep 3 &&
+        alembic upgrade head 2>/dev/null || true &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+      "
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,0 +1,56 @@
+name: MATCHA
+options:
+  bundleIdPrefix: com.matcha
+  deploymentTarget:
+    iOS: 18.0
+settings:
+  base:
+    SWIFT_VERSION: 6.0
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 0.1.0
+    IPHONEOS_DEPLOYMENT_TARGET: 18.0
+targets:
+  MATCHA:
+    type: application
+    platform: iOS
+    sources:
+      - MATCHA
+    scheme:
+      testTargets:
+        - MATCHATests
+        - MATCHAUITests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: MATCHA/App/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.matcha.ios
+        PRODUCT_NAME: MATCHA
+        TARGETED_DEVICE_FAMILY: 1
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+        DEVELOPMENT_ASSET_PATHS: "\"MATCHA/Preview Content\""
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "Apple Development"
+        DEVELOPMENT_TEAM: 2WU7C7C87E
+        CODE_SIGNING_ALLOWED: YES
+  MATCHATests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - MATCHATests
+    dependencies:
+      - target: MATCHA
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.matcha.ios.tests
+        GENERATE_INFOPLIST_FILE: YES
+  MATCHAUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - MATCHAUITests
+    dependencies:
+      - target: MATCHA
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.matcha.ios.uitests
+        CODE_SIGNING_ALLOWED: NO
