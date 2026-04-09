@@ -2,15 +2,15 @@ import SwiftUI
 
 enum MatchaTokens {
     enum Colors {
-        // Warm dark — Bumble Dark style with brown/beige undertone
-        static let background = Color(hex: 0x141210)
-        static let surface = Color(hex: 0x1C1916)
-        static let surfaceSoft = Color(hex: 0x201D19)
-        static let elevated = Color(hex: 0x262220)
-        static let elevatedSoft = Color(hex: 0x2E2A26)
-        static let accent = Color(hex: 0x7BFFB8)       // mint green
-        static let accentMuted = Color(hex: 0x4DA87A)
-        static let accentGlow = Color(hex: 0xB0FFD6)
+        // Deep purple — Figma/Twitch style
+        static let background = Color(hex: 0x13111C)
+        static let surface = Color(hex: 0x1B182A)
+        static let surfaceSoft = Color(hex: 0x1F1C2E)
+        static let elevated = Color(hex: 0x262336)
+        static let elevatedSoft = Color(hex: 0x2E2A3E)
+        static let accent = Color(hex: 0xA78BFA)       // lavender
+        static let accentMuted = Color(hex: 0x7C6BBF)
+        static let accentGlow = Color(hex: 0xC4B5FC)
         static let textPrimary = Color.white
         static let textSecondary = Color.white.opacity(0.68)
         static let textMuted = Color.white.opacity(0.42)
@@ -20,10 +20,10 @@ enum MatchaTokens {
         static let danger = Color(hex: 0xFF7070)
         static let baliBlue = Color(hex: 0x7ED0FF)
         static let sand = Color(hex: 0xE8C98A)
-        static let heroGradientTop = Color(hex: 0x1A1714)
-        static let heroGradientBottom = Color(hex: 0x0E0C0A)
-        static let gradientStart = Color(hex: 0x161310)
-        static let gradientEnd = Color(hex: 0x110F14)
+        static let heroGradientTop = Color(hex: 0x1A1728)
+        static let heroGradientBottom = Color(hex: 0x0E0C14)
+        static let gradientStart = Color(hex: 0x161322)
+        static let gradientEnd = Color(hex: 0x100E18)
 
         // Liquid Glass palette — slightly brighter
         static let glassFill = Color.white.opacity(0.07)
