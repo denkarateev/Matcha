@@ -16,49 +16,112 @@ struct ChatsView: View {
     // Paywall
     @State private var showPaywall = false
 
+    // Segments
+    @State private var selectedSegment: ChatSegment = .primary
+
+    enum ChatSegment: String, CaseIterable {
+        case primary = "Primary"
+        case deals = "Deals"
+        case requests = "Requests"
+    }
+
     init(repository: any MatchaRepository) {
         self.repository = repository
         _store = State(initialValue: ChatsStore(repository: repository))
     }
 
+    // Filtered conversations per segment
+    private var primaryConversations: [ChatPreview] {
+        filteredConversations.filter { $0.dealSummary == nil && !($0.isAwaitingFirstMessage) }
+    }
+
+    private var dealConversations: [ChatPreview] {
+        filteredConversations.filter { $0.dealSummary != nil }
+    }
+
+    private var requestConversations: [ChatPreview] {
+        filteredConversations.filter { $0.isAwaitingFirstMessage && $0.dealSummary == nil }
+    }
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                // Error banner
-                if let error = store.error, store.home.conversations.isEmpty, store.home.newMatches.isEmpty {
-                    HStack(spacing: 8) {
-                        Image(systemName: "wifi.exclamationmark")
-                            .font(.body.weight(.medium))
-                        Text(error.errorDescription ?? "Connection error")
-                            .font(.subheadline)
-                            .lineLimit(3)
-                        Spacer()
-                        Button("Retry") { Task { await store.load() } }
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(MatchaTokens.Colors.accent)
-                    }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, MatchaTokens.Spacing.medium)
-                    .padding(.vertical, 12)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .padding(.horizontal, MatchaTokens.Spacing.large)
-                }
-
-                // Action Needed removed — info already visible in chat rows below
-
-                // Likes + new matches row (always show — Likes card is always visible)
-                newMatchesSection
-                    .padding(.bottom, MatchaTokens.Spacing.large)
-
-                // Conversations
-                if !filteredConversations.isEmpty {
-                    conversationsList
-                } else if store.hasLoaded {
-                    emptyChatsState
-                        .padding(.top, 60)
+        VStack(spacing: 0) {
+            // Segment picker
+            Picker("", selection: $selectedSegment) {
+                ForEach(ChatSegment.allCases, id: \.self) { segment in
+                    Text(segment.rawValue).tag(segment)
                 }
             }
-            .padding(.top, MatchaTokens.Spacing.small)
+            .pickerStyle(.segmented)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 8)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    // Error banner
+                    if let error = store.error, store.home.conversations.isEmpty, store.home.newMatches.isEmpty {
+                        HStack(spacing: 8) {
+                            Image(systemName: "wifi.exclamationmark")
+                                .font(.body.weight(.medium))
+                            Text(error.errorDescription ?? "Connection error")
+                                .font(.subheadline)
+                                .lineLimit(3)
+                            Spacer()
+                            Button("Retry") { Task { await store.load() } }
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(MatchaTokens.Colors.accent)
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, MatchaTokens.Spacing.medium)
+                        .padding(.vertical, 12)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .padding(.horizontal, MatchaTokens.Spacing.large)
+                    }
+
+                    switch selectedSegment {
+                    case .primary:
+                        // Likes + new matches row
+                        newMatchesSection
+                            .padding(.bottom, MatchaTokens.Spacing.large)
+
+                        if !primaryConversations.isEmpty {
+                            segmentConversationsList(primaryConversations)
+                        } else if store.hasLoaded {
+                            emptyChatsState
+                                .padding(.top, 60)
+                        }
+
+                    case .deals:
+                        if !dealConversations.isEmpty {
+                            // Active deals first
+                            let active = dealConversations.filter {
+                                $0.activeDealStatus == .draft || $0.activeDealStatus == .confirmed
+                            }
+                            let completed = dealConversations.filter {
+                                $0.activeDealStatus == .visited || $0.activeDealStatus == .reviewed
+                            }
+
+                            if !active.isEmpty {
+                                sectionHeader("Active Deals")
+                                segmentConversationsList(active)
+                            }
+                            if !completed.isEmpty {
+                                sectionHeader("Completed")
+                                segmentConversationsList(completed)
+                            }
+                        } else if store.hasLoaded {
+                            emptySegmentState(icon: "person.2.circle", text: "No deals yet", subtitle: "Start a deal in any chat")
+                        }
+
+                    case .requests:
+                        if !requestConversations.isEmpty {
+                            segmentConversationsList(requestConversations)
+                        } else if store.hasLoaded {
+                            emptySegmentState(icon: "tray", text: "No requests", subtitle: "New match requests will appear here")
+                        }
+                    }
+                }
+                .padding(.top, MatchaTokens.Spacing.small)
+            }
         }
         .refreshable { await store.load() }
         .onAppear {
@@ -390,46 +453,29 @@ struct ChatsView: View {
     // MARK: - Conversations List
 
     private var conversationsList: some View {
+        segmentConversationsList(filteredConversations)
+    }
+
+    private func segmentConversationsList(_ chats: [ChatPreview]) -> some View {
         LazyVStack(spacing: 0) {
-            ForEach(filteredConversations) { chat in
+            ForEach(chats) { chat in
                 NavigationLink(value: chat) {
                     conversationRow(chat)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("\(chat.partner.name), \(chat.lastMessage)\(chat.unreadCount > 0 ? ", \(chat.unreadCount) unread" : "")")
-                .accessibilityHint("Open conversation with \(chat.partner.name)")
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    // Unmatch — red
+                .accessibilityLabel("\(chat.partner.name), \(chat.lastMessage)")
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    // Delete — red, full swipe
                     Button(role: .destructive) {
                         unmatchTarget = chat
                         showUnmatchConfirm = true
                     } label: {
-                        Label("Unmatch", systemImage: "heart.slash.fill")
+                        Label("Delete", systemImage: "trash.fill")
                     }
                     .tint(MatchaTokens.Colors.danger)
-
-                    // Report — orange
-                    Button {
-                        reportTarget = chat
-                        showReport = true
-                    } label: {
-                        Label("Report", systemImage: "exclamationmark.triangle.fill")
-                    }
-                    .tint(MatchaTokens.Colors.warning)
-
-                    // Did you meet? — green (only if there's a confirmed deal)
-                    if chat.activeDealStatus == .confirmed {
-                        Button {
-                            checkInTarget = chat
-                            Task { await store.checkIn(chat: chat) }
-                        } label: {
-                            Label("Did you meet?", systemImage: "checkmark.circle.fill")
-                        }
-                        .tint(MatchaTokens.Colors.success)
-                    }
                 }
                 .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                    // Mute/Unmute — left swipe
+                    // Mute/Unmute
                     Button {
                         Task { await store.toggleMute(chat: chat) }
                     } label: {
@@ -438,10 +484,35 @@ struct ChatsView: View {
                             systemImage: chat.isMuted ? "speaker.fill" : "speaker.slash.fill"
                         )
                     }
-                    .tint(Color.white.opacity(0.3))
+                    .tint(Color(hex: 0x5B7AFF))
                 }
             }
         }
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(.white.opacity(0.5))
+            .padding(.horizontal, MatchaTokens.Spacing.large)
+            .padding(.top, 16)
+            .padding(.bottom, 6)
+    }
+
+    private func emptySegmentState(icon: String, text: String, subtitle: String) -> some View {
+        VStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 40, weight: .light))
+                .foregroundStyle(.white.opacity(0.2))
+            Text(text)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.5))
+            Text(subtitle)
+                .font(.system(size: 13))
+                .foregroundStyle(.white.opacity(0.3))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 80)
     }
 
     private func conversationRow(_ chat: ChatPreview) -> some View {
