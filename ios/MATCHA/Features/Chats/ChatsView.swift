@@ -32,7 +32,7 @@ struct ChatsView: View {
 
     // Filtered conversations per segment
     private var primaryConversations: [ChatPreview] {
-        filteredConversations.filter { $0.dealSummary == nil && !($0.isAwaitingFirstMessage) }
+        filteredConversations // show ALL conversations including deals
     }
 
     private var dealConversations: [ChatPreview] {
@@ -45,14 +45,27 @@ struct ChatsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Segment picker
-            Picker("", selection: $selectedSegment) {
+            // Segment tabs — custom square pills
+            HStack(spacing: 8) {
                 ForEach(ChatSegment.allCases, id: \.self) { segment in
-                    Text(segment.rawValue).tag(segment)
+                    let isSelected = selectedSegment == segment
+                    Button {
+                        withAnimation(.spring(response: 0.25)) { selectedSegment = segment }
+                    } label: {
+                        Text(segment.rawValue)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(isSelected ? .black : .white.opacity(0.5))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 38)
+                            .background(
+                                isSelected ? MatchaTokens.Colors.accent : Color.white.opacity(0.08),
+                                in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            )
+                    }
+                    .buttonStyle(.plain)
                 }
             }
-            .pickerStyle(.segmented)
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 16)
             .padding(.vertical, 8)
 
             ScrollView {
