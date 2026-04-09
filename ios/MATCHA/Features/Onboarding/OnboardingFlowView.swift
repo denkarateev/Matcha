@@ -360,7 +360,7 @@ private struct RegistrationScreen: View {
         ZStack {
             // Background — gradient matching onboarding slides
             LinearGradient(
-                colors: [Color(hex: 0x0A1A08), MatchaTokens.Colors.background],
+                colors: [MatchaTokens.Colors.heroGradientTop, MatchaTokens.Colors.background],
                 startPoint: .top,
                 endPoint: .bottom
             )
