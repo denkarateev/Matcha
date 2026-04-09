@@ -34,9 +34,9 @@ struct MatchaTabShellView: View {
                 }
                 .tag(AppTab.offers)
 
-                // Tab 2: Activity
+                // Tab 2: Activity (Likes + deals activity)
                 NavigationStack {
-                    NotificationsView(
+                    LikesView(
                         currentUser: appState.currentUser,
                         repository: environment.repository
                     )
