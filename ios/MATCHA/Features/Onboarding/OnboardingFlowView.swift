@@ -351,193 +351,230 @@ private struct WelcomeScreen: View {
     }
 }
 
-// MARK: - Screen 2: Registration + Role
+// MARK: - Screen 2: Registration + Role (onboarding style — white card)
 
 private struct RegistrationScreen: View {
     @Bindable var store: OnboardingStore
 
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 20) {
-                // Header
+        ZStack {
+            // Background — gradient matching onboarding slides
+            LinearGradient(
+                colors: [Color(hex: 0x0A1A08), Color(hex: 0x050505)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+
+            // Decorative matcha leaf
+            VStack {
+                LottieView(name: "matcha-leaf", loopMode: .loop)
+                    .frame(width: 80, height: 80)
+                    .opacity(0.4)
+                    .padding(.top, 60)
+                Spacer()
+            }
+
+            // White card from bottom (matching onboarding slides)
+            VStack {
+                // Skip / back button top-left
                 HStack {
                     Button {
                         withAnimation { store.step = 1 }
                     } label: {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.6))
-                            .frame(width: 36, height: 36)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.7))
+                            .frame(width: 32, height: 32)
+                            .background(.white.opacity(0.1), in: Circle())
                     }
                     Spacer()
-                    Text(store.isLoginMode ? "Log In" : "Create Account")
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundStyle(.white)
-                    Spacer()
-                    Color.clear.frame(width: 36, height: 36)
                 }
-                .padding(.top, 16)
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
 
-                // Progress (signup only)
-                if !store.isLoginMode {
-                    progressBar(step: 1, total: store.totalSteps)
-                }
+                Spacer()
 
-                // Mode toggle
-                if !store.isLoginMode {
-                    modeToggle
-                }
+                // White card
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 18) {
+                        // Title
+                        Text(store.isLoginMode ? "Welcome back" : "Create Account")
+                            .font(.system(size: 26, weight: .bold, design: .rounded))
+                            .foregroundStyle(.black)
 
-                // Fields
-                VStack(spacing: 14) {
-                    MatchaTextField(
-                        icon: "envelope",
-                        placeholder: "Email address",
-                        text: $store.email,
-                        fieldState: store.emailFieldState,
-                        keyboardType: .emailAddress,
-                        autocapitalization: .never,
-                        autocorrectionDisabled: true,
-                        contentType: .emailAddress
-                    )
-
-                    MatchaSecureField(
-                        placeholder: store.isLoginMode ? "Password" : "Password (min 8 chars)",
-                        text: $store.password,
-                        fieldState: store.passwordFieldState,
-                        contentType: store.isLoginMode ? .password : .newPassword
-                    )
-
-                    // Confirm password (signup only)
-                    if !store.isLoginMode {
-                        MatchaSecureField(
-                            placeholder: "Confirm Password",
-                            text: $store.confirmPassword,
-                            fieldState: store.password == store.confirmPassword || store.confirmPassword.isEmpty
-                                ? .normal
-                                : .error("Passwords don't match"),
-                            contentType: .newPassword
-                        )
-                    }
-                }
-
-                // Terms checkbox (signup only)
-                if !store.isLoginMode {
-                    Button {
-                        withAnimation(.spring(response: 0.2)) {
-                            store.agreedToTerms.toggle()
-                        }
-                    } label: {
-                        HStack(alignment: .top, spacing: 12) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .strokeBorder(
-                                        store.agreedToTerms ? MatchaTokens.Colors.accent : .white.opacity(0.3),
-                                        lineWidth: 1.5
-                                    )
-                                    .frame(width: 22, height: 22)
-
-                                if store.agreedToTerms {
-                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                        .fill(MatchaTokens.Colors.accent)
-                                        .frame(width: 22, height: 22)
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 12, weight: .bold))
-                                        .foregroundStyle(.black)
+                        if !store.isLoginMode {
+                            // Progress dots
+                            HStack(spacing: 8) {
+                                ForEach(1...store.totalSteps, id: \.self) { i in
+                                    Capsule()
+                                        .fill(i <= 1 ? Color.black : Color.gray.opacity(0.2))
+                                        .frame(width: i <= 1 ? 24 : 8, height: 4)
                                 }
                             }
+                        }
 
-                            Text("I agree to the **Terms of Service** and **Privacy Policy**")
+                        // Fields — light style
+                        VStack(spacing: 12) {
+                            lightTextField(icon: "envelope", placeholder: "Email address", text: $store.email)
+                                .keyboardType(.emailAddress)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .textContentType(.emailAddress)
+
+                            lightSecureField(placeholder: store.isLoginMode ? "Password" : "Password (min 8 chars)", text: $store.password)
+
+                            if !store.isLoginMode {
+                                lightSecureField(placeholder: "Confirm Password", text: $store.confirmPassword)
+                            }
+                        }
+
+                        // Terms (signup)
+                        if !store.isLoginMode {
+                            Button {
+                                withAnimation(.spring(response: 0.2)) { store.agreedToTerms.toggle() }
+                            } label: {
+                                HStack(alignment: .top, spacing: 10) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                            .strokeBorder(store.agreedToTerms ? Color.black : .gray.opacity(0.3), lineWidth: 1.5)
+                                            .frame(width: 20, height: 20)
+                                        if store.agreedToTerms {
+                                            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                                .fill(.black)
+                                                .frame(width: 20, height: 20)
+                                            Image(systemName: "checkmark")
+                                                .font(.system(size: 10, weight: .bold))
+                                                .foregroundStyle(.white)
+                                        }
+                                    }
+                                    Text("I agree to the **Terms of Service** and **Privacy Policy**")
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(.black.opacity(0.5))
+                                        .multilineTextAlignment(.leading)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        // Role toggle (signup)
+                        if !store.isLoginMode {
+                            HStack(spacing: 0) {
+                                lightRoleTab("Blogger", role: .blogger)
+                                lightRoleTab("Business", role: .business)
+                            }
+                            .background(Color.gray.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        }
+
+                        // Error
+                        if let error = store.errorMessage {
+                            Text(error)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(.red)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
+                        // CTA — black button (matching onboarding)
+                        Button {
+                            Task { await store.advanceFromRegistration() }
+                        } label: {
+                            ZStack {
+                                Text(store.isLoginMode ? "Log In" : "Continue")
+                                    .opacity(store.isLoading ? 0 : 1)
+                                if store.isLoading {
+                                    ProgressView().tint(.white)
+                                }
+                            }
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 54)
+                            .background(.black, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        }
+                        .disabled(store.isLoading)
+
+                        // Switch mode
+                        Button {
+                            withAnimation { store.switchAuthMode(to: !store.isLoginMode) }
+                        } label: {
+                            Text(store.isLoginMode ? "Don't have an account? **Sign up**" : "Already have an account? **Log in**")
                                 .font(.system(size: 13))
-                                .foregroundStyle(.white.opacity(0.6))
-                                .multilineTextAlignment(.leading)
+                                .foregroundStyle(.black.opacity(0.4))
                         }
                     }
-                    .buttonStyle(.plain)
+                    .padding(.horizontal, 28)
+                    .padding(.top, 28)
+                    .padding(.bottom, 40)
                 }
-
-                // Role toggle (signup only)
-                if !store.isLoginMode {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("I am a")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.5))
-
-                        HStack(spacing: 0) {
-                            roleTab("Blogger", role: .blogger)
-                            roleTab("Business", role: .business)
-                        }
-                        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    }
-                }
-
-                // Error
-                if let error = store.errorMessage {
-                    ErrorBanner(message: error)
-                }
-
-                // Submit
-                Button {
-                    Task { await store.advanceFromRegistration() }
-                } label: {
-                    ZStack {
-                        Text(store.isLoginMode ? "Log In" : "Continue")
-                            .opacity(store.isLoading ? 0 : 1)
-                        if store.isLoading {
-                            ProgressView().tint(.black)
-                        }
-                    }
-                    .font(.system(size: 17, weight: .bold))
-                    .foregroundStyle(.black)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 54)
-                    .background(MatchaTokens.Colors.accent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                }
-                .disabled(store.isLoading)
-                .accessibilityLabel(store.isLoginMode ? "Log in to MATCHA" : "Continue to next step")
-
-                // Switch mode link
-                Button {
-                    withAnimation {
-                        store.switchAuthMode(to: !store.isLoginMode)
-                    }
-                } label: {
-                    Text(store.isLoginMode ? "Don't have an account? Sign up" : "Already have an account? Log in")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.4))
-                        .frame(maxWidth: .infinity)
-                }
-
-                Spacer().frame(height: 40)
+                .background(
+                    UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28)
+                        .fill(.white)
+                        .ignoresSafeArea(edges: .bottom)
+                )
             }
-            .padding(.horizontal, 24)
         }
-        .scrollBounceBehavior(.basedOnSize)
     }
 
-    private var modeToggle: some View {
-        EmptyView() // Mode switch is via the bottom link now
+    // MARK: - Light text field (white card style)
+
+    private func lightTextField(icon: String, placeholder: String, text: Binding<String>) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundStyle(.black.opacity(0.35))
+                .frame(width: 20)
+
+            TextField(placeholder, text: text)
+                .font(.system(size: 16))
+                .foregroundStyle(.black)
+                .tint(.black)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 18)
+        .background(.gray.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(.gray.opacity(0.15), lineWidth: 1)
+        )
     }
 
-    private func roleTab(_ title: String, role: Role) -> some View {
+    private func lightSecureField(placeholder: String, text: Binding<String>) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "lock")
+                .font(.system(size: 16))
+                .foregroundStyle(.black.opacity(0.35))
+                .frame(width: 20)
+
+            SecureField(placeholder, text: text)
+                .font(.system(size: 16))
+                .foregroundStyle(.black)
+                .tint(.black)
+                .textContentType(.password)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 18)
+        .background(.gray.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(.gray.opacity(0.15), lineWidth: 1)
+        )
+    }
+
+    private func lightRoleTab(_ title: String, role: Role) -> some View {
         let selected = store.selectedRole == role
         return Button {
-            withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
-                store.selectedRole = role
-            }
+            withAnimation(.spring(response: 0.25)) { store.selectedRole = role }
         } label: {
             Text(title)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(selected ? .black : .white.opacity(0.6))
+                .foregroundStyle(selected ? .white : .black.opacity(0.5))
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)
-                .background(
-                    selected ? MatchaTokens.Colors.accent : .clear,
-                    in: RoundedRectangle(cornerRadius: 10, style: .continuous)
-                )
+                .background(selected ? Color.black : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
         .padding(2)
     }
+
 }
 
 // MARK: - Screen 3: Mini Profile
