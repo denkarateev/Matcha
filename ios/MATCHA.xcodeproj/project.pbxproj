@@ -28,6 +28,7 @@
 		2DC0C2C47F1569A31C47A9A6 /* OfferCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D14AE3741E1726299E1173C /* OfferCard.swift */; };
 		313FF7369107DC6A4DFFD50F /* Deal.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41C73BA927CF0691656CF8E /* Deal.swift */; };
 		33E99708411AB71FBFB39E7F /* TagChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = D320B8D3E8800416418E1E2C /* TagChip.swift */; };
+		369B9AF6D3A5D8AF24966945 /* ShareSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 308B7F365F1D19BA92763F40 /* ShareSheetView.swift */; };
 		37CBE44B8217CB64300EA550 /* ReferralView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60994EBF876E7205EC06BEE1 /* ReferralView.swift */; };
 		3CFD033637444A01B24A8308 /* SubscriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9787B635A8DD036BA84B73BB /* SubscriptionView.swift */; };
 		435DEB197FB36C4367A13626 /* DealAndOffersTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8181D27FA9BF22AB5060B268 /* DealAndOffersTest.swift */; };
@@ -131,6 +132,7 @@
 		298CAF1CD216A5C0AF5C629C /* ReturnExperienceSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnExperienceSheet.swift; sourceTree = "<group>"; };
 		2D2B39C011E2A6D325292238 /* DealStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DealStatus.swift; sourceTree = "<group>"; };
 		2F291661231282316FD1E393 /* MatchaTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchaTabBar.swift; sourceTree = "<group>"; };
+		308B7F365F1D19BA92763F40 /* ShareSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheetView.swift; sourceTree = "<group>"; };
 		324AFCD1BC40C6746AE271E7 /* CreateOfferView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateOfferView.swift; sourceTree = "<group>"; };
 		352AF40D340AE7981D7A1DCE /* MockMatchaRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockMatchaRepository.swift; sourceTree = "<group>"; };
 		3AF6F3BCE83CD9AE846246C7 /* APIMatchaRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIMatchaRepository.swift; sourceTree = "<group>"; };
@@ -295,6 +297,7 @@
 				60994EBF876E7205EC06BEE1 /* ReferralView.swift */,
 				298CAF1CD216A5C0AF5C629C /* ReturnExperienceSheet.swift */,
 				89E2F38002195A75FF75543A /* ShareDealCard.swift */,
+				308B7F365F1D19BA92763F40 /* ShareSheetView.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -730,6 +733,7 @@
 				4B0A4E49867DD80D47EA2F86 /* SettingsView.swift in Sources */,
 				5382DC40DEA71E82B4CB1784 /* ShadowAccountManager.swift in Sources */,
 				AE2080D5C76975D717E6EA68 /* ShareDealCard.swift in Sources */,
+				369B9AF6D3A5D8AF24966945 /* ShareSheetView.swift in Sources */,
 				638B6B0C80A73EC970E68CD3 /* SkeletonView.swift in Sources */,
 				7B9C6658789A813C3536EA1B /* StoreManager.swift in Sources */,
 				62ADE98731B10D43646288C1 /* SubscriptionPlan.swift in Sources */,

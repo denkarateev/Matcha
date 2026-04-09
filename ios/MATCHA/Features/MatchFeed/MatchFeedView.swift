@@ -172,7 +172,6 @@ struct MatchFeedView: View {
         // Share sheet for post-match sharing
         .sheet(isPresented: $showMatchShareSheet) {
             ShareSheetView(activityItems: [matchShareText])
-                .presentationDetents([.medium])
         }
         // Toast message overlay
         .overlay(alignment: .bottom) {
