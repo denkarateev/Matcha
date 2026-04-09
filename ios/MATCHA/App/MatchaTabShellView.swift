@@ -34,17 +34,17 @@ struct MatchaTabShellView: View {
                 }
                 .tag(AppTab.offers)
 
-                // Tab 2: Activity (Likes + Deals + Responses)
+                // Tab 2: Notifications
                 NavigationStack {
-                    LikesView(
+                    NotificationsView(
                         currentUser: appState.currentUser,
                         repository: environment.repository
                     )
                 }
                 .tabItem {
-                    Label("Activity", systemImage: "bell.fill")
+                    Label("Notifications", systemImage: "bell.fill")
                 }
-                .tag(AppTab.activity)
+                .tag(AppTab.notifications)
 
                 // Tab 3: Match Feed (center)
                 NavigationStack {

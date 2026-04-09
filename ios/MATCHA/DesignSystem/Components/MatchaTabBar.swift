@@ -4,28 +4,31 @@ import SwiftUI
 
 enum MatchaTab: Int, CaseIterable {
     case offers
-    case activity
+    case notifications
     case feed
     case chats
     case profile
 
+    /// Legacy alias so existing code referencing `.activity` still compiles.
+    static let activity: MatchaTab = .notifications
+
     var icon: String {
         switch self {
-        case .offers:   return "tag.fill"
-        case .activity: return "bell.fill"
-        case .feed:     return "leaf.fill"
-        case .chats:    return "bubble.fill"
-        case .profile:  return "person.fill"
+        case .offers:        return "tag.fill"
+        case .notifications: return "bell.fill"
+        case .feed:          return "leaf.fill"
+        case .chats:         return "bubble.fill"
+        case .profile:       return "person.fill"
         }
     }
 
     var label: String {
         switch self {
-        case .offers:   return "Offers"
-        case .activity: return "Activity"
-        case .feed:     return "Match"
-        case .chats:    return "Chats"
-        case .profile:  return "Profile"
+        case .offers:        return "Offers"
+        case .notifications: return "Notifications"
+        case .feed:          return "Match"
+        case .chats:         return "Chats"
+        case .profile:       return "Profile"
         }
     }
 }
@@ -166,7 +169,7 @@ struct MatchaTabView<Content: View>: View {
             Spacer()
             MatchaTabBar(
                 selectedTab: $tab,
-                badges: [.activity: 3, .chats: 12]
+                badges: [.notifications: 3, .chats: 12]
             )
             .padding(.bottom, 24)
         }

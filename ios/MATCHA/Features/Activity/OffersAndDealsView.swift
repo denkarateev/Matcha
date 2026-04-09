@@ -1,20 +1,16 @@
 import SwiftUI
 
-/// Combined Offers + Deals tab — shows marketplace offers and user's active deals in one place.
+/// Offers tab — shows marketplace offers directly (deals moved to Chats tab).
 struct OffersAndDealsView: View {
     let currentUser: UserProfile
     let repository: any MatchaRepository
 
-    @State private var selectedSection: Section = .offers
-
-    enum Section: String, CaseIterable {
-        case offers = "Offers"
-        case deals = "My Deals"
-    }
+    @State private var showSearch = false
+    @State private var showFilter = false
 
     var body: some View {
         VStack(spacing: 0) {
-            // Custom top bar — no system toolbar grouping
+            // Custom top bar
             HStack {
                 Text("Offers")
                     .font(.system(size: 18, weight: .bold))
@@ -39,22 +35,7 @@ struct OffersAndDealsView: View {
             .padding(.top, 8)
             .padding(.bottom, 8)
 
-            // Segmented picker
-            Picker("", selection: $selectedSection) {
-                ForEach(Section.allCases, id: \.self) { section in
-                    Text(section.rawValue).tag(section)
-                }
-            }
-            .pickerStyle(.segmented)
-            .padding(.horizontal, 20)
-            .padding(.bottom, 4)
-
-            switch selectedSection {
-            case .offers:
-                OffersView(repository: repository, isBusiness: currentUser.role == .business)
-            case .deals:
-                DealsView(currentUser: currentUser, repository: repository)
-            }
+            OffersView(repository: repository, isBusiness: currentUser.role == .business)
         }
         .navigationBarHidden(true)
         .sheet(isPresented: $showFilter) {
@@ -65,7 +46,4 @@ struct OffersAndDealsView: View {
         }
         .background(Color(hex: 0x0A0A0A).ignoresSafeArea())
     }
-
-    @State private var showSearch = false
-    @State private var showFilter = false
 }
