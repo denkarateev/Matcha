@@ -58,9 +58,19 @@ struct UserProfile: Identifiable, Hashable {
     let followersCount: Int?
     let instagramHandle: String?
     let tiktokHandle: String?
+    var youtubeHandle: String?
+    var instagramFollowers: Int?
+    var instagramEngagement: Double?  // percentage
+    var youtubeSubscribers: Int?
+    var tiktokFollowers: Int?
 
     var secondaryLine: String {
         category?.title ?? role.title
+    }
+
+    /// True when at least one social account handle is linked.
+    var hasSocialAccounts: Bool {
+        instagramHandle != nil || youtubeHandle != nil || tiktokHandle != nil
     }
 
     /// Blue Check: awarded for 3+ completed deals with Content Proof.
@@ -96,7 +106,12 @@ struct UserProfile: Identifiable, Hashable {
         collabTypes: [CollaborationType] = [],
         followersCount: Int? = nil,
         instagramHandle: String? = nil,
-        tiktokHandle: String? = nil
+        tiktokHandle: String? = nil,
+        youtubeHandle: String? = nil,
+        instagramFollowers: Int? = nil,
+        instagramEngagement: Double? = nil,
+        youtubeSubscribers: Int? = nil,
+        tiktokFollowers: Int? = nil
     ) {
         self.id = id
         self.name = name
@@ -125,6 +140,11 @@ struct UserProfile: Identifiable, Hashable {
         self.followersCount = followersCount
         self.instagramHandle = instagramHandle
         self.tiktokHandle = tiktokHandle
+        self.youtubeHandle = youtubeHandle
+        self.instagramFollowers = instagramFollowers
+        self.instagramEngagement = instagramEngagement
+        self.youtubeSubscribers = youtubeSubscribers
+        self.tiktokFollowers = tiktokFollowers
     }
 }
 
@@ -168,7 +188,12 @@ extension UserProfile {
             collabTypes: [derivedCollabType],
             followersCount: profile.audienceSize,
             instagramHandle: profile.instagramHandle,
-            tiktokHandle: profile.tiktokHandle
+            tiktokHandle: profile.tiktokHandle,
+            youtubeHandle: nil,
+            instagramFollowers: profile.audienceSize,  // fallback: use audienceSize
+            instagramEngagement: nil,
+            youtubeSubscribers: nil,
+            tiktokFollowers: nil
         )
         up.serverUserId = profile.userId
         return up
@@ -219,7 +244,12 @@ extension UserProfile {
             collabTypes: [derivedCollabType],
             followersCount: profile.audienceSize,
             instagramHandle: profile.instagramHandle,
-            tiktokHandle: profile.tiktokHandle
+            tiktokHandle: profile.tiktokHandle,
+            youtubeHandle: nil,
+            instagramFollowers: profile.audienceSize,  // fallback: use audienceSize
+            instagramEngagement: nil,
+            youtubeSubscribers: nil,
+            tiktokFollowers: nil
         )
         up.serverUserId = profile.userId
         return up

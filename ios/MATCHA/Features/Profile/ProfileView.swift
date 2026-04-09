@@ -32,6 +32,11 @@ struct ProfileView: View {
                 aboutSection
                 sectionDivider
 
+                socialAccountsSection
+                if store.currentUser.hasSocialAccounts {
+                    sectionDivider
+                }
+
                 nichesSection
                 sectionDivider
 
@@ -389,6 +394,17 @@ struct ProfileView: View {
         .padding(.vertical, 18)
     }
 
+    // MARK: - Social Accounts
+
+    @ViewBuilder
+    private var socialAccountsSection: some View {
+        if store.currentUser.hasSocialAccounts {
+            SocialAccountsSectionContent(user: store.currentUser)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 18)
+        }
+    }
+
     // MARK: - Stats
 
     private var statsSection: some View {
@@ -592,5 +608,185 @@ final class ProfileStore {
 
     init(currentUser: UserProfile) {
         self.currentUser = currentUser
+    }
+}
+
+// MARK: - Social Accounts Section
+
+/// Self-contained social accounts card with platform tabs and stat cards.
+private struct SocialAccountsSectionContent: View {
+    let user: UserProfile
+    @State private var selectedPlatform: Platform = .instagram
+
+    // MARK: Platform enum local to this component
+
+    enum Platform: String, CaseIterable, Identifiable {
+        case instagram = "Instagram"
+        case youtube   = "YouTube"
+        case tiktok    = "TikTok"
+        var id: String { rawValue }
+
+        var iconName: String {
+            switch self {
+            case .instagram: return "camera.circle.fill"
+            case .youtube:   return "play.rectangle.fill"
+            case .tiktok:    return "music.note.list"
+            }
+        }
+
+        var accentColor: Color {
+            switch self {
+            case .instagram: return Color(hex: 0xE1306C)
+            case .youtube:   return Color(hex: 0xFF0000)
+            case .tiktok:    return Color(hex: 0x69C9D0)
+            }
+        }
+    }
+
+    // MARK: Available platforms (only those with a handle)
+
+    private var availablePlatforms: [Platform] {
+        var platforms: [Platform] = []
+        if user.instagramHandle != nil { platforms.append(.instagram) }
+        if user.youtubeHandle != nil   { platforms.append(.youtube) }
+        if user.tiktokHandle != nil    { platforms.append(.tiktok) }
+        return platforms
+    }
+
+    private var activePlatform: Platform {
+        if availablePlatforms.contains(selectedPlatform) {
+            return selectedPlatform
+        }
+        return availablePlatforms.first ?? .instagram
+    }
+
+    // MARK: Stats for selected platform
+
+    private var followersValue: Int? {
+        switch activePlatform {
+        case .instagram: return user.instagramFollowers ?? user.followersCount
+        case .youtube:   return user.youtubeSubscribers
+        case .tiktok:    return user.tiktokFollowers
+        }
+    }
+
+    private var engagementValue: Double? {
+        switch activePlatform {
+        case .instagram: return user.instagramEngagement
+        case .youtube:   return nil
+        case .tiktok:    return nil
+        }
+    }
+
+    private var handleText: String {
+        switch activePlatform {
+        case .instagram: return user.instagramHandle.map { "@\($0)" } ?? ""
+        case .youtube:   return user.youtubeHandle ?? ""
+        case .tiktok:    return user.tiktokHandle.map { "@\($0)" } ?? ""
+        }
+    }
+
+    // MARK: Body
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Social Accounts")
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(.white)
+
+            // Platform tabs
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(availablePlatforms) { platform in
+                        platformTab(platform)
+                    }
+                }
+            }
+
+            // Stat cards row
+            HStack(spacing: 10) {
+                statCard(
+                    title: activePlatform == .youtube ? "Subscribers" : "Followers",
+                    value: followersValue.map { formatCompact($0) } ?? "—"
+                )
+                statCard(
+                    title: "Avg. Views",
+                    value: "—"
+                )
+                statCard(
+                    title: "Engagement",
+                    value: engagementValue.map { String(format: "%.1f%%", $0) } ?? "—"
+                )
+            }
+        }
+    }
+
+    // MARK: - Platform Tab
+
+    private func platformTab(_ platform: Platform) -> some View {
+        Button {
+            withAnimation(MatchaTokens.Animations.tabSwitch) {
+                selectedPlatform = platform
+            }
+        } label: {
+            VStack(spacing: 6) {
+                HStack(spacing: 6) {
+                    Image(systemName: platform.iconName)
+                        .font(.system(size: 14, weight: .semibold))
+                    Text(handleForPlatform(platform))
+                        .font(.system(size: 13, weight: .semibold))
+                        .lineLimit(1)
+                }
+                .foregroundStyle(activePlatform == platform ? .white : .white.opacity(0.45))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 9)
+
+                // Accent underline for active tab
+                Rectangle()
+                    .fill(activePlatform == platform ? platform.accentColor : Color.clear)
+                    .frame(height: 2)
+                    .clipShape(Capsule())
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func handleForPlatform(_ platform: Platform) -> String {
+        switch platform {
+        case .instagram: return user.instagramHandle.map { "@\($0)" } ?? "Instagram"
+        case .youtube:   return user.youtubeHandle ?? "YouTube"
+        case .tiktok:    return user.tiktokHandle.map { "@\($0)" } ?? "TikTok"
+        }
+    }
+
+    // MARK: - Stat Card
+
+    private func statCard(title: String, value: String) -> some View {
+        VStack(spacing: 6) {
+            Text(value)
+                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+            Text(title)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.white.opacity(0.4))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(MatchaTokens.Colors.elevated)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.06), lineWidth: 1)
+                }
+        )
+    }
+
+    // MARK: - Formatting
+
+    private func formatCompact(_ count: Int) -> String {
+        if count >= 1_000_000 { return String(format: "%.1fM", Double(count) / 1_000_000) }
+        if count >= 1_000     { return String(format: "%.0fK", Double(count) / 1_000) }
+        return "\(count)"
     }
 }
