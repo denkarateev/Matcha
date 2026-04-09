@@ -17,15 +17,21 @@ struct OnboardingFlowView: View {
 
             switch store.step {
             case 0:
-                WelcomeScreen(store: store)
+                OnboardingSlidesScreen(store: store)
                     .transition(.opacity)
             case 1:
-                RegistrationScreen(store: store)
+                WelcomeScreen(store: store)
                     .transition(.asymmetric(
                         insertion: .move(edge: .trailing).combined(with: .opacity),
                         removal: .move(edge: .leading).combined(with: .opacity)
                     ))
             case 2:
+                RegistrationScreen(store: store)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .leading).combined(with: .opacity)
+                    ))
+            case 3:
                 MiniProfileScreen(store: store)
                     .transition(.asymmetric(
                         insertion: .move(edge: .trailing).combined(with: .opacity),
@@ -44,6 +50,144 @@ struct OnboardingFlowView: View {
 }
 
 // MARK: - Screen 1: Welcome + Role Selection (Light theme)
+
+// MARK: - Screen 0: Onboarding Slides (InfluGold style)
+
+private struct OnboardingSlidesScreen: View {
+    @Bindable var store: OnboardingStore
+    @State private var currentSlide = 0
+
+    private let slides: [(image: String, title: String, subtitle: String)] = [
+        (
+            "https://images.unsplash.com/photo-1611042553484-d61f9d9bf757?w=800&h=1200&fit=crop",
+            "Grow your brand\nwith real collabs",
+            "Connect with top businesses in Bali for authentic partnerships"
+        ),
+        (
+            "https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=800&h=1200&fit=crop",
+            "Barter deals,\nno cash needed",
+            "Exchange content for experiences — dinners, stays, events"
+        ),
+        (
+            "https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?w=800&h=1200&fit=crop",
+            "Track every step\nof your collab",
+            "From first match to published content — all in one place"
+        ),
+    ]
+
+    var body: some View {
+        ZStack {
+            // Fullscreen image
+            TabView(selection: $currentSlide) {
+                ForEach(0..<slides.count, id: \.self) { index in
+                    AsyncImage(url: URL(string: slides[index].image)) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .ignoresSafeArea()
+                        default:
+                            LinearGradient(
+                                colors: [
+                                    MatchaTokens.Colors.accent.opacity(0.3),
+                                    Color(hex: 0x050505)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                            .ignoresSafeArea()
+                        }
+                    }
+                    .tag(index)
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .ignoresSafeArea()
+
+            // Skip button top-right
+            VStack {
+                HStack {
+                    Spacer()
+                    Button {
+                        withAnimation { store.step = 1 }
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.7))
+                            .frame(width: 32, height: 32)
+                            .background(.black.opacity(0.3), in: Circle())
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                Spacer()
+            }
+
+            // Bottom card
+            VStack {
+                Spacer()
+
+                VStack(spacing: 20) {
+                    // Page dots
+                    HStack(spacing: 8) {
+                        ForEach(0..<slides.count, id: \.self) { i in
+                            Capsule()
+                                .fill(i == currentSlide ? MatchaTokens.Colors.accent : Color.gray.opacity(0.3))
+                                .frame(width: i == currentSlide ? 24 : 8, height: 4)
+                                .animation(.spring(response: 0.3), value: currentSlide)
+                        }
+                    }
+
+                    // Title
+                    Text(slides[currentSlide].title)
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .foregroundStyle(.black)
+                        .multilineTextAlignment(.center)
+                        .id(currentSlide) // force re-render for transition
+                        .transition(.opacity)
+
+                    // Subtitle
+                    Text(slides[currentSlide].subtitle)
+                        .font(.system(size: 15))
+                        .foregroundStyle(.black.opacity(0.5))
+                        .multilineTextAlignment(.center)
+                        .id("sub-\(currentSlide)")
+                        .transition(.opacity)
+
+                    // CTA
+                    Button {
+                        if currentSlide < slides.count - 1 {
+                            withAnimation(.spring(response: 0.35)) {
+                                currentSlide += 1
+                            }
+                        } else {
+                            withAnimation { store.step = 1 }
+                        }
+                    } label: {
+                        Text(currentSlide < slides.count - 1 ? "Next" : "Get Started")
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 54)
+                            .background(.black, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                }
+                .padding(.horizontal, 28)
+                .padding(.top, 28)
+                .padding(.bottom, 40)
+                .background(
+                    UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28)
+                        .fill(.white)
+                        .ignoresSafeArea(edges: .bottom)
+                )
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: currentSlide)
+    }
+}
+
+// MARK: - Screen 1: Welcome + Role Selection
 
 private struct WelcomeScreen: View {
     @Bindable var store: OnboardingStore
@@ -110,7 +254,7 @@ private struct WelcomeScreen: View {
             VStack(spacing: 12) {
                 Button {
                     store.switchAuthMode(to: false)
-                    withAnimation { store.step = 1 }
+                    withAnimation { store.step = 2 }
                 } label: {
                     Text("Continue")
                         .font(.system(size: 17, weight: .bold))
@@ -122,7 +266,7 @@ private struct WelcomeScreen: View {
 
                 Button {
                     store.switchAuthMode(to: true)
-                    withAnimation { store.step = 1 }
+                    withAnimation { store.step = 2 }
                 } label: {
                     Text("I already have an account")
                         .font(.system(size: 14, weight: .medium))
@@ -218,7 +362,7 @@ private struct RegistrationScreen: View {
                 // Header
                 HStack {
                     Button {
-                        withAnimation { store.step = 0 }
+                        withAnimation { store.step = 1 }
                     } label: {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
@@ -408,7 +552,7 @@ private struct MiniProfileScreen: View {
                 // Header
                 HStack {
                     Button {
-                        withAnimation { store.step = 1 }
+                        withAnimation { store.step = 2 }
                     } label: {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
@@ -529,7 +673,7 @@ private struct CategoryScreen: View {
                 // Header
                 HStack {
                     Button {
-                        withAnimation { store.step = 2 }
+                        withAnimation { store.step = 3 }
                     } label: {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
@@ -701,7 +845,7 @@ final class OnboardingStore {
     var nameFieldState: MatchaFieldState = .normal
 
     var totalSteps: Int {
-        selectedRole == .business ? 3 : 2
+        selectedRole == .business ? 4 : 3
     }
 
     init(appState: AppState) {
@@ -775,7 +919,7 @@ final class OnboardingStore {
             return
         }
 
-        withAnimation { step = 2 }
+        withAnimation { step = 3 }
     }
 
     func submitProfile() async {
@@ -805,7 +949,7 @@ final class OnboardingStore {
 
         // Business users go to category selection first
         if selectedRole == .business {
-            withAnimation { step = 3 }
+            withAnimation { step = 4 }
             return
         }
 
