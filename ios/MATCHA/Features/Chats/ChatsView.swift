@@ -45,7 +45,11 @@ struct ChatsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Segment tabs — custom square pills
+            // Stories row FIRST (Likes + new matches)
+            newMatchesSection
+                .padding(.bottom, 8)
+
+            // Segment tabs BELOW stories
             HStack(spacing: 8) {
                 ForEach(ChatSegment.allCases, id: \.self) { segment in
                     let isSelected = selectedSegment == segment
@@ -56,7 +60,7 @@ struct ChatsView: View {
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(isSelected ? .black : .white.opacity(0.5))
                             .frame(maxWidth: .infinity)
-                            .frame(height: 38)
+                            .frame(height: 36)
                             .background(
                                 isSelected ? MatchaTokens.Colors.accent : Color.white.opacity(0.08),
                                 in: RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -66,7 +70,7 @@ struct ChatsView: View {
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 8)
+            .padding(.vertical, 6)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -92,10 +96,6 @@ struct ChatsView: View {
 
                     switch selectedSegment {
                     case .all:
-                        // Likes + new matches row
-                        newMatchesSection
-                            .padding(.bottom, MatchaTokens.Spacing.large)
-
                         if !allConversations.isEmpty {
                             segmentConversationsList(allConversations)
                         } else if store.hasLoaded {
