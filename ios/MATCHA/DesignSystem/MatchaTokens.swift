@@ -2,28 +2,28 @@ import SwiftUI
 
 enum MatchaTokens {
     enum Colors {
-        // Deep purple — Figma/Twitch style
-        static let background = Color(hex: 0x13111C)
-        static let surface = Color(hex: 0x1B182A)
-        static let surfaceSoft = Color(hex: 0x1F1C2E)
-        static let elevated = Color(hex: 0x262336)
-        static let elevatedSoft = Color(hex: 0x2E2A3E)
-        static let accent = Color(hex: 0xA78BFA)       // lavender
-        static let accentMuted = Color(hex: 0x7C6BBF)
-        static let accentGlow = Color(hex: 0xC4B5FC)
+        // Original MATCHA — clean dark + lime green
+        static let background = Color(hex: 0x050505)
+        static let surface = Color(hex: 0x101314)
+        static let surfaceSoft = Color(hex: 0x141918)
+        static let elevated = Color(hex: 0x171C1B)
+        static let elevatedSoft = Color(hex: 0x1C2321)
+        static let accent = Color(hex: 0xB8FF43)       // matcha lime
+        static let accentMuted = Color(hex: 0x6F8F31)
+        static let accentGlow = Color(hex: 0xD8FF8F)
         static let textPrimary = Color.white
-        static let textSecondary = Color.white.opacity(0.68)
-        static let textMuted = Color.white.opacity(0.42)
-        static let outline = Color.white.opacity(0.10)
-        static let success = Color(hex: 0x5EE09A)
-        static let warning = Color(hex: 0xFFC05C)
-        static let danger = Color(hex: 0xFF7070)
-        static let baliBlue = Color(hex: 0x7ED0FF)
+        static let textSecondary = Color.white.opacity(0.72)
+        static let textMuted = Color.white.opacity(0.48)
+        static let outline = Color.white.opacity(0.14)
+        static let success = Color(hex: 0x56D987)
+        static let warning = Color(hex: 0xFFB84D)
+        static let danger = Color(hex: 0xFF6B6B)
+        static let baliBlue = Color(hex: 0x74C6FF)
         static let sand = Color(hex: 0xE8C98A)
-        static let heroGradientTop = Color(hex: 0x1A1728)
-        static let heroGradientBottom = Color(hex: 0x0E0C14)
-        static let gradientStart = Color(hex: 0x161322)
-        static let gradientEnd = Color(hex: 0x100E18)
+        static let heroGradientTop = Color(hex: 0x1A2E13)
+        static let heroGradientBottom = Color(hex: 0x090C08)
+        static let gradientStart = Color(hex: 0x0A1A0D)
+        static let gradientEnd = Color(hex: 0x0D0A15)
 
         // Liquid Glass palette — slightly brighter
         static let glassFill = Color.white.opacity(0.07)
