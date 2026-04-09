@@ -5,6 +5,7 @@ import PhotosUI
 
 struct CreateOfferView: View {
     @Environment(\.dismiss) private var dismiss
+    var repository: any MatchaRepository = APIMatchaRepository()
 
     // Form state
     @State private var title: String = ""
@@ -664,9 +665,29 @@ struct CreateOfferView: View {
             Button("Publish", role: .none) {
                 isPublishing = true
                 Task {
-                    try? await Task.sleep(for: .seconds(1))
-                    isPublishing = false
-                    dismiss()
+                    do {
+                        let request = OfferCreateRequest(
+                            title: title.trimmingCharacters(in: .whitespaces),
+                            type: offerType,
+                            bloggerReceives: bloggerReceives.trimmingCharacters(in: .whitespaces),
+                            businessReceives: businessReceives.trimmingCharacters(in: .whitespaces),
+                            slotsTotal: unlimitedSlots ? 0 : slots,
+                            photoURL: "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=600",
+                            expiresAt: hasExpiry ? expiryDate : nil,
+                            preferredBloggerNiche: selectedNiches.first,
+                            minAudience: audienceTier == .any ? nil : audienceTier.label,
+                            guests: guests == .solo ? nil : guests.rawValue,
+                            specialConditions: specialConditions.isEmpty ? nil : specialConditions,
+                            isLastMinute: false
+                        )
+                        _ = try await repository.createOffer(request)
+                        MatchaHaptic.success()
+                        isPublishing = false
+                        dismiss()
+                    } catch {
+                        isPublishing = false
+                        // TODO: show error
+                    }
                 }
             }
             Button("Cancel", role: .cancel) {}

@@ -51,7 +51,7 @@ struct OffersAndDealsView: View {
         }
         .navigationBarHidden(true)
         .sheet(isPresented: $showCreateOffer) {
-            CreateOfferView()
+            CreateOfferView(repository: repository)
         }
         .sheet(isPresented: $showFilter) {
             OfferFilterView(
