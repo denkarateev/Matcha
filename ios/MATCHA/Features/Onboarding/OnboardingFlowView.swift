@@ -539,25 +539,7 @@ private struct RegistrationScreen: View {
     }
 
     private func lightSecureField(placeholder: String, text: Binding<String>) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: "lock")
-                .font(.system(size: 16))
-                .foregroundStyle(.black.opacity(0.35))
-                .frame(width: 20)
-
-            SecureField(placeholder, text: text)
-                .font(.system(size: 16))
-                .foregroundStyle(.black)
-                .tint(.black)
-                .textContentType(.password)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 18)
-        .background(.gray.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(.gray.opacity(0.15), lineWidth: 1)
-        )
+        LightSecureFieldView(placeholder: placeholder, text: text)
     }
 
     private func lightRoleTab(_ title: String, role: Role) -> some View {
@@ -798,6 +780,53 @@ private func progressBar(step: Int, total: Int) -> some View {
                 .fill(i <= step ? MatchaTokens.Colors.accent : Color.white.opacity(0.1))
                 .frame(height: 3)
         }
+    }
+}
+
+// MARK: - Light Secure Field (with show/hide toggle)
+
+private struct LightSecureFieldView: View {
+    let placeholder: String
+    @Binding var text: String
+    @State private var isVisible = false
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "lock")
+                .font(.system(size: 16))
+                .foregroundStyle(.black.opacity(0.35))
+                .frame(width: 20)
+
+            Group {
+                if isVisible {
+                    TextField(placeholder, text: $text)
+                        .textContentType(.password)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                } else {
+                    SecureField(placeholder, text: $text)
+                        .textContentType(.password)
+                }
+            }
+            .font(.system(size: 16))
+            .foregroundStyle(.black)
+            .tint(.black)
+
+            Button {
+                isVisible.toggle()
+            } label: {
+                Image(systemName: isVisible ? "eye.slash" : "eye")
+                    .font(.system(size: 16))
+                    .foregroundStyle(.black.opacity(0.3))
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 18)
+        .background(.gray.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(.gray.opacity(0.15), lineWidth: 1)
+        )
     }
 }
 
