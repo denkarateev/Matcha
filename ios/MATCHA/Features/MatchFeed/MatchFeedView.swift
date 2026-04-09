@@ -193,22 +193,66 @@ struct MatchFeedView: View {
         }
     }
 
-    // MARK: - Top Bar
+    // MARK: - Top Bar (stories row + filter)
 
     private var topBar: some View {
-        HStack(spacing: 16) {
-            Spacer()
+        HStack(spacing: 0) {
+            // Stories row — upcoming profiles in feed
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(store.profiles.prefix(8)) { profile in
+                        storyAvatar(profile)
+                    }
+                }
+                .padding(.leading, 16)
+            }
 
-            // Filter
+            // Filter button
             Button {
                 showFilter = true
             } label: {
                 Image(systemName: "line.3.horizontal.decrease")
-                    .font(.system(size: 18))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.8))
+                    .frame(width: 36, height: 36)
+                    .background(.black.opacity(0.3), in: Circle())
+            }
+            .padding(.trailing, 16)
+            .padding(.leading, 8)
+        }
+    }
+
+    private func storyAvatar(_ profile: UserProfile) -> some View {
+        let isCurrent = store.currentProfile?.id == profile.id
+        return Group {
+            if let url = profile.photoURL {
+                AsyncImage(url: url) { phase in
+                    if case .success(let img) = phase {
+                        img.resizable().aspectRatio(contentMode: .fill)
+                    } else {
+                        Circle().fill(MatchaTokens.Colors.elevated)
+                    }
+                }
+            } else {
+                ZStack {
+                    Circle().fill(MatchaTokens.Colors.elevated)
+                    Text(String(profile.name.prefix(1)).uppercased())
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.5))
+                }
             }
         }
-        .padding(.horizontal, 20)
+        .frame(width: 40, height: 40)
+        .clipShape(Circle())
+        .overlay(
+            Circle().strokeBorder(
+                isCurrent ? MatchaTokens.Colors.accent : .clear,
+                lineWidth: 2
+            )
+        )
+        .scaleEffect(isCurrent ? 1.1 : 0.9)
+        .opacity(isCurrent ? 1.0 : 0.5)
+        .animation(.spring(response: 0.3), value: store.currentIndex)
     }
 
     // MARK: - Card Stack Area
