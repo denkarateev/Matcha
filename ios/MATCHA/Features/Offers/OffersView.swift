@@ -70,10 +70,10 @@ struct OffersView: View {
             }
         }
         .refreshable { await store.load() }
-        .background(Color(hex: 0x050505).ignoresSafeArea())
+        .background(MatchaTokens.Colors.background.ignoresSafeArea())
         .navigationTitle("Offers")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color(hex: 0x050505), for: .navigationBar)
+        .toolbarBackground(MatchaTokens.Colors.background, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .navigationDestination(for: Offer.self) { offer in
             OfferDetailView(offer: offer, isBusiness: isBusiness)
@@ -438,7 +438,7 @@ struct OffersView: View {
     private func typeBadge(_ type: CollaborationType) -> some View {
         Text(type.title.uppercased())
             .font(.system(size: 10, weight: .bold))
-            .foregroundStyle(type == .barter ? Color(hex: 0x050505) : Color(hex: 0x050505))
+            .foregroundStyle(type == .barter ? MatchaTokens.Colors.background : MatchaTokens.Colors.background)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(

@@ -53,7 +53,7 @@ struct ProfileView: View {
             }
             .padding(.bottom, 100)
         }
-        .background(Color(hex: 0x0A0A0A).ignoresSafeArea())
+        .background(MatchaTokens.Colors.background.ignoresSafeArea())
         .ignoresSafeArea(edges: .top)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -104,7 +104,7 @@ struct ProfileView: View {
                 if case .success(let image) = phase {
                     image.resizable().aspectRatio(contentMode: .fill)
                 } else {
-                    Color(hex: 0x0A0A0A)
+                    MatchaTokens.Colors.background
                 }
             }
             .frame(height: 460)
@@ -113,8 +113,8 @@ struct ProfileView: View {
             LinearGradient(
                 stops: [
                     .init(color: .clear, location: 0.45),
-                    .init(color: Color(hex: 0x0A0A0A).opacity(0.5), location: 0.72),
-                    .init(color: Color(hex: 0x0A0A0A), location: 1.0),
+                    .init(color: MatchaTokens.Colors.background.opacity(0.5), location: 0.72),
+                    .init(color: MatchaTokens.Colors.background, location: 1.0),
                 ],
                 startPoint: .top,
                 endPoint: .bottom

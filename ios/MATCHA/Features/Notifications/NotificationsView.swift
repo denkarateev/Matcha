@@ -67,7 +67,7 @@ struct NotificationsView: View {
                 bellBadge
             }
         }
-        .toolbarBackground(Color(hex: 0x050505), for: .navigationBar)
+        .toolbarBackground(MatchaTokens.Colors.background, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .sheet(isPresented: $showLikesPaywall) {
             PaywallView(.blurredLikes)

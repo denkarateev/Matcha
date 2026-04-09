@@ -77,7 +77,7 @@ struct PaywallView: View {
             LinearGradient(
                 colors: [
                     Color(hex: 0x0A1A0D),
-                    Color(hex: 0x050505),
+                    MatchaTokens.Colors.background,
                     Color(hex: 0x0D0A15),
                 ],
                 startPoint: .topLeading,

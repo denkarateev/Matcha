@@ -13,7 +13,7 @@ struct OnboardingFlowView: View {
 
     var body: some View {
         ZStack {
-            Color(hex: 0x050505).ignoresSafeArea()
+            MatchaTokens.Colors.background.ignoresSafeArea()
 
             switch store.step {
             case 0:
@@ -91,7 +91,7 @@ private struct OnboardingSlidesScreen: View {
                             LinearGradient(
                                 colors: [
                                     MatchaTokens.Colors.accent.opacity(0.3),
-                                    Color(hex: 0x050505)
+                                    MatchaTokens.Colors.background
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -360,7 +360,7 @@ private struct RegistrationScreen: View {
         ZStack {
             // Background — gradient matching onboarding slides
             LinearGradient(
-                colors: [Color(hex: 0x0A1A08), Color(hex: 0x050505)],
+                colors: [Color(hex: 0x0A1A08), MatchaTokens.Colors.background],
                 startPoint: .top,
                 endPoint: .bottom
             )

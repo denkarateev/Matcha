@@ -44,6 +44,6 @@ struct OffersAndDealsView: View {
                 matchingCount: 0
             )
         }
-        .background(Color(hex: 0x0A0A0A).ignoresSafeArea())
+        .background(MatchaTokens.Colors.background.ignoresSafeArea())
     }
 }

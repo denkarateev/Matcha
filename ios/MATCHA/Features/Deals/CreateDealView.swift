@@ -141,10 +141,10 @@ struct CreateDealView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
             }
-            .background(Color(hex: 0x0A0A0A).ignoresSafeArea())
+            .background(MatchaTokens.Colors.background.ignoresSafeArea())
             .navigationTitle("New Deal")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color(hex: 0x0A0A0A), for: .navigationBar)
+            .toolbarBackground(MatchaTokens.Colors.background, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

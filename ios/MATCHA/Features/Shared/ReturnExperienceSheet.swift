@@ -95,7 +95,7 @@ struct ReturnExperienceSheet: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 16)
         }
-        .background(Color(hex: 0x0A0A0A))
+        .background(MatchaTokens.Colors.background)
         .presentationDetents([.medium])
         .presentationDragIndicator(.hidden)
         .presentationCornerRadius(28)

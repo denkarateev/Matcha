@@ -89,10 +89,10 @@ struct VerificationFlowView: View {
                         .padding(.bottom, 12)
                 }
             }
-            .background(Color(hex: 0x0A0A0A).ignoresSafeArea())
+            .background(MatchaTokens.Colors.background.ignoresSafeArea())
             .navigationTitle("Verification")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color(hex: 0x0A0A0A), for: .navigationBar)
+            .toolbarBackground(MatchaTokens.Colors.background, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

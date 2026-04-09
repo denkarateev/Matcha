@@ -31,6 +31,6 @@ struct ServerErrorView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(hex: 0x0A0A0A))
+        .background(MatchaTokens.Colors.background)
     }
 }

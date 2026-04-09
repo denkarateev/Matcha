@@ -729,7 +729,7 @@ struct DealDetailView: View {
                 Text(title)
                     .font(.system(size: 16, weight: .bold))
             }
-            .foregroundStyle(Color(hex: 0x050505))
+            .foregroundStyle(MatchaTokens.Colors.background)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(MatchaTokens.Colors.accent, in: RoundedRectangle(cornerRadius: 16, style: .continuous))

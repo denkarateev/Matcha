@@ -2,33 +2,34 @@ import SwiftUI
 
 enum MatchaTokens {
     enum Colors {
-        static let background = Color(hex: 0x050505)
-        static let surface = Color(hex: 0x101314)
-        static let surfaceSoft = Color(hex: 0x141918)
-        static let elevated = Color(hex: 0x171C1B)
-        static let elevatedSoft = Color(hex: 0x1C2321)
+        // Softer dark — lifted from pure black to warm charcoal
+        static let background = Color(hex: 0x121416)
+        static let surface = Color(hex: 0x1A1D20)
+        static let surfaceSoft = Color(hex: 0x1E2225)
+        static let elevated = Color(hex: 0x232729)
+        static let elevatedSoft = Color(hex: 0x2A2F31)
         static let accent = Color(hex: 0xB8FF43)
-        static let accentMuted = Color(hex: 0x6F8F31)
+        static let accentMuted = Color(hex: 0x7BA03A)
         static let accentGlow = Color(hex: 0xD8FF8F)
         static let textPrimary = Color.white
-        static let textSecondary = Color.white.opacity(0.72)
-        static let textMuted = Color.white.opacity(0.48)
-        static let outline = Color.white.opacity(0.14)
-        static let success = Color(hex: 0x56D987)
-        static let warning = Color(hex: 0xFFB84D)
-        static let danger = Color(hex: 0xFF6B6B)
-        static let baliBlue = Color(hex: 0x74C6FF)
+        static let textSecondary = Color.white.opacity(0.68)
+        static let textMuted = Color.white.opacity(0.42)
+        static let outline = Color.white.opacity(0.12)
+        static let success = Color(hex: 0x5EE09A)
+        static let warning = Color(hex: 0xFFC05C)
+        static let danger = Color(hex: 0xFF7070)
+        static let baliBlue = Color(hex: 0x7ED0FF)
         static let sand = Color(hex: 0xE8C98A)
-        static let heroGradientTop = Color(hex: 0x1A2E13)
-        static let heroGradientBottom = Color(hex: 0x090C08)
-        static let gradientStart = Color(hex: 0x0A1A0D)
-        static let gradientEnd = Color(hex: 0x0D0A15)
+        static let heroGradientTop = Color(hex: 0x1F3318)
+        static let heroGradientBottom = Color(hex: 0x10130F)
+        static let gradientStart = Color(hex: 0x141F16)
+        static let gradientEnd = Color(hex: 0x141218)
 
-        // Liquid Glass palette
-        static let glassFill = Color.white.opacity(0.06)
-        static let glassBorder = Color.white.opacity(0.12)
-        static let glassBorderLight = Color.white.opacity(0.18)
-        static let glassHighlight = Color.white.opacity(0.08)
+        // Liquid Glass palette — slightly brighter
+        static let glassFill = Color.white.opacity(0.07)
+        static let glassBorder = Color.white.opacity(0.14)
+        static let glassBorderLight = Color.white.opacity(0.20)
+        static let glassHighlight = Color.white.opacity(0.10)
     }
 
     /// Subtle dark gradient background (green → black → purple) replacing flat black

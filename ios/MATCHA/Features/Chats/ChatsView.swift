@@ -17,12 +17,12 @@ struct ChatsView: View {
     @State private var showPaywall = false
 
     // Segments
-    @State private var selectedSegment: ChatSegment = .primary
+    @State private var selectedSegment: ChatSegment = .all
 
     enum ChatSegment: String, CaseIterable {
-        case primary = "Primary"
+        case all = "All"
+        case chats = "Chats"
         case deals = "Deals"
-        case requests = "Requests"
     }
 
     init(repository: any MatchaRepository) {
@@ -31,16 +31,16 @@ struct ChatsView: View {
     }
 
     // Filtered conversations per segment
-    private var primaryConversations: [ChatPreview] {
-        filteredConversations // show ALL conversations including deals
+    private var allConversations: [ChatPreview] {
+        filteredConversations
+    }
+
+    private var chatOnlyConversations: [ChatPreview] {
+        filteredConversations.filter { $0.dealSummary == nil }
     }
 
     private var dealConversations: [ChatPreview] {
         filteredConversations.filter { $0.dealSummary != nil }
-    }
-
-    private var requestConversations: [ChatPreview] {
-        filteredConversations.filter { $0.isAwaitingFirstMessage && $0.dealSummary == nil }
     }
 
     var body: some View {
@@ -91,21 +91,27 @@ struct ChatsView: View {
                     }
 
                     switch selectedSegment {
-                    case .primary:
+                    case .all:
                         // Likes + new matches row
                         newMatchesSection
                             .padding(.bottom, MatchaTokens.Spacing.large)
 
-                        if !primaryConversations.isEmpty {
-                            segmentConversationsList(primaryConversations)
+                        if !allConversations.isEmpty {
+                            segmentConversationsList(allConversations)
                         } else if store.hasLoaded {
                             emptyChatsState
                                 .padding(.top, 60)
                         }
 
+                    case .chats:
+                        if !chatOnlyConversations.isEmpty {
+                            segmentConversationsList(chatOnlyConversations)
+                        } else if store.hasLoaded {
+                            emptySegmentState(icon: "bubble.left.and.bubble.right", text: "No chats yet", subtitle: "Conversations without deals will appear here")
+                        }
+
                     case .deals:
                         if !dealConversations.isEmpty {
-                            // Active deals first
                             let active = dealConversations.filter {
                                 $0.activeDealStatus == .draft || $0.activeDealStatus == .confirmed
                             }
@@ -123,13 +129,6 @@ struct ChatsView: View {
                             }
                         } else if store.hasLoaded {
                             emptySegmentState(icon: "person.2.circle", text: "No deals yet", subtitle: "Start a deal in any chat")
-                        }
-
-                    case .requests:
-                        if !requestConversations.isEmpty {
-                            segmentConversationsList(requestConversations)
-                        } else if store.hasLoaded {
-                            emptySegmentState(icon: "tray", text: "No requests", subtitle: "New match requests will appear here")
                         }
                     }
                 }
