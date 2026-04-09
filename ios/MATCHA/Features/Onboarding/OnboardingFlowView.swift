@@ -263,6 +263,53 @@ private struct RegistrationScreen: View {
                         fieldState: store.passwordFieldState,
                         contentType: store.isLoginMode ? .password : .newPassword
                     )
+
+                    // Confirm password (signup only)
+                    if !store.isLoginMode {
+                        MatchaSecureField(
+                            placeholder: "Confirm Password",
+                            text: $store.confirmPassword,
+                            fieldState: store.password == store.confirmPassword || store.confirmPassword.isEmpty
+                                ? .normal
+                                : .error("Passwords don't match"),
+                            contentType: .newPassword
+                        )
+                    }
+                }
+
+                // Terms checkbox (signup only)
+                if !store.isLoginMode {
+                    Button {
+                        withAnimation(.spring(response: 0.2)) {
+                            store.agreedToTerms.toggle()
+                        }
+                    } label: {
+                        HStack(alignment: .top, spacing: 12) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .strokeBorder(
+                                        store.agreedToTerms ? MatchaTokens.Colors.accent : .white.opacity(0.3),
+                                        lineWidth: 1.5
+                                    )
+                                    .frame(width: 22, height: 22)
+
+                                if store.agreedToTerms {
+                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                        .fill(MatchaTokens.Colors.accent)
+                                        .frame(width: 22, height: 22)
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundStyle(.black)
+                                }
+                            }
+
+                            Text("I agree to the **Terms of Service** and **Privacy Policy**")
+                                .font(.system(size: 13))
+                                .foregroundStyle(.white.opacity(0.6))
+                                .multilineTextAlignment(.leading)
+                        }
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 // Role toggle (signup only)
@@ -636,6 +683,8 @@ final class OnboardingStore {
     var step: Int = 0
     var email: String = ""
     var password: String = ""
+    var confirmPassword: String = ""
+    var agreedToTerms: Bool = false
     var isLoginMode: Bool = false
     var selectedRole: Role = .blogger
 
@@ -691,6 +740,17 @@ final class OnboardingStore {
             passwordFieldState = .error("Minimum 8 characters")
             errorMessage = "Password must be at least 8 characters."
             return
+        }
+
+        if !isLoginMode {
+            guard password == confirmPassword else {
+                errorMessage = "Passwords don't match."
+                return
+            }
+            guard agreedToTerms else {
+                errorMessage = "Please agree to the Terms of Service."
+                return
+            }
         }
 
         emailFieldState = .success

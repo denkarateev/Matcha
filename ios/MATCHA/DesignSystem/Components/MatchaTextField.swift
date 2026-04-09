@@ -49,10 +49,10 @@ struct MatchaTextField: View {
                 trailingIcon
             }
             .padding(.horizontal, MatchaTokens.Spacing.medium)
-            .padding(.vertical, 14)
-            .background(MatchaTokens.Colors.elevated, in: RoundedRectangle(cornerRadius: MatchaTokens.Radius.button, style: .continuous))
+            .padding(.vertical, 18)
+            .background(MatchaTokens.Colors.elevated, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: MatchaTokens.Radius.button, style: .continuous)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .strokeBorder(effectiveState.borderColor, lineWidth: isFocused ? 1.5 : 1)
             }
             .animation(MatchaTokens.Animations.buttonPress, value: isFocused)
@@ -173,10 +173,10 @@ struct MatchaSecureField: View {
                 .accessibilityLabel(isVisible ? "Hide password" : "Show password")
             }
             .padding(.horizontal, MatchaTokens.Spacing.medium)
-            .padding(.vertical, 14)
-            .background(MatchaTokens.Colors.elevated, in: RoundedRectangle(cornerRadius: MatchaTokens.Radius.button, style: .continuous))
+            .padding(.vertical, 18)
+            .background(MatchaTokens.Colors.elevated, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: MatchaTokens.Radius.button, style: .continuous)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .strokeBorder(effectiveState.borderColor, lineWidth: isFocused ? 1.5 : 1)
             }
             .animation(MatchaTokens.Animations.buttonPress, value: isFocused)
