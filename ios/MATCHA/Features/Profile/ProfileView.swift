@@ -5,6 +5,7 @@ struct ProfileView: View {
     @State private var store: ProfileStore
     @State private var activeSheet: ActiveSheet?
     @State private var showSettings = false
+    @State private var showNotifications = false
     private let repository: any MatchaRepository
 
     var onProfileSaved: ((UserProfile) -> Void)?
@@ -70,6 +71,12 @@ struct ProfileView: View {
             ProfileSettingsListView(
                 settingsRows: store.settingsRows,
                 onSignOut: onSignOut
+            )
+        }
+        .navigationDestination(isPresented: $showNotifications) {
+            NotificationsView(
+                currentUser: store.currentUser,
+                repository: repository
             )
         }
     }
@@ -212,12 +219,22 @@ struct ProfileView: View {
 
             Spacer()
 
-            Button { showSettings = true } label: {
-                Image(systemName: "gearshape.fill")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 36, height: 36)
-                    .background(.black.opacity(0.4), in: Circle())
+            HStack(spacing: 10) {
+                Button { showNotifications = true } label: {
+                    Image(systemName: "bell.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 36, height: 36)
+                        .background(.black.opacity(0.4), in: Circle())
+                }
+
+                Button { showSettings = true } label: {
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 36, height: 36)
+                        .background(.black.opacity(0.4), in: Circle())
+                }
             }
         }
         .padding(.top, 60)

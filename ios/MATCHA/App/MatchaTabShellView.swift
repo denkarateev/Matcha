@@ -34,7 +34,7 @@ struct MatchaTabShellView: View {
                 }
                 .tag(AppTab.offers)
 
-                // Tab 2: Notifications
+                // Tab 2: Activity
                 NavigationStack {
                     NotificationsView(
                         currentUser: appState.currentUser,
@@ -42,7 +42,7 @@ struct MatchaTabShellView: View {
                     )
                 }
                 .tabItem {
-                    Label("Notifications", systemImage: "bell.fill")
+                    Label("Activity", systemImage: "heart.fill")
                 }
                 .tag(AppTab.notifications)
 
