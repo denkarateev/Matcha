@@ -1816,6 +1816,7 @@ function renderUsersTable(users) {
       <td class="actions" onclick="event.stopPropagation()">
         <button class="btn btn-success btn-xs" onclick="openVerifyModal('${u.id}', ${u.verification_level})">Verify</button>
         <button class="btn btn-info btn-xs" onclick="openAudienceModal('${u.id}', ${u.audience_size || 0})">Audience</button>
+        <button class="btn btn-xs" style="background:#5B7AFF;color:#fff" onclick="resetSwipes('${u.id}')">Reset Swipes</button>
         ${u.is_active !== false ? `<button class="btn btn-danger btn-xs" onclick="banUser('${u.id}')">Ban</button>` : '<span class="badge badge-red">Banned</span>'}
       </td>
     </tr>`;
@@ -1915,6 +1916,7 @@ async function openUserDetail(userId) {
       <div class="detail-actions">
         <button class="btn btn-success btn-sm" onclick="openVerifyModal('${u.id}', ${u.verification_level})">Set Verification</button>
         <button class="btn btn-info btn-sm" onclick="openAudienceModal('${u.id}', ${u.audience_size || 0})">Set Audience</button>
+        <button class="btn btn-sm" style="background:#5B7AFF;color:#fff" onclick="resetSwipes('${u.id}')">Reset Swipes</button>
         ${u.is_active ? `<button class="btn btn-danger btn-sm" onclick="banUser('${u.id}')">Ban User</button>` : ''}
       </div>
     `;
@@ -2016,6 +2018,14 @@ async function banUser(userId) {
     toast('User has been banned', 'success');
     loadUsers();
   } catch { toast('Failed to ban user', 'error'); }
+}
+
+async function resetSwipes(userId) {
+  if (!confirm('Reset all swipes for this user? They will see all profiles again in the feed.')) return;
+  try {
+    const data = await apiJson(`/admin/reset-swipes/${userId}`, { method: 'POST' });
+    toast(data.detail || 'Swipes reset', 'success');
+  } catch { toast('Failed to reset swipes', 'error'); }
 }
 
 // =========================================================================
