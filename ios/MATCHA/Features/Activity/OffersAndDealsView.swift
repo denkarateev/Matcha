@@ -16,7 +16,7 @@ struct OffersAndDealsView: View {
             // Custom top bar
             HStack {
                 Text("Offers")
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: 32, weight: .bold))
                     .foregroundStyle(.white)
 
                 Spacer()
