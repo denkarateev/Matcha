@@ -318,6 +318,7 @@ struct ChatsView: View {
     }
 
     private var newMatchesSection: some View {
+        TimelineView(.periodic(from: .now, by: 60)) { _ in
         VStack(alignment: .leading, spacing: MatchaTokens.Spacing.small) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text("New Matches")
@@ -363,6 +364,7 @@ struct ChatsView: View {
                 .padding(.horizontal, MatchaTokens.Spacing.large)
             }
         }
+        } // TimelineView
     }
 
     private var likesStoryCard: some View {

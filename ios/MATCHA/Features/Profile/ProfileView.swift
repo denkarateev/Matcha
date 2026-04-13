@@ -50,6 +50,12 @@ struct ProfileView: View {
                 settingsRow
                 sectionDivider
 
+                // Dev tools (only for dev accounts)
+                if NetworkService.shared.currentUserID == "dev-user-1" || NetworkService.shared.currentUserID == "ded-user-1" {
+                    devToolsSection
+                    sectionDivider
+                }
+
                 signOutButton
             }
             .padding(.bottom, 100)
@@ -535,6 +541,61 @@ struct ProfileView: View {
             .padding(.vertical, 16)
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - Dev Tools
+
+    @State private var devToolsMessage: String?
+
+    private var devToolsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("DEV TOOLS")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(MatchaTokens.Colors.warning)
+                .tracking(1)
+                .padding(.horizontal, 24)
+
+            Button {
+                Task {
+                    guard let userId = NetworkService.shared.currentUserID else { return }
+                    do {
+                        let _: [String: String] = try await NetworkService.shared.request(
+                            .POST, path: "/admin/reset-swipes/\(userId)"
+                        )
+                        devToolsMessage = "Swipes reset! Pull to refresh feed"
+                    } catch {
+                        devToolsMessage = "Failed: \(error.localizedDescription)"
+                    }
+                }
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 32, height: 32)
+                        .background(Color(hex: 0x5B7AFF), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Reset Swipes")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(.white)
+                        Text("See all profiles again in feed")
+                            .font(.caption)
+                            .foregroundStyle(MatchaTokens.Colors.textSecondary)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 24)
+            }
+            .buttonStyle(.plain)
+
+            if let msg = devToolsMessage {
+                Text(msg)
+                    .font(.caption)
+                    .foregroundStyle(MatchaTokens.Colors.accent)
+                    .padding(.horizontal, 24)
+            }
+        }
+        .padding(.vertical, 12)
     }
 
     // MARK: - Sign Out

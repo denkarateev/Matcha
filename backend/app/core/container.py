@@ -803,11 +803,29 @@ def _seed_store(store: InMemoryStore) -> None:
         updated_at=_ago(minutes=10),
     )
 
+    # Dev user: chats WITHOUT deals (appear in Messages segment)
+    chat_dev_msg1 = Chat(
+        id="chat-dev-msg-1",
+        participant_ids=tuple(sorted(("dev-user-1", "blogger-1"))),
+        match_id=match1_id,
+        created_at=_ago(hours=4),
+        updated_at=_ago(minutes=15),
+    )
+    chat_dev_msg2 = Chat(
+        id="chat-dev-msg-2",
+        participant_ids=tuple(sorted(("dev-user-1", "blogger-3"))),
+        match_id=None,
+        created_at=_ago(hours=8),
+        updated_at=_ago(hours=1),
+    )
+
     store.chats[chat1_id] = chat1
     store.chats[chat2_id] = chat2
     store.chats["chat-dev-1"] = chat_dev1
     store.chats["chat-dev-2"] = chat_dev2
     store.chats["chat-dev-3"] = chat_dev3
+    store.chats["chat-dev-msg-1"] = chat_dev_msg1
+    store.chats["chat-dev-msg-2"] = chat_dev_msg2
     store.chats["chat-ded-1"] = chat_ded1
     store.chats["chat-ded-2"] = chat_ded2
     store.chats["chat-ded-3"] = chat_ded3
@@ -968,7 +986,40 @@ def _seed_store(store: InMemoryStore) -> None:
             created_at=_ago(hours=20),
         ),
     ]
-    for m in msgs + dev_msgs + ded_msgs + dev_deal_msgs:
+    # Dev user: messages for chats WITHOUT deals (Messages segment)
+    dev_plain_msgs = [
+        Message(
+            id="msg-plain-1", chat_id="chat-dev-msg-1", sender_id="blogger-1",
+            text="Hey! Saw your profile, love the travel content. Would be great to connect!",
+            created_at=_ago(hours=4),
+        ),
+        Message(
+            id="msg-plain-2", chat_id="chat-dev-msg-1", sender_id="dev-user-1",
+            text="Thanks Sarah! Your Bali content is amazing. What spots do you recommend?",
+            created_at=_ago(hours=3, minutes=30),
+        ),
+        Message(
+            id="msg-plain-3", chat_id="chat-dev-msg-1", sender_id="blogger-1",
+            text="Definitely check out Uluwatu temple at sunset and Tegallalang rice terraces! 🌴",
+            created_at=_ago(minutes=15),
+        ),
+        Message(
+            id="msg-plain-4", chat_id="chat-dev-msg-2", sender_id="blogger-3",
+            text="Hi! I'm Kevin, wellness content creator. Your fitness approach is cool 💪",
+            created_at=_ago(hours=8),
+        ),
+        Message(
+            id="msg-plain-5", chat_id="chat-dev-msg-2", sender_id="dev-user-1",
+            text="Hey Kevin! Thanks, been exploring yoga studios in Canggu. Any recommendations?",
+            created_at=_ago(hours=7),
+        ),
+        Message(
+            id="msg-plain-6", chat_id="chat-dev-msg-2", sender_id="blogger-3",
+            text="The Yoga Barn in Ubud is incredible. Also Desa Seni in Canggu for more chill vibes",
+            created_at=_ago(hours=1),
+        ),
+    ]
+    for m in msgs + dev_msgs + ded_msgs + dev_deal_msgs + dev_plain_msgs:
         store.messages[m.id] = m
 
     # ------------------------------------------------------------------
@@ -1145,6 +1196,25 @@ def _seed_store(store: InMemoryStore) -> None:
 
     for d in [deal1, deal2, deal3, deal_dev_draft, deal_dev_confirmed, deal_dev_visited, deal_ded_confirmed, deal_ded_draft]:
         store.deals[d.id] = d
+
+    # ------------------------------------------------------------------
+    # Incoming likes (other users liked dev-user → appear in Likes tab)
+    # ------------------------------------------------------------------
+    from app.modules.matches.domain.models import Swipe, SwipeDirection
+    incoming_likes = [
+        Swipe(id="like-to-dev-1", actor_id="blogger-1", target_id="dev-user-1",
+              direction=SwipeDirection.RIGHT, delivered=True, created_at=_ago(hours=2)),
+        Swipe(id="like-to-dev-2", actor_id="blogger-3", target_id="dev-user-1",
+              direction=SwipeDirection.RIGHT, delivered=True, created_at=_ago(hours=5)),
+        Swipe(id="like-to-dev-3", actor_id="blogger-4", target_id="dev-user-1",
+              direction=SwipeDirection.SUPER, delivered=True, created_at=_ago(hours=8)),
+        Swipe(id="like-to-dev-4", actor_id="blogger-5", target_id="dev-user-1",
+              direction=SwipeDirection.RIGHT, delivered=True, created_at=_ago(days=1)),
+        Swipe(id="like-to-dev-5", actor_id="business-4", target_id="dev-user-1",
+              direction=SwipeDirection.RIGHT, delivered=True, created_at=_ago(hours=1)),
+    ]
+    for s in incoming_likes:
+        store.swipes[s.id] = s
 
     # ------------------------------------------------------------------
     # Offers

@@ -19,6 +19,13 @@ struct LikesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: MatchaTokens.Spacing.large) {
+                // Title — unified style across all tabs
+                Text("Likes")
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 8)
+
                 if let error = store.error, store.likes.isEmpty {
                     errorBanner(error)
                 }
@@ -46,8 +53,7 @@ struct LikesView: View {
             Task { await store.load() }
         }
         .background { MatchaTokens.backgroundGradient.ignoresSafeArea() }
-        .navigationTitle("Likes")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarHidden(true)
         .sheet(isPresented: $showLikesPaywall) {
             PaywallView(.blurredLikes)
         }
