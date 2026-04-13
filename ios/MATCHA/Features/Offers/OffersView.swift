@@ -36,7 +36,7 @@ struct OffersView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 24)
-                    .padding(.top, 60)
+                    .padding(.top, 8)
                     .padding(.bottom, 6)
 
                 // Error

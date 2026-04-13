@@ -385,8 +385,8 @@ struct ChatsView: View {
                     .font(.title2)
                     .foregroundStyle(.black)
 
-                // Count badge
-                let likeCount = ShadowAccountManager.shared.pendingLikesCount
+                // Count badge — shows real incoming likes from API
+                let likeCount = store.incomingLikesCount
                 if likeCount > 0 {
                     Text("\(likeCount)")
                         .font(.caption2.weight(.bold))
@@ -713,6 +713,7 @@ final class ChatsStore {
     var home = ChatHome(newMatches: [], conversations: [])
     var error: NetworkError?
     var hasLoaded = false
+    var incomingLikesCount: Int = 0
 
     init(repository: any MatchaRepository) {
         self.repository = repository
@@ -728,7 +729,10 @@ final class ChatsStore {
         hasLoaded = true
         do {
             home = try await repository.fetchChatHome()
-            print("[MATCHA] Chats loaded: \(home.conversations.count) conversations, \(home.newMatches.count) matches")
+            // Fetch incoming likes count for badge
+            let activity = try await repository.fetchActivitySummary()
+            incomingLikesCount = activity.likes.count
+            print("[MATCHA] Chats loaded: \(home.conversations.count) conversations, \(home.newMatches.count) matches, \(incomingLikesCount) likes")
         } catch let networkError as NetworkError {
             print("[MATCHA] Chats error: \(networkError)")
             self.error = networkError
