@@ -720,20 +720,26 @@ struct EditProfileView: View {
         isSaving = true
         Task {
             do {
-                // 1. Upload new photos to server
-                var uploadedURLs: [String] = []
+                // 1. Build full photo URL array preserving slot order
+                // Each slot is either an existing remote URL or a new image to upload
+                var allPhotoURLs: [String] = []
                 for slot in photoSlots {
-                    guard let image = slot.image,
-                          let data = image.jpegData(compressionQuality: 0.85) else { continue }
-                    let upload: PhotoUploadResponse = try await NetworkService.shared.upload(
-                        path: "/auth/upload-photo",
-                        imageData: data,
-                        filename: "profile-\(UUID().uuidString).jpg"
-                    )
-                    uploadedURLs.append(upload.url)
+                    if let image = slot.image,
+                       let data = image.jpegData(compressionQuality: 0.85) {
+                        // New photo — upload
+                        let upload: PhotoUploadResponse = try await NetworkService.shared.upload(
+                            path: "/auth/upload-photo",
+                            imageData: data,
+                            filename: "profile-\(UUID().uuidString).jpg"
+                        )
+                        allPhotoURLs.append(upload.url)
+                    } else if let remoteURL = slot.remoteURL?.absoluteString {
+                        // Existing photo — keep URL
+                        allPhotoURLs.append(remoteURL)
+                    }
                 }
 
-                // 2. Build update request with photo URLs
+                // 2. Build update request
                 var update = ProfileUpdateRequest(
                     displayName: name.trimmingCharacters(in: .whitespacesAndNewlines),
                     country: profile.countryCode,
@@ -746,10 +752,10 @@ struct EditProfileView: View {
                     collabType: collaborationType.rawValue
                 )
 
-                // Only update photos if user added new ones
-                if !uploadedURLs.isEmpty {
-                    update.photoUrls = uploadedURLs
-                    update.primaryPhotoUrl = uploadedURLs.first
+                // Always send full photo array — primary is always first slot
+                if !allPhotoURLs.isEmpty {
+                    update.photoUrls = allPhotoURLs
+                    update.primaryPhotoUrl = allPhotoURLs.first
                 }
 
                 let updated = try await repository.updateProfile(update)
