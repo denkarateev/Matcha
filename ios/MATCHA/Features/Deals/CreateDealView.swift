@@ -397,7 +397,7 @@ struct CreateDealView: View {
 
         let request = DealCreateRequest(
             partnerId: partnerId,
-            type: dealType == .barter ? .barter : .paid,
+            type: dealType,
             youOffer: trimOffer,
             youReceive: trimReceive.isEmpty ? trimOffer : trimReceive,
             placeName: trimPlace.isEmpty ? nil : trimPlace,

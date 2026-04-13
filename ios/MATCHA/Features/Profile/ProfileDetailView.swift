@@ -10,6 +10,7 @@ struct ProfileDetailView: View {
     @State private var showChat = false
     @State private var liked = false
     @State private var showBlockReport = false
+    @State private var ugcPosts: [UGCPost] = []
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -185,10 +186,14 @@ struct ProfileDetailView: View {
             statsRow
             if !profile.bio.isEmpty { bioSection }
             collabSection
+            if profile.role == .business && !ugcPosts.isEmpty {
+                UGCGalleryView(posts: ugcPosts, isOwner: false)
+            }
             if !profile.photoURLs.isEmpty { gallerySection }
         }
         .padding(.top, MatchaTokens.Spacing.medium)
         .padding(.bottom, 120)
+        .task { await loadUGCPosts() }
     }
 
     // MARK: - Stats Row
@@ -454,5 +459,19 @@ struct ProfileDetailView: View {
         if count >= 1_000_000 { return String(format: "%.1fM", Double(count) / 1_000_000) }
         if count >= 1_000 { return String(format: "%.0fK", Double(count) / 1_000) }
         return "\(count)"
+    }
+
+    // MARK: - UGC
+
+    private func loadUGCPosts() async {
+        guard profile.role == .business else { return }
+        do {
+            let dtos: [UGCPostDTO] = try await NetworkService.shared.request(
+                .GET, path: "/profiles/\(profile.serverUserId)/ugc"
+            )
+            ugcPosts = dtos.map { $0.toDomain() }
+        } catch {
+            ugcPosts = []
+        }
     }
 }

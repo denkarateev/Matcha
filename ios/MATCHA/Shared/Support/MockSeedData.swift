@@ -473,7 +473,11 @@ enum MockSeedData {
     )
 
     static let chatHome = ChatHome(
-        newMatches: [sarahBali, comoCanggu, kevinFitness],
+        newMatches: [
+            NewMatch(profile: sarahBali, matchId: "mock-1", expiresAt: Date().addingTimeInterval(40 * 3600), createdAt: Date().addingTimeInterval(-8 * 3600)),
+            NewMatch(profile: comoCanggu, matchId: "mock-2", expiresAt: Date().addingTimeInterval(6 * 3600), createdAt: Date().addingTimeInterval(-42 * 3600)),
+            NewMatch(profile: kevinFitness, matchId: "mock-3", expiresAt: Date().addingTimeInterval(47 * 3600), createdAt: Date().addingTimeInterval(-1 * 3600)),
+        ],
         conversations: [
             ChatPreview(
                 id: UUID(),

@@ -163,7 +163,7 @@ struct ContentProofReadDTO: Decodable, Sendable {
 
 struct DealCreateRequest: Encodable, Sendable {
     let partnerId: String
-    let type: CollaborationType
+    let type: DealType
     let youOffer: String
     let youReceive: String
     let placeName: String?
@@ -173,7 +173,7 @@ struct DealCreateRequest: Encodable, Sendable {
 
     init(
         partnerId: String,
-        type: CollaborationType,
+        type: DealType,
         youOffer: String,
         youReceive: String,
         placeName: String? = nil,

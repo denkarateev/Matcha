@@ -26,6 +26,8 @@ struct CreateOfferView: View {
     // UI
     @State private var showPublishAlert = false
     @State private var isPublishing = false
+    @State private var publishError: String = ""
+    @State private var showPublishError = false
 
     let offerCredits: Int = 2
 
@@ -686,13 +688,19 @@ struct CreateOfferView: View {
                         dismiss()
                     } catch {
                         isPublishing = false
-                        // TODO: show error
+                        publishError = error.localizedDescription
+                        showPublishError = true
                     }
                 }
             }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This will use 1 offer credit. You have \(offerCredits) credit\(offerCredits == 1 ? "" : "s") remaining.")
+        }
+        .alert("Failed to Publish", isPresented: $showPublishError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(publishError)
         }
     }
 

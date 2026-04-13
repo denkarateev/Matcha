@@ -86,8 +86,9 @@ class MatchService:
                 user_a.role,
                 user_b.role,
             } == {UserRole.BLOGGER, UserRole.BUSINESS}:
+                # Business writes first (Bumble model per MATCHA spec)
                 first_message_by = (
-                    user_a.id if user_a.role == UserRole.BLOGGER else user_b.id
+                    user_a.id if user_a.role == UserRole.BUSINESS else user_b.id
                 )
 
         match = Match(

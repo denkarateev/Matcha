@@ -16,12 +16,14 @@ struct ChatConversationView: View {
     @State private var showContentProof = false
     @State private var isDealPipelineCollapsed = false
     @State private var expandedTranslations: Set<String> = []
+    @State private var typingManager: TypingStateManager
     @FocusState private var isInputFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
     init(chat: ChatPreview, repository: any MatchaRepository) {
         self.repository = repository
         _store = State(initialValue: ChatConversationStore(chat: chat, repository: repository))
+        _typingManager = State(initialValue: TypingStateManager(chatId: chat.chatID))
     }
 
     var body: some View {
@@ -33,12 +35,12 @@ struct ChatConversationView: View {
             if store.shouldPromptCurrentUserToWriteFirst {
                 firstMessageCallout(
                     title: "Your move",
-                    body: "This match works like Bumble: you open the conversation first, and you have 48 hours to start it."
+                    body: "You write first in this match. Send a message within 48 hours or the match will expire."
                 )
             } else if store.isWaitingForPartnerFirstMessage {
                 firstMessageCallout(
-                    title: "Blogger writes first",
-                    body: "This match follows Bumble logic. You'll be able to reply as soon as the blogger starts the chat."
+                    title: "Waiting for \(store.chat.partner.name)",
+                    body: "In MATCHA the business sends the first message. You'll be able to reply as soon as they start the chat."
                 )
             }
 
@@ -72,25 +74,8 @@ struct ChatConversationView: View {
                     }
                     .transition(.move(edge: .top).combined(with: .opacity))
                 } else {
-                    // Expanded pipeline
+                    // Expanded pipeline — tap header to collapse
                     VStack(spacing: 0) {
-                        // Collapse button
-                        HStack {
-                            Spacer()
-                            Button {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                    isDealPipelineCollapsed = true
-                                }
-                            } label: {
-                                Image(systemName: "chevron.up")
-                                    .font(.system(size: 11, weight: .bold))
-                                    .foregroundStyle(.white.opacity(0.4))
-                                    .frame(width: 32, height: 24)
-                            }
-                        }
-                        .padding(.trailing, 16)
-                        .padding(.top, 4)
-
                         DealPipelineView(
                             deal: deal,
                             compact: false,
@@ -107,6 +92,11 @@ struct ChatConversationView: View {
                             } : nil,
                             onCancelDeal: {
                                 showCancelDealConfirm = true
+                            },
+                            onCollapse: {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                    isDealPipelineCollapsed = true
+                                }
                             },
                             isPerformingAction: store.isPerformingDealAction
                         )
@@ -125,9 +115,16 @@ struct ChatConversationView: View {
                 quickRepliesBar
             }
 
+            if typingManager.isPartnerTyping {
+                TypingIndicatorView(partnerName: store.chat.partner.name)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
+
             inputBar
         }
         .background { MatchaTokens.backgroundGradient.ignoresSafeArea() }
+        .onAppear { typingManager.startPolling() }
+        .onDisappear { typingManager.stopPolling() }
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -170,9 +167,14 @@ struct ChatConversationView: View {
                                 .foregroundStyle(MatchaTokens.Colors.textPrimary)
                                 .lineLimit(1)
                             if let deal = store.activeDeal {
-                                Text(deal.status.displayTitle)
-                                    .font(.system(size: 10, weight: .medium))
-                                    .foregroundStyle(MatchaTokens.Colors.accent)
+                                HStack(spacing: 4) {
+                                    Circle()
+                                        .fill(MatchaTokens.Colors.accent)
+                                        .frame(width: 5, height: 5)
+                                    Text(deal.status.displayTitle)
+                                        .font(.system(size: 10, weight: .medium))
+                                        .foregroundStyle(MatchaTokens.Colors.accent)
+                                }
                             }
                         }
                     }
@@ -214,6 +216,8 @@ struct ChatConversationView: View {
                 }
             }
         }
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.visible, for: .navigationBar)
         .toolbarBackground(MatchaTokens.Colors.background, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .sheet(isPresented: $showBlockReport) {
@@ -232,7 +236,7 @@ struct ChatConversationView: View {
         .sheet(isPresented: $showCreateDeal) {
             CreateDealView(
                 partnerName: store.chat.partner.name,
-                partnerId: store.chat.partner.serverUserId.isEmpty ? store.chat.partner.id.uuidString : store.chat.partner.serverUserId,
+                partnerId: (store.chat.partner.serverUserId ?? "").isEmpty ? store.chat.partner.id.uuidString : (store.chat.partner.serverUserId ?? ""),
                 repository: repository
             ) {
                 await store.load()
@@ -431,10 +435,19 @@ struct ChatConversationView: View {
                 .background(
                     message.isOutgoing
                         ? MatchaTokens.Colors.accent
-                        : MatchaTokens.Colors.elevated,
-                    in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        : MatchaTokens.Colors.elevated
+                )
+                .clipShape(
+                    UnevenRoundedRectangle(
+                        topLeadingRadius: message.isOutgoing ? 18 : 6,
+                        bottomLeadingRadius: 18,
+                        bottomTrailingRadius: 18,
+                        topTrailingRadius: message.isOutgoing ? 6 : 18,
+                        style: .continuous
+                    )
                 )
             }
+            .frame(maxWidth: UIScreen.main.bounds.width * 0.74, alignment: message.isOutgoing ? .trailing : .leading)
 
             if !message.isOutgoing { Spacer(minLength: 60) }
         }
@@ -600,26 +613,38 @@ struct ChatConversationView: View {
                     .background(MatchaTokens.Colors.background)
                     .padding(.bottom, 8)
             } else {
-                HStack(spacing: 8) {
-                    // Text field (Telegram style)
+                HStack(spacing: 10) {
+                    // Plus button (attachments)
+                    Button(action: {}) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundStyle(MatchaTokens.Colors.textSecondary)
+                            .frame(width: 36, height: 36)
+                            .background(MatchaTokens.Colors.surface, in: Circle())
+                            .overlay(Circle().strokeBorder(MatchaTokens.Colors.outline, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+
+                    // Text field
                     TextField(
-                        "Message...",
+                        "Message\u{2026}",
                         text: $messageText,
                         axis: .vertical
                     )
-                    .font(.system(size: 16))
+                    .font(.system(size: 14))
                     .foregroundStyle(.white)
                     .lineLimit(1...5)
                     .focused($isInputFocused)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
+                    .onChange(of: messageText) { typingManager.localUserTyped() }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
                     .background(
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .fill(Color.white.opacity(0.08))
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .fill(MatchaTokens.Colors.elevated)
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .strokeBorder(Color.white.opacity(0.12), lineWidth: 0.5)
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .strokeBorder(MatchaTokens.Colors.outline, lineWidth: 1)
                     )
 
                     // Send button
@@ -627,30 +652,24 @@ struct ChatConversationView: View {
                         Group {
                             if store.isSending {
                                 ProgressView()
-                                    .tint(.white)
+                                    .tint(.black)
                                     .scaleEffect(0.8)
                             } else {
                                 Image(systemName: "arrow.up")
                                     .font(.system(size: 16, weight: .bold))
-                                    .foregroundStyle(
-                                        trimmedMessage.isEmpty ? MatchaTokens.Colors.textMuted : .black
-                                    )
+                                    .foregroundStyle(.black)
                             }
                         }
-                        .frame(width: 34, height: 34)
-                        .background(
-                            trimmedMessage.isEmpty
-                                ? Color.clear
-                                : MatchaTokens.Colors.accent,
-                            in: Circle()
-                        )
+                        .frame(width: 36, height: 36)
+                        .background(MatchaTokens.Colors.accent, in: Circle())
                     }
                     .disabled(trimmedMessage.isEmpty || store.isSending)
+                    .opacity(trimmedMessage.isEmpty ? 0.5 : 1)
                     .animation(.easeInOut(duration: 0.15), value: trimmedMessage.isEmpty)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(MatchaTokens.Colors.surface)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(MatchaTokens.Colors.background)
             }
         }
     }

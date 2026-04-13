@@ -13,6 +13,7 @@ struct DealPipelineView: View {
     var onDeclineDraft: (() -> Void)? = nil
     var onReportNoShow: (() -> Void)? = nil
     var onCancelDeal: (() -> Void)? = nil
+    var onCollapse: (() -> Void)? = nil
     var isPerformingAction = false
 
     // The four linear stages displayed in the pipeline
@@ -26,12 +27,16 @@ struct DealPipelineView: View {
         deal.partnerName.components(separatedBy: " ").first ?? deal.partnerName
     }
 
+    private var isTerminalState: Bool {
+        deal.status == .cancelled || deal.status == .noShow
+    }
+
     private var currentIndex: Int {
         switch deal.status {
         case .cancelled:
-            return 0
+            return -1
         case .noShow:
-            return 2
+            return Self.stages.firstIndex(of: .confirmed) ?? 1
         default:
             return Self.stages.firstIndex(of: deal.status) ?? -1
         }
@@ -57,34 +62,43 @@ struct DealPipelineView: View {
                     Image(systemName: "wallet.pass.fill")
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(MatchaTokens.Colors.accent)
-                    Text("Active Deal")
-                        .font(.caption.weight(.bold))
+                    Text("ACTIVE DEAL")
+                        .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(MatchaTokens.Colors.textPrimary)
                         .tracking(0.6)
+
+                    if onCollapse != nil {
+                        Image(systemName: "chevron.up")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
                 }
+                .onTapGesture { onCollapse?() }
 
                 Spacer()
 
                 if let onTapDetails {
                     Button(action: onTapDetails) {
                         Text("Details >")
-                            .font(.caption.weight(.semibold))
+                            .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(MatchaTokens.Colors.accent)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("View deal details")
+                    .accessibilityHint("Opens full deal information")
                 }
             }
             .padding(.horizontal, MatchaTokens.Spacing.medium)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
+            .padding(.top, 8)
+            .padding(.bottom, 4)
 
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
                 pipelineRow
                 stageLabelsRow
                 dealInfoRow
             }
             .padding(.horizontal, MatchaTokens.Spacing.medium)
-            .padding(.vertical, 14)
+            .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .fill(
@@ -111,10 +125,10 @@ struct DealPipelineView: View {
             if !compact {
                 actionFooter
                     .padding(.horizontal, MatchaTokens.Spacing.medium)
-                    .padding(.top, 10)
+                    .padding(.top, 6)
             }
         }
-        .padding(.bottom, 12)
+        .padding(.bottom, 8)
         .background(
             LinearGradient(
                 colors: [

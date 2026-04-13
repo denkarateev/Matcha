@@ -159,7 +159,12 @@ final class NetworkService {
         }
     }
 
-    private let session = URLSession.shared
+    private let session: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForResource = 120
+        return URLSession(configuration: config)
+    }()
     private var cachedAuthToken: String?
     private var cachedCurrentUserID: String?
     private var cachedCurrentUserRole: Role?
@@ -208,7 +213,7 @@ final class NetworkService {
     #if DEBUG
     var baseURL = URL(string: "http://188.253.19.166:8842/api/v1")!
     #else
-    var baseURL = URL(string: "http://188.253.19.166:8842/api/v1")!
+    var baseURL = URL(string: "https://188.253.19.166:8842/api/v1")!
     #endif
 
     // MARK: - Token Storage

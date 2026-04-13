@@ -500,7 +500,7 @@ struct OfferDetailView: View {
                     && offer.preferredNiche == nil
                     && offer.audienceTier == .any
                     && offer.minimumAudience == nil
-                    && (offer.specialConditions == nil || offer.specialConditions!.isEmpty) {
+                    && (offer.specialConditions?.isEmpty ?? true) {
                     Text("No specific requirements")
                         .font(.subheadline)
                         .foregroundStyle(MatchaTokens.Colors.textSecondary)

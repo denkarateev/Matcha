@@ -288,7 +288,7 @@ final class ChatConversationStore {
         let message = ConversationMessage(
             id: UUID().uuidString,
             chatID: chat.chatID,
-            senderID: NetworkService.shared.currentUserID ?? chat.partner.id.uuidString,
+            senderID: "system",
             body: .system(text),
             createdAt: Date(),
             isOutgoing: false

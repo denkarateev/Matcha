@@ -1,32 +1,33 @@
 enum AppTab: Int, CaseIterable, Identifiable {
     case offers
-    case notifications
+    case likes
     case match
     case chats
     case profile
 
-    /// Legacy alias so existing code referencing `.activity` still compiles.
-    static let activity: AppTab = .notifications
+    /// Legacy aliases so existing code still compiles.
+    static let activity: AppTab = .likes
+    static let notifications: AppTab = .likes
 
     var id: Int { rawValue }
 
     var title: String {
         switch self {
-        case .offers:        "Offers"
-        case .notifications: "Notifications"
-        case .match:         "Match"
-        case .chats:         "Chats"
-        case .profile:       "Profile"
+        case .offers:  "Offers"
+        case .likes:   "Activity"
+        case .match:   "Match"
+        case .chats:   "Chats"
+        case .profile: "Profile"
         }
     }
 
     var systemImage: String {
         switch self {
-        case .offers:        "tag.fill"
-        case .notifications: "bell.fill"
-        case .match:         "leaf.fill"
-        case .chats:         "bubble.fill"
-        case .profile:       "person.fill"
+        case .offers:  "tag.fill"
+        case .likes:   "heart.fill"
+        case .match:   "leaf.fill"
+        case .chats:   "bubble.fill"
+        case .profile: "person.fill"
         }
     }
 }

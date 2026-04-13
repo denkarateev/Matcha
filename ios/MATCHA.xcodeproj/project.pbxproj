@@ -100,6 +100,11 @@
 		F978A0888DAFD5024E39EF03 /* DealsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 520DAC4A4384EC0F9BDAF582 /* DealsView.swift */; };
 		FD458EC8074CA18CC2874CF0 /* CreateDealView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480B21019F0C58179200FF71 /* CreateDealView.swift */; };
 		FF7038BE5FEB269D44CB45D2 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A98468123E63C5770DE6446D /* AppState.swift */; };
+		03AB20C0630F4EBAAD5D155C /* UGCPost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A85D06D7D24E47B4364C40 /* UGCPost.swift */; };
+		499339B1D24F4D9EA349969B /* UGCGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F2F33DEF1D4B8AAAD174C4 /* UGCGalleryView.swift */; };
+		1D603BB6B26A408A8D27BB9D /* TypingIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A95980E7F9BA499FB6CE8915 /* TypingIndicatorView.swift */; };
+		0E536A7C7B9D4C5A808695D7 /* DealPipelineMiniView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE861A46950D4856AD51481F /* DealPipelineMiniView.swift */; };
+		644F3086600D48CFAF8D32A5 /* ChatsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B66542D57F4B44469DBE1621 /* ChatsUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -217,6 +222,11 @@
 		FE2A5F9984DE59F279ACDB46 /* ChatPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatPreview.swift; sourceTree = "<group>"; };
 		FF24243F93A60F1B9F9F7FEE /* MatchaRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchaRepository.swift; sourceTree = "<group>"; };
 		FF489E17C95F198E3A6DC005 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
+		49A85D06D7D24E47B4364C40 /* UGCPost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UGCPost.swift; sourceTree = "<group>"; };
+		99F2F33DEF1D4B8AAAD174C4 /* UGCGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UGCGalleryView.swift; sourceTree = "<group>"; };
+		A95980E7F9BA499FB6CE8915 /* TypingIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingIndicatorView.swift; sourceTree = "<group>"; };
+		FE861A46950D4856AD51481F /* DealPipelineMiniView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DealPipelineMiniView.swift; sourceTree = "<group>"; };
+		B66542D57F4B44469DBE1621 /* ChatsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatsUITests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -416,6 +426,9 @@
 				4904D7D3DBF78429451B0F40 /* ServerErrorView.swift */,
 				FA1C705E2670E0B18CC97F0A /* SkeletonView.swift */,
 				D320B8D3E8800416418E1E2C /* TagChip.swift */,
+				FE861A46950D4856AD51481F /* DealPipelineMiniView.swift */,
+				A95980E7F9BA499FB6CE8915 /* TypingIndicatorView.swift */,
+				99F2F33DEF1D4B8AAAD174C4 /* UGCGalleryView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -462,6 +475,7 @@
 				77EB4FD0A152CE4C113FF2BE /* Role.swift */,
 				E01B71E772B8203D93763C70 /* SubscriptionPlan.swift */,
 				6082827D8791797D4823ACBB /* UserProfile.swift */,
+				49A85D06D7D24E47B4364C40 /* UGCPost.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -551,6 +565,7 @@
 				8181D27FA9BF22AB5060B268 /* DealAndOffersTest.swift */,
 				D749286A893E0E6ED5A36E7C /* DealFlowUITests.swift */,
 				8C0F4DBA375ADA012A3205EA /* FlowTest.swift */,
+				B66542D57F4B44469DBE1621 /* ChatsUITests.swift */,
 			);
 			path = MATCHAUITests;
 			sourceTree = "<group>";
@@ -751,8 +766,12 @@
 				62ADE98731B10D43646288C1 /* SubscriptionPlan.swift in Sources */,
 				3CFD033637444A01B24A8308 /* SubscriptionView.swift in Sources */,
 				33E99708411AB71FBFB39E7F /* TagChip.swift in Sources */,
+				0E536A7C7B9D4C5A808695D7 /* DealPipelineMiniView.swift in Sources */,
+				1D603BB6B26A408A8D27BB9D /* TypingIndicatorView.swift in Sources */,
+				499339B1D24F4D9EA349969B /* UGCGalleryView.swift in Sources */,
 				0061D9AEBD86996199D0AA56 /* TranslationService.swift in Sources */,
 				ED049D8A50E539EDB761B8AB /* UserProfile.swift in Sources */,
+				03AB20C0630F4EBAAD5D155C /* UGCPost.swift in Sources */,
 				83EE08E70DC123BA9582260B /* ValidationService.swift in Sources */,
 				03AE155E5EC60588149EA952 /* VerificationFlowView.swift in Sources */,
 			);
@@ -765,6 +784,7 @@
 				435DEB197FB36C4367A13626 /* DealAndOffersTest.swift in Sources */,
 				4ECF6D915A18579D93DF42C2 /* DealFlowUITests.swift in Sources */,
 				1B5DEAED4C63702B6BF43C05 /* FlowTest.swift in Sources */,
+				644F3086600D48CFAF8D32A5 /* ChatsUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -888,6 +908,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = 2WU7C7C87E;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

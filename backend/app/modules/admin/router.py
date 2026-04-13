@@ -483,6 +483,27 @@ async def list_reports(
 
 
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Dev: Reset swipes for a user (allows re-swiping for testing)
+# ---------------------------------------------------------------------------
+
+@router.post("/reset-swipes/{user_id}")
+async def reset_swipes(
+    user_id: str,
+    container: AppContainer = Depends(get_container),
+) -> dict:
+    """Delete all swipes by a user so they can re-swipe profiles (dev/test only)."""
+    store = _get_store(container)
+    before = len(store.swipes)
+    store.swipes = {
+        k: v for k, v in store.swipes.items()
+        if v.actor_id != user_id
+    }
+    after = len(store.swipes)
+    store.persist()
+    return {"detail": f"Deleted {before - after} swipes for {user_id}"}
+
+
 # Helpers
 # ---------------------------------------------------------------------------
 

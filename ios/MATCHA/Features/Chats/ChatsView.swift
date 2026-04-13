@@ -21,7 +21,7 @@ struct ChatsView: View {
 
     enum ChatSegment: String, CaseIterable {
         case all = "All"
-        case chats = "Chats"
+        case chats = "Messages"
         case deals = "Deals"
     }
 
@@ -45,9 +45,18 @@ struct ChatsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Stories row FIRST (Likes + new matches)
+            // Title
+            Text("Messages")
+                .font(.system(size: 32, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 24)
+                .padding(.top, 8)
+                .padding(.bottom, 6)
+
+            // Stories row
             newMatchesSection
-                .padding(.bottom, 8)
+                .padding(.bottom, 4)
 
             // Segment tabs BELOW stories
             HStack(spacing: 8) {
@@ -60,7 +69,7 @@ struct ChatsView: View {
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(isSelected ? .black : .white.opacity(0.5))
                             .frame(maxWidth: .infinity)
-                            .frame(height: 36)
+                            .frame(height: 38)
                             .background(
                                 isSelected ? MatchaTokens.Colors.accent : Color.white.opacity(0.08),
                                 in: RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -70,70 +79,87 @@ struct ChatsView: View {
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 6)
+            .padding(.top, 6)
+            .padding(.bottom, 8)
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    // Error banner
-                    if let error = store.error, store.home.conversations.isEmpty, store.home.newMatches.isEmpty {
-                        HStack(spacing: 8) {
-                            Image(systemName: "wifi.exclamationmark")
-                                .font(.body.weight(.medium))
-                            Text(error.errorDescription ?? "Connection error")
-                                .font(.subheadline)
-                                .lineLimit(3)
-                            Spacer()
-                            Button("Retry") { Task { await store.load() } }
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(MatchaTokens.Colors.accent)
-                        }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, MatchaTokens.Spacing.medium)
-                        .padding(.vertical, 12)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .padding(.horizontal, MatchaTokens.Spacing.large)
+            List {
+                // Error banner
+                if let error = store.error, store.home.conversations.isEmpty, store.home.newMatches.isEmpty {
+                    HStack(spacing: 8) {
+                        Image(systemName: "wifi.exclamationmark")
+                            .font(.body.weight(.medium))
+                        Text(error.errorDescription ?? "Connection error")
+                            .font(.subheadline)
+                            .lineLimit(3)
+                        Spacer()
+                        Button("Retry") { Task { await store.load() } }
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(MatchaTokens.Colors.accent)
+                    }
+                    .foregroundStyle(.white)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 6, leading: 24, bottom: 6, trailing: 24))
+                }
+
+                switch selectedSegment {
+                case .all:
+                    if !allConversations.isEmpty {
+                        segmentConversationsList(allConversations)
+                    } else if store.hasLoaded {
+                        emptyChatsState
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                     }
 
-                    switch selectedSegment {
-                    case .all:
-                        if !allConversations.isEmpty {
-                            segmentConversationsList(allConversations)
-                        } else if store.hasLoaded {
-                            emptyChatsState
-                                .padding(.top, 60)
+                case .chats:
+                    if !chatOnlyConversations.isEmpty {
+                        segmentConversationsList(chatOnlyConversations)
+                    } else if store.hasLoaded {
+                        emptySegmentState(icon: "bubble.left.and.bubble.right", text: "No messages yet", subtitle: "Conversations without deals will appear here")
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                    }
+
+                case .deals:
+                    if !dealConversations.isEmpty {
+                        let active = dealConversations.filter {
+                            $0.activeDealStatus == .draft || $0.activeDealStatus == .confirmed
+                        }
+                        let completed = dealConversations.filter {
+                            $0.activeDealStatus == .visited || $0.activeDealStatus == .reviewed
                         }
 
-                    case .chats:
-                        if !chatOnlyConversations.isEmpty {
-                            segmentConversationsList(chatOnlyConversations)
-                        } else if store.hasLoaded {
-                            emptySegmentState(icon: "bubble.left.and.bubble.right", text: "No chats yet", subtitle: "Conversations without deals will appear here")
-                        }
-
-                    case .deals:
-                        if !dealConversations.isEmpty {
-                            let active = dealConversations.filter {
-                                $0.activeDealStatus == .draft || $0.activeDealStatus == .confirmed
-                            }
-                            let completed = dealConversations.filter {
-                                $0.activeDealStatus == .visited || $0.activeDealStatus == .reviewed
-                            }
-
-                            if !active.isEmpty {
-                                sectionHeader("Active Deals")
+                        if !active.isEmpty {
+                            Section {
                                 segmentConversationsList(active)
+                            } header: {
+                                Text("Active Deals")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(.white.opacity(0.5))
+                                    .textCase(nil)
                             }
-                            if !completed.isEmpty {
-                                sectionHeader("Completed")
-                                segmentConversationsList(completed)
-                            }
-                        } else if store.hasLoaded {
-                            emptySegmentState(icon: "person.2.circle", text: "No deals yet", subtitle: "Start a deal in any chat")
+                            .listRowBackground(Color.clear)
                         }
+                        if !completed.isEmpty {
+                            Section {
+                                segmentConversationsList(completed)
+                            } header: {
+                                Text("Completed")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(.white.opacity(0.5))
+                                    .textCase(nil)
+                            }
+                            .listRowBackground(Color.clear)
+                        }
+                    } else if store.hasLoaded {
+                        emptySegmentState(icon: "person.2.circle", text: "No deals yet", subtitle: "Start a deal in any chat")
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                     }
                 }
-                .padding(.top, MatchaTokens.Spacing.small)
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
         }
         .refreshable { await store.load() }
         .onAppear {
@@ -141,8 +167,7 @@ struct ChatsView: View {
             Task { await store.load() }
         }
         .background { MatchaTokens.backgroundGradient.ignoresSafeArea() }
-        .navigationTitle("Messages")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
         // Search bar removed — not needed at MVP stage
         // Navigation destinations
         .navigationDestination(for: UserProfile.self) { profile in
@@ -285,19 +310,24 @@ struct ChatsView: View {
     }
 
     /// Only matches where no messages have been exchanged yet
-    private var uncontactedMatches: [UserProfile] {
-        store.home.newMatches.filter { profile in
-            guard let chat = matchedConversation(for: profile) else { return true }
+    private var uncontactedMatches: [NewMatch] {
+        store.home.newMatches.filter { match in
+            guard let chat = matchedConversation(for: match.profile) else { return true }
             return chat.isAwaitingFirstMessage
         }
     }
 
     private var newMatchesSection: some View {
         VStack(alignment: .leading, spacing: MatchaTokens.Spacing.small) {
-            Text("New Matches")
-                .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                .foregroundStyle(MatchaTokens.Colors.textSecondary)
-                .padding(.horizontal, MatchaTokens.Spacing.large)
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("New Matches")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(MatchaTokens.Colors.textSecondary)
+                Text("Waiting for their first message")
+                    .font(.system(size: 11))
+                    .foregroundStyle(MatchaTokens.Colors.textSecondary.opacity(0.6))
+            }
+            .padding(.horizontal, 24)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
@@ -312,21 +342,21 @@ struct ChatsView: View {
                     .accessibilityHint("See all profiles that liked you")
 
                     // Only show uncontacted matches (awaiting first message)
-                    ForEach(uncontactedMatches) { profile in
-                        if let chat = matchedConversation(for: profile) {
+                    ForEach(uncontactedMatches) { match in
+                        if let chat = matchedConversation(for: match.profile) {
                             NavigationLink(value: chat) {
-                                matchStoryCard(profile, chat: chat)
+                                matchStoryCard(match)
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel("New match: \(profile.name)")
-                            .accessibilityHint("Open chat with \(profile.name)")
+                            .accessibilityLabel("New match: \(match.profile.name)")
+                            .accessibilityHint("Open chat with \(match.profile.name)")
                         } else {
-                            NavigationLink(value: profile) {
-                                matchStoryCard(profile, chat: nil)
+                            NavigationLink(value: match.profile) {
+                                matchStoryCard(match)
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel("New match: \(profile.name)")
-                            .accessibilityHint("View \(profile.name)'s profile")
+                            .accessibilityLabel("New match: \(match.profile.name)")
+                            .accessibilityHint("View \(match.profile.name)'s profile")
                         }
                     }
                 }
@@ -340,10 +370,11 @@ struct ChatsView: View {
             ZStack {
                 Circle()
                     .fill(
-                        LinearGradient(
+                        RadialGradient(
                             colors: [MatchaTokens.Colors.accent, MatchaTokens.Colors.accent.opacity(0.6)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+                            center: .init(x: 0.3, y: 0.25),
+                            startRadius: 0,
+                            endRadius: 40
                         )
                     )
                     .frame(width: 68, height: 68)
@@ -372,8 +403,9 @@ struct ChatsView: View {
         .frame(width: 76)
     }
 
-    private func matchStoryCard(_ profile: UserProfile, chat: ChatPreview?) -> some View {
-        let timerProgress = matchTimerProgress(chat: chat)
+    private func matchStoryCard(_ match: NewMatch) -> some View {
+        let timerProgress = matchTimerProgress(match)
+        let profile = match.profile
 
         return VStack(spacing: 8) {
             ZStack {
@@ -382,7 +414,7 @@ struct ChatsView: View {
                     .stroke(Color.white.opacity(0.1), lineWidth: 3)
                     .frame(width: 72, height: 72)
 
-                // Timer ring — decreases as 24h runs out
+                // Timer ring — fills based on remaining 48h
                 Circle()
                     .trim(from: 0, to: timerProgress)
                     .stroke(
@@ -393,7 +425,6 @@ struct ChatsView: View {
                     )
                     .frame(width: 72, height: 72)
                     .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 1), value: timerProgress)
 
                 // Avatar
                 Group {
@@ -418,6 +449,7 @@ struct ChatsView: View {
                 .frame(width: 64, height: 64)
                 .clipShape(Circle())
             }
+            .padding(2) // prevent ring stroke clipping
 
             Text(profile.name.components(separatedBy: " ").first ?? profile.name)
                 .font(.caption)
@@ -428,17 +460,13 @@ struct ChatsView: View {
     }
 
     /// Returns 0.0…1.0 representing how much time is left (1.0 = full, 0.0 = expired)
-    /// Uses `matchExpiresAt` from backend when available, falls back to createdAt + 24h
-    private func matchTimerProgress(chat: ChatPreview?) -> CGFloat {
-        let totalDuration: TimeInterval = 24 * 60 * 60 // 24h total
-        guard let chat else { return 1.0 }
+    private func matchTimerProgress(_ match: NewMatch) -> CGFloat {
+        let totalDuration: TimeInterval = 48 * 60 * 60 // 48h per spec
 
         let deadline: Date
-        if let expiresAt = chat.matchExpiresAt {
-            // Use backend expires_at
+        if let expiresAt = match.expiresAt {
             deadline = expiresAt
-        } else if let createdAt = chat.createdAt {
-            // Fallback: created + 24h
+        } else if let createdAt = match.createdAt {
             deadline = createdAt.addingTimeInterval(totalDuration)
         } else {
             return 1.0
@@ -468,36 +496,37 @@ struct ChatsView: View {
         segmentConversationsList(filteredConversations)
     }
 
+    @ViewBuilder
     private func segmentConversationsList(_ chats: [ChatPreview]) -> some View {
-        LazyVStack(spacing: 0) {
-            ForEach(chats) { chat in
-                NavigationLink(value: chat) {
-                    conversationRow(chat)
+        ForEach(chats) { chat in
+            ZStack {
+                NavigationLink(value: chat) { EmptyView() }
+                    .opacity(0)
+                conversationRow(chat)
+            }
+            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .accessibilityLabel("\(chat.partner.name), \(chat.lastMessage)")
+            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                Button(role: .destructive) {
+                    unmatchTarget = chat
+                    showUnmatchConfirm = true
+                } label: {
+                    Label("Delete", systemImage: "trash.fill")
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("\(chat.partner.name), \(chat.lastMessage)")
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                    // Delete — red, full swipe
-                    Button(role: .destructive) {
-                        unmatchTarget = chat
-                        showUnmatchConfirm = true
-                    } label: {
-                        Label("Delete", systemImage: "trash.fill")
-                    }
-                    .tint(MatchaTokens.Colors.danger)
+                .tint(MatchaTokens.Colors.danger)
+            }
+            .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                Button {
+                    Task { await store.toggleMute(chat: chat) }
+                } label: {
+                    Label(
+                        chat.isMuted ? "Unmute" : "Mute",
+                        systemImage: chat.isMuted ? "speaker.fill" : "speaker.slash.fill"
+                    )
                 }
-                .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                    // Mute/Unmute
-                    Button {
-                        Task { await store.toggleMute(chat: chat) }
-                    } label: {
-                        Label(
-                            chat.isMuted ? "Unmute" : "Mute",
-                            systemImage: chat.isMuted ? "speaker.fill" : "speaker.slash.fill"
-                        )
-                    }
-                    .tint(Color(hex: 0x5B7AFF))
-                }
+                .tint(Color(hex: 0x5B7AFF))
             }
         }
     }
@@ -606,9 +635,12 @@ struct ChatsView: View {
                     }
                 }
 
-                // Deal pipeline indicator
+                // Deal pipeline indicator (unified 24px style)
                 if let dealSummary = chat.dealSummary {
-                    dealPipelineRow(summary: dealSummary)
+                    DealPipelineMiniView(
+                        status: dealSummary.status,
+                        showCTA: dealSummary.cta != nil
+                    )
                 }
             }
         }
@@ -621,83 +653,6 @@ struct ChatsView: View {
                 .fill(Color.white.opacity(0.06))
                 .frame(height: 0.5)
                 .padding(.leading, 82)
-        }
-    }
-
-    // MARK: - Deal Pipeline Indicator
-
-    private func dealPipelineRow(summary: ChatDealSummary) -> some View {
-        let stage = dealStageIndex(summary.status)
-        let stageColor = dealStageColor(summary.status)
-        let stageIcon = dealStageIcon(summary.status)
-
-        return HStack(spacing: 8) {
-            // Status icon + label
-            HStack(spacing: 5) {
-                Image(systemName: stageIcon)
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(stageColor)
-                Text(summary.status.title)
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(stageColor)
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(stageColor.opacity(0.12), in: Capsule())
-
-            // Pipeline progress bar
-            HStack(spacing: 3) {
-                ForEach(0..<4, id: \.self) { i in
-                    Capsule()
-                        .fill(i <= stage ? stageColor : Color.white.opacity(0.12))
-                        .frame(height: 3)
-                }
-            }
-            .frame(maxWidth: 60)
-
-            Spacer()
-
-            // CTA button
-            if let cta = summary.cta {
-                Text(cta.title)
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.black)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(MatchaTokens.Colors.accent, in: Capsule())
-            }
-        }
-    }
-
-    private func dealStageIndex(_ status: DealStatus) -> Int {
-        switch status {
-        case .draft:     0
-        case .confirmed: 1
-        case .visited:   2
-        case .reviewed:  3
-        default:         0
-        }
-    }
-
-    private func dealStageColor(_ status: DealStatus) -> Color {
-        switch status {
-        case .draft:     MatchaTokens.Colors.warning
-        case .confirmed: MatchaTokens.Colors.success
-        case .visited:   MatchaTokens.Colors.accent
-        case .reviewed:  MatchaTokens.Colors.accent
-        case .noShow:    MatchaTokens.Colors.danger
-        case .cancelled: MatchaTokens.Colors.danger
-        }
-    }
-
-    private func dealStageIcon(_ status: DealStatus) -> String {
-        switch status {
-        case .draft:     "pencil.circle.fill"
-        case .confirmed: "checkmark.seal.fill"
-        case .visited:   "mappin.circle.fill"
-        case .reviewed:  "star.circle.fill"
-        case .noShow:    "person.fill.xmark"
-        case .cancelled: "xmark.circle.fill"
         }
     }
 

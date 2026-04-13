@@ -134,18 +134,29 @@ final class APIMatchaRepository: MatchaRepository {
     func fetchChatHome() async throws -> ChatHome {
         let session = try await resolveCurrentSession()
 
-        async let matchDTOs: [MatchReadDTO] = network.request(.GET, path: "/matches")
-        async let chatDTOs: [ChatReadDTO] = network.request(.GET, path: "/chats")
+        // Each request falls back gracefully so partial failures don't break the whole screen
+        let matchDTOs: [MatchReadDTO]
+        do {
+            matchDTOs = try await network.request(.GET, path: "/matches")
+        } catch {
+            matchDTOs = []
+        }
 
-        // Deals may fail/cancel independently — don't let it break chats
+        let chatDTOs: [ChatReadDTO]
+        do {
+            chatDTOs = try await network.request(.GET, path: "/chats")
+        } catch {
+            chatDTOs = []
+        }
+
         let dealDTOs: [DealReadDTO]
         do {
             dealDTOs = try await network.request(.GET, path: "/deals")
         } catch {
-            dealDTOs = [] // graceful fallback — chats still load
+            dealDTOs = []
         }
 
-        let (matches, chats) = try await (matchDTOs, chatDTOs)
+        let (matches, chats) = (matchDTOs, chatDTOs)
         let deals = dealDTOs
         print("[MATCHA] fetchChatHome: \(chats.count) chats, \(matches.count) matches, \(deals.count) deals, session=\(session.userID)")
         // Use reduce to avoid crash on duplicate keys
@@ -208,14 +219,20 @@ final class APIMatchaRepository: MatchaRepository {
         // Deduplicate: skip if already in conversations OR already seen in this list
         let conversationPartnerIDs = Set(conversations.map { $0.partner.id.uuidString.lowercased() })
         var seenMatchPartnerIDs = Set<String>()
-        let newMatches = matches.compactMap { match -> UserProfile? in
+        let newMatches = matches.compactMap { match -> NewMatch? in
             guard let partnerID = counterpartID(for: match.userIds, currentUserID: session.userID) else {
                 return nil
             }
             let lowered = partnerID.lowercased()
             guard !conversationPartnerIDs.contains(lowered) else { return nil }
             guard seenMatchPartnerIDs.insert(lowered).inserted else { return nil }
-            return profilesByID[partnerID]
+            guard let profile = profilesByID[partnerID] else { return nil }
+            return NewMatch(
+                profile: profile,
+                matchId: match.id,
+                expiresAt: match.expiresAt,
+                createdAt: match.createdAt
+            )
         }
 
         return ChatHome(newMatches: newMatches, conversations: conversations)
@@ -409,16 +426,30 @@ final class APIMatchaRepository: MatchaRepository {
     }
 
     private func fetchProfiles(userIDs: [String], assumedRole: Role) async throws -> [String: UserProfile] {
-        var profiles: [String: UserProfile] = [:]
+        // Pre-build placeholders on MainActor, then fetch in parallel
+        var placeholders: [String: UserProfile] = [:]
         for userID in userIDs {
-            do {
-                let profile = try await fetchProfile(userId: userID)
-                profiles[userID] = UserProfile.from(profile: profile, role: assumedRole)
-            } catch {
-                profiles[userID] = makePlaceholderProfile(id: userID, role: assumedRole, name: "Matcha User")
-            }
+            placeholders[userID] = makePlaceholderProfile(id: userID, role: assumedRole, name: "Matcha User")
         }
-        return profiles
+
+        return await withTaskGroup(of: (String, UserProfile).self) { group in
+            for userID in userIDs {
+                let placeholder = placeholders[userID]!
+                group.addTask {
+                    do {
+                        let profile = try await self.fetchProfile(userId: userID)
+                        return (userID, UserProfile.from(profile: profile, role: assumedRole))
+                    } catch {
+                        return (userID, placeholder)
+                    }
+                }
+            }
+            var profiles: [String: UserProfile] = [:]
+            for await (id, profile) in group {
+                profiles[id] = profile
+            }
+            return profiles
+        }
     }
 
     private func preferredDeal(

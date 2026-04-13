@@ -8,6 +8,8 @@ GET  /chats/{chat_id}               — Full chat detail with messages
 GET  /chats/{chat_id}/messages      — Messages for a chat (iOS primary path)
 POST /chats/{chat_id}/messages      — Send a message
 GET  /chats/{chat_id}/quick-replies — Contextual quick-reply suggestions
+POST /chats/{chat_id}/typing        — Signal that the current user is typing
+GET  /chats/{chat_id}/typing        — Check if the partner is typing
 POST /chats/{chat_id}/mute          — Mute a chat for the current user
 POST /chats/{chat_id}/unmute        — Unmute a chat for the current user
 POST /chats/{chat_id}/unmatch       — Unmatch: cancel deals, remove chat and match
@@ -143,6 +145,69 @@ def get_quick_replies(
     """
     replies = container.chat_service.get_quick_replies(current_user_id, chat_id)
     return QuickRepliesRead(replies=replies)
+
+
+# ---------------------------------------------------------------------------
+# Typing Indicator
+# ---------------------------------------------------------------------------
+
+_TYPING_TTL_SECONDS = 5  # typing state expires after 5 seconds
+
+
+class TypingStatusResponse(BaseModel):
+    is_typing: bool
+
+
+@router.post("/{chat_id}/typing", status_code=204)
+def post_typing(
+    chat_id: str,
+    current_user_id: str = Depends(get_current_user_id),
+    container: AppContainer = Depends(get_container),
+) -> None:
+    """Signal that the current user is typing in this chat."""
+    from datetime import datetime, timezone
+
+    # Verify user is a participant
+    container.chat_service.get_chat(current_user_id, chat_id)
+    # Store timestamp
+    key = f"{chat_id}:{current_user_id}"
+    container.settings  # ensure container is alive
+    # Access store's typing_state (works for both in-memory and db)
+    if not hasattr(container, "_typing_state"):
+        container._typing_state = {}
+    container._typing_state[key] = datetime.now(timezone.utc)
+
+
+@router.get("/{chat_id}/typing", response_model=TypingStatusResponse)
+def get_typing(
+    chat_id: str,
+    current_user_id: str = Depends(get_current_user_id),
+    container: AppContainer = Depends(get_container),
+) -> TypingStatusResponse:
+    """Check if the partner is currently typing."""
+    from datetime import datetime, timezone, timedelta
+
+    chat, _ = container.chat_service.get_chat(current_user_id, chat_id)
+    partner_id = (
+        chat.participant_ids[0]
+        if chat.participant_ids[1] == current_user_id
+        else chat.participant_ids[1]
+    )
+
+    key = f"{chat_id}:{partner_id}"
+    if not hasattr(container, "_typing_state"):
+        container._typing_state = {}
+
+    last_typed = container._typing_state.get(key)
+    if last_typed is None:
+        return TypingStatusResponse(is_typing=False)
+
+    elapsed = (datetime.now(timezone.utc) - last_typed).total_seconds()
+    is_typing = elapsed < _TYPING_TTL_SECONDS
+    # Cleanup expired entry
+    if not is_typing:
+        container._typing_state.pop(key, None)
+    return TypingStatusResponse(is_typing=is_typing)
 
 
 # ---------------------------------------------------------------------------

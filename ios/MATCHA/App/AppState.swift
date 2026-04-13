@@ -88,6 +88,15 @@ final class AppState {
             return
         }
 
+        // Test injection: allow UI tests to inject credentials via env
+        if let testToken = ProcessInfo.processInfo.environment["MATCHA_TEST_TOKEN"],
+           let testUserID = ProcessInfo.processInfo.environment["MATCHA_TEST_USER_ID"],
+           !testToken.isEmpty {
+            let testRole = Role(rawValue: ProcessInfo.processInfo.environment["MATCHA_TEST_ROLE"] ?? "blogger") ?? .blogger
+            NetworkService.shared.applySession(token: testToken, userID: testUserID, role: testRole)
+            print("[MATCHA] Test credentials injected for user \(testUserID)")
+        }
+
         let hasToken = NetworkService.shared.isAuthenticated
         print("[MATCHA] Bootstrap live: hasToken=\(hasToken)")
         guard hasToken else {
@@ -164,7 +173,7 @@ final class AppState {
 
         // Build a lightweight placeholder user profile from auth data
         currentUser = UserProfile(
-            id: UUID(uuidString: authResponse.user.id) ?? UUID(),
+            id: UUID(uuidString: authResponse.user.id) ?? UUID(uuidString: "00000000-0000-0000-0000-000000000000")!,
             name: authResponse.user.fullName,
             role: authResponse.user.role,
             heroSymbol: authResponse.user.role == .business

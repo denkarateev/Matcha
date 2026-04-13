@@ -8,8 +8,9 @@ import SwiftUI
 /// Step 2: Audience (role-dependent)
 /// Step 3: Social Bridge (Instagram DM code verification)
 struct VerificationFlowView: View {
-    let profile: UserProfile
+    var profile: UserProfile?
     var onSubmitted: () -> Void = {}
+    @State private var loadedProfile: UserProfile?
 
     @State private var currentStep = 1
     @Environment(\.dismiss) private var dismiss
@@ -42,14 +43,25 @@ struct VerificationFlowView: View {
         "Eco & Sustainable", "Events & Nightlife",
     ]
 
-    init(profile: UserProfile, onSubmitted: @escaping () -> Void = {}) {
+    init(profile: UserProfile? = nil, onSubmitted: @escaping () -> Void = {}) {
         self.profile = profile
         self.onSubmitted = onSubmitted
-        _selectedNiches = State(initialValue: Set(profile.niches))
+        _selectedNiches = State(initialValue: Set(profile?.niches ?? []))
         _instagramHandle = State(initialValue: "")
         _tiktokHandle = State(initialValue: "")
         _verificationCode = State(initialValue: Self.generateCode())
-        _businessDistrict = State(initialValue: profile.district ?? profile.locationDistrict ?? "")
+        _businessDistrict = State(initialValue: profile?.district ?? profile?.locationDistrict ?? "")
+    }
+
+    /// Resolved profile — uses loaded from API if available, falls back to passed profile
+    private var activeProfile: UserProfile {
+        loadedProfile ?? profile ?? UserProfile(
+            id: UUID(), name: "", role: .blogger, heroSymbol: "",
+            countryCode: "ID", audience: "", category: nil, district: nil,
+            niches: [], languages: [], bio: "", collaborationType: .both,
+            rating: nil, verifiedVisits: 0, badges: [], subscriptionPlan: .free,
+            hasActiveOffer: false, isVerified: false
+        )
     }
 
     // MARK: - Body
@@ -200,7 +212,7 @@ struct VerificationFlowView: View {
                 Text("Your Audience")
                     .font(.system(size: 22, weight: .bold))
                     .foregroundStyle(.white)
-                Text(profile.role == .blogger
+                Text(activeProfile.role == .blogger
                     ? "Tell us about your audience size"
                     : "Tell us about your business location")
                     .font(.system(size: 14, weight: .medium))
@@ -208,7 +220,7 @@ struct VerificationFlowView: View {
             }
             .padding(.top, 16)
 
-            if profile.role == .blogger {
+            if activeProfile.role == .blogger {
                 verificationSection(title: "AUDIENCE SIZE") {
                     VStack(spacing: 10) {
                         ForEach([AudienceTier.nano, .micro, .mid], id: \.self) { tier in
@@ -560,7 +572,7 @@ struct VerificationFlowView: View {
         case 1:
             return !selectedNiches.isEmpty
         case 2:
-            if profile.role == .business {
+            if activeProfile.role == .business {
                 return !businessDistrict.trimmingCharacters(in: .whitespaces).isEmpty
             }
             return true // blogger always has a tier selected

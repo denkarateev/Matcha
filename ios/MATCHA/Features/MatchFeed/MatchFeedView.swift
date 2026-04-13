@@ -5,7 +5,7 @@ import SwiftUI
 
 struct MatchFeedView: View {
     @State private var store: MatchFeedStore
-    @State private var shadowAccount = ShadowAccountManager.shared
+    private var shadowAccount: ShadowAccountManager { ShadowAccountManager.shared }
     private let repository: any MatchaRepository
 
     // Filter sheet
@@ -20,10 +20,15 @@ struct MatchFeedView: View {
 
     // Undo pill — shown for 3-5s after a left swipe
     @State private var showUndoPill = false
-    @State private var undoTask: Task<Void, Never>? = nil
+    @State private var undoTask: Task<Void, Never>? {
+        willSet { undoTask?.cancel() }
+    }
 
     // Paywall
     @State private var showPaywall = false
+
+    // Verification flow
+    @State private var showVerification = false
 
     // Match celebration animation state
     @State private var celebrationAppeared = false
@@ -172,6 +177,12 @@ struct MatchFeedView: View {
         // Share sheet for post-match sharing
         .sheet(isPresented: $showMatchShareSheet) {
             ShareSheetView(activityItems: [matchShareText])
+        }
+        .sheet(isPresented: $showVerification) {
+            NavigationStack {
+                VerificationFlowView()
+                    .navigationBarTitleDisplayMode(.inline)
+            }
         }
         // Toast message overlay
         .overlay(alignment: .bottom) {
@@ -557,8 +568,10 @@ struct MatchFeedView: View {
                 VStack(spacing: 12) {
                     Button {
                         store.showShadowBlockedMessage = false
-                        // Navigate to profile/verification flow
-                        // TODO: hook up navigation to verification
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(400))
+                            showVerification = true
+                        }
                     } label: {
                         HStack(spacing: 8) {
                             Image(systemName: "checkmark.shield.fill")
@@ -618,8 +631,11 @@ struct MatchFeedView: View {
             VStack(spacing: 12) {
                 Button {
                     store.showShadowActivationSheet = false
-                    // Navigate to profile completion / verification
-                    // TODO: hook up navigation to verification
+                    // Delay to let sheet dismiss before showing next one
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(400))
+                        showVerification = true
+                    }
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "person.crop.circle.badge.checkmark")

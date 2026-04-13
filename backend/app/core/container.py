@@ -19,7 +19,7 @@ from app.modules.chats.service import ChatService
 from app.modules.deals.domain.models import ContentProof, Deal, DealReview, DealStatus
 from app.modules.deals.repository import InMemoryDealRepository
 from app.modules.deals.service import DealService
-from app.modules.matches.domain.models import Match, MatchSource
+from app.modules.matches.domain.models import Match, MatchSource, MATCH_EXPIRY_HOURS
 from app.modules.matches.repository import InMemoryMatchRepository
 from app.modules.matches.service import MatchService
 from app.modules.offers.domain.models import (
@@ -55,6 +55,8 @@ class InMemoryStore:
     chats: dict[str, object] = field(default_factory=dict)
     messages: dict[str, object] = field(default_factory=dict)
     deals: dict[str, object] = field(default_factory=dict)
+    typing_state: dict[str, object] = field(default_factory=dict)
+    # typing_state: { "chat_id:user_id": datetime } — last typing timestamp
 
     def __getstate__(self):
         """Remove non-pickleable fields."""
@@ -610,55 +612,73 @@ def _seed_store(store: InMemoryStore) -> None:
     match_dev2_id = "match-dev-2"
     match_dev3_id = "match-dev-3"
 
+    def _match_expires(created):
+        """expires_at = created_at + 48h (MATCH_EXPIRY_HOURS)."""
+        return created + timedelta(hours=MATCH_EXPIRY_HOURS)
+
     match1 = Match(
         id=match1_id,
         user_ids=("blogger-1", "business-1"),
         source=MatchSource.SWIPE,
         created_at=_ago(days=5),
+        expires_at=_match_expires(_ago(days=5)),
     )
     match2 = Match(
         id=match2_id,
         user_ids=("blogger-4", "business-2"),
         source=MatchSource.OFFER,
         created_at=_ago(days=10),
+        expires_at=_match_expires(_ago(days=10)),
     )
-    # Dev user matches
+    # Dev user matches — varied timer states for demo
+    _dev1_created = _ago(hours=6)
     match_dev1 = Match(
         id=match_dev1_id,
         user_ids=("dev-user-1", "business-1"),
         source=MatchSource.SWIPE,
-        created_at=_ago(days=2),
+        created_at=_dev1_created,
+        expires_at=_match_expires(_dev1_created),
     )
+    _dev2_created = _ago(hours=36)
     match_dev2 = Match(
         id=match_dev2_id,
         user_ids=("dev-user-1", "business-2"),
         source=MatchSource.SWIPE,
-        created_at=_ago(days=1),
+        created_at=_dev2_created,
+        expires_at=_match_expires(_dev2_created),
     )
+    _dev3_created = _ago(hours=2)
     match_dev3 = Match(
         id=match_dev3_id,
         user_ids=("dev-user-1", "business-3"),
         source=MatchSource.SWIPE,
-        created_at=_ago(hours=12),
+        created_at=_dev3_created,
+        expires_at=_match_expires(_dev3_created),
     )
-    # Ded user matches — with 3 businesses
+    # Ded user matches — with 3 businesses, fresh timers
+    _ded1_created = _ago(hours=2)
     match_ded1 = Match(
         id="match-ded-1",
         user_ids=tuple(sorted(("ded-user-1", "business-1"))),
         source=MatchSource.SWIPE,
-        created_at=_ago(hours=2),
+        created_at=_ded1_created,
+        expires_at=_match_expires(_ded1_created),
     )
+    _ded2_created = _ago(hours=6)
     match_ded2 = Match(
         id="match-ded-2",
         user_ids=tuple(sorted(("ded-user-1", "business-2"))),
         source=MatchSource.SWIPE,
-        created_at=_ago(hours=6),
+        created_at=_ded2_created,
+        expires_at=_match_expires(_ded2_created),
     )
+    _ded3_created = _ago(hours=1)
     match_ded3 = Match(
         id="match-ded-3",
         user_ids=tuple(sorted(("ded-user-1", "business-4"))),
         source=MatchSource.OFFER,
-        created_at=_ago(hours=1),
+        created_at=_ded3_created,
+        expires_at=_match_expires(_ded3_created),
     )
 
     store.matches[match1_id] = match1
@@ -669,6 +689,55 @@ def _seed_store(store: InMemoryStore) -> None:
     store.matches["match-ded-1"] = match_ded1
     store.matches["match-ded-2"] = match_ded2
     store.matches["match-ded-3"] = match_ded3
+
+    # Fresh matches WITHOUT chats — show in New Matches stories with timer rings
+    _dev_fresh1_created = _ago(hours=3)
+    store.matches["match-dev-fresh-1"] = Match(
+        id="match-dev-fresh-1",
+        user_ids=tuple(sorted(("dev-user-1", "business-4"))),
+        source=MatchSource.SWIPE,
+        first_message_by="dev-user-1",
+        created_at=_dev_fresh1_created,
+        expires_at=_match_expires(_dev_fresh1_created),
+    )
+    _dev_fresh2_created = _ago(hours=40)
+    store.matches["match-dev-fresh-2"] = Match(
+        id="match-dev-fresh-2",
+        user_ids=tuple(sorted(("dev-user-1", "business-5"))),
+        source=MatchSource.SWIPE,
+        first_message_by="dev-user-1",
+        created_at=_dev_fresh2_created,
+        expires_at=_match_expires(_dev_fresh2_created),
+    )
+    _dev_fresh3_created = _ago(minutes=30)
+    store.matches["match-dev-fresh-3"] = Match(
+        id="match-dev-fresh-3",
+        user_ids=tuple(sorted(("dev-user-1", "blogger-3"))),
+        source=MatchSource.SWIPE,
+        first_message_by="dev-user-1",
+        created_at=_dev_fresh3_created,
+        expires_at=_match_expires(_dev_fresh3_created),
+    )
+
+    # Fresh matches for ded-user without chats
+    _ded_fresh1 = _ago(hours=4)
+    store.matches["match-ded-fresh-1"] = Match(
+        id="match-ded-fresh-1",
+        user_ids=tuple(sorted(("ded-user-1", "business-5"))),
+        source=MatchSource.SWIPE,
+        first_message_by="ded-user-1",
+        created_at=_ded_fresh1,
+        expires_at=_match_expires(_ded_fresh1),
+    )
+    _ded_fresh2 = _ago(hours=44)
+    store.matches["match-ded-fresh-2"] = Match(
+        id="match-ded-fresh-2",
+        user_ids=tuple(sorted(("ded-user-1", "blogger-3"))),
+        source=MatchSource.SWIPE,
+        first_message_by="ded-user-1",
+        created_at=_ded_fresh2,
+        expires_at=_match_expires(_ded_fresh2),
+    )
 
     # ------------------------------------------------------------------
     # Chats
@@ -815,7 +884,91 @@ def _seed_store(store: InMemoryStore) -> None:
             created_at=_ago(hours=12),
         ),
     ]
-    for m in msgs + dev_msgs:
+    # Ded user messages
+    ded_msgs = [
+        Message(
+            id="msg-ded-1", chat_id="chat-ded-1", sender_id="business-1",
+            text="Welcome! We'd love to feature you at The Lawn this weekend. Here's a deal 🤝",
+            created_at=_ago(hours=2),
+        ),
+        Message(
+            id="msg-ded-2", chat_id="chat-ded-1", sender_id="ded-user-1",
+            text="Looks perfect, accepted! See you Saturday 🌅",
+            created_at=_ago(hours=1, minutes=30),
+        ),
+        Message(
+            id="msg-ded-3", chat_id="chat-ded-1", sender_id="system",
+            text="✅ Deal confirmed!",
+            is_system=True,
+            message_type="deal_status",
+            created_at=_ago(hours=1),
+        ),
+        Message(
+            id="msg-ded-4", chat_id="chat-ded-2", sender_id="ded-user-1",
+            text="Hey! Love the Motel Mexicola vibe. Interested in a brunch collab?",
+            created_at=_ago(hours=6),
+        ),
+        Message(
+            id="msg-ded-5", chat_id="chat-ded-2", sender_id="business-2",
+            text="Sounds fun! What do you have in mind?",
+            created_at=_ago(hours=5),
+        ),
+        Message(
+            id="msg-ded-6", chat_id="chat-ded-3", sender_id="business-4",
+            text="Hi! Your aesthetic is perfect for our beach club. Let's work together ☕",
+            created_at=_ago(hours=1),
+        ),
+    ]
+    # Dev user deal-related messages
+    dev_deal_msgs = [
+        Message(
+            id="msg-dev-deal-1", chat_id="chat-dev-2", sender_id="dev-user-1",
+            text="Here's my proposal for the party night collab 🎉",
+            deal_card_id="deal-dev-draft",
+            created_at=_ago(hours=3),
+        ),
+        Message(
+            id="msg-dev-deal-2", chat_id="chat-dev-2", sender_id="business-2",
+            text="Checking with the team, will get back to you!",
+            created_at=_ago(hours=2),
+        ),
+        Message(
+            id="msg-dev-deal-3", chat_id="chat-dev-3", sender_id="business-3",
+            text="Great! Here's our deal offer 🤝",
+            deal_card_id="deal-dev-confirmed",
+            created_at=_ago(hours=6),
+        ),
+        Message(
+            id="msg-dev-deal-4", chat_id="chat-dev-3", sender_id="dev-user-1",
+            text="This looks amazing, accepted! Can't wait 🙌",
+            created_at=_ago(hours=5),
+        ),
+        Message(
+            id="msg-dev-deal-5", chat_id="chat-dev-3", sender_id="system",
+            text="✅ Deal confirmed!",
+            is_system=True,
+            message_type="deal_status",
+            created_at=_ago(hours=5),
+        ),
+        Message(
+            id="msg-dev-deal-6", chat_id="chat-dev-1", sender_id="business-1",
+            text="Had a great time hosting you! Don't forget to check in 🌴",
+            created_at=_ago(days=1, hours=2),
+        ),
+        Message(
+            id="msg-dev-deal-7", chat_id="chat-dev-1", sender_id="system",
+            text="📍 Both sides checked in!",
+            is_system=True,
+            message_type="deal_status",
+            created_at=_ago(days=1),
+        ),
+        Message(
+            id="msg-dev-deal-8", chat_id="chat-dev-1", sender_id="dev-user-1",
+            text="Amazing experience! Content coming soon 📸",
+            created_at=_ago(hours=20),
+        ),
+    ]
+    for m in msgs + dev_msgs + ded_msgs + dev_deal_msgs:
         store.messages[m.id] = m
 
     # ------------------------------------------------------------------
@@ -897,7 +1050,100 @@ def _seed_store(store: InMemoryStore) -> None:
         created_at=_ago(days=22),
         updated_at=_ago(days=17),
     )
-    for d in [deal1, deal2, deal3]:
+    # ---- Dev user deals (different stages for demo) ----
+
+    # Draft — waiting for partner to accept
+    deal_dev_draft = Deal(
+        id="deal-dev-draft",
+        chat_id="chat-dev-2",
+        participant_ids=tuple(sorted(("dev-user-1", "business-2"))),
+        initiator_id="dev-user-1",
+        type=OfferType.BARTER,
+        offered_text="1 Reel + 3 Stories at the party night",
+        requested_text="Dinner for 2 + VIP table + drinks",
+        place_name="Motel Mexicola, Seminyak",
+        guests="duo",
+        scheduled_for=_now() + timedelta(days=2),
+        content_deadline=_now() + timedelta(days=9),
+        status=DealStatus.DRAFT,
+        created_at=_ago(hours=3),
+        updated_at=_ago(hours=3),
+    )
+
+    # Confirmed — both agreed, visit upcoming
+    deal_dev_confirmed = Deal(
+        id="deal-dev-confirmed",
+        chat_id="chat-dev-3",
+        participant_ids=tuple(sorted(("dev-user-1", "business-3"))),
+        initiator_id="business-3",
+        type=OfferType.BARTER,
+        offered_text="2-night stay in a Garden Suite",
+        requested_text="2 Reels + 3 Stories + 1 feed post",
+        place_name="COMO Uma Canggu",
+        guests="solo",
+        scheduled_for=_now() + timedelta(days=1),
+        content_deadline=_now() + timedelta(days=8),
+        status=DealStatus.CONFIRMED,
+        created_at=_ago(hours=6),
+        updated_at=_ago(hours=2),
+    )
+
+    # Visited — collab happened, waiting for review
+    deal_dev_visited = Deal(
+        id="deal-dev-visited",
+        chat_id="chat-dev-1",
+        participant_ids=tuple(sorted(("dev-user-1", "business-1"))),
+        initiator_id="business-1",
+        type=OfferType.BARTER,
+        offered_text="Sunset dinner for 2 + cocktails",
+        requested_text="1 Reel + 3 Stories mentioning @thelawncanggu",
+        place_name="The Lawn Canggu",
+        guests="solo",
+        scheduled_for=_ago(days=1),
+        content_deadline=_now() + timedelta(days=5),
+        status=DealStatus.VISITED,
+        checked_in_user_ids={"dev-user-1", "business-1"},
+        created_at=_ago(days=3),
+        updated_at=_ago(days=1),
+    )
+
+    # ---- Ded user deals ----
+
+    # Confirmed deal
+    deal_ded_confirmed = Deal(
+        id="deal-ded-confirmed",
+        chat_id="chat-ded-1",
+        participant_ids=tuple(sorted(("ded-user-1", "business-1"))),
+        initiator_id="business-1",
+        type=OfferType.PAID,
+        offered_text="$250 for content package",
+        requested_text="2 Reels + 5 Stories over the weekend",
+        place_name="The Lawn Canggu, Batu Bolong",
+        guests="solo",
+        scheduled_for=_now() + timedelta(days=3),
+        status=DealStatus.CONFIRMED,
+        created_at=_ago(hours=2),
+        updated_at=_ago(hours=1),
+    )
+
+    # Draft deal
+    deal_ded_draft = Deal(
+        id="deal-ded-draft",
+        chat_id="chat-ded-2",
+        participant_ids=tuple(sorted(("ded-user-1", "business-2"))),
+        initiator_id="ded-user-1",
+        type=OfferType.BARTER,
+        offered_text="1 Reel reviewing the brunch experience",
+        requested_text="Brunch for 2 + welcome cocktails",
+        place_name="Motel Mexicola",
+        guests="duo",
+        scheduled_for=_now() + timedelta(days=5),
+        status=DealStatus.DRAFT,
+        created_at=_ago(hours=6),
+        updated_at=_ago(hours=6),
+    )
+
+    for d in [deal1, deal2, deal3, deal_dev_draft, deal_dev_confirmed, deal_dev_visited, deal_ded_confirmed, deal_ded_draft]:
         store.deals[d.id] = d
 
     # ------------------------------------------------------------------

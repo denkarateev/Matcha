@@ -13,6 +13,7 @@ final class MatchFeedStore {
     var error: NetworkError?
     var matchCelebration: UserProfile?  // non-nil when a mutual match just happened
 
+    /// Count of profiles who liked current user (from API). Shadow pending likes use ShadowAccountManager.
     var pendingLikes: Int = 0
     var likedByProfiles: [UserProfile] = []
     var showActivationPrompt = false
@@ -31,6 +32,7 @@ final class MatchFeedStore {
 
     private let repository: any MatchaRepository
     private var lastSkippedProfileID: UUID?
+    private var toastDismissTask: Task<Void, Never>?
 
     init(repository: any MatchaRepository) {
         self.repository = repository
@@ -132,7 +134,8 @@ final class MatchFeedStore {
             showActivationPrompt = pendingLikes >= 3
 
             toastMessage = "Like saved! Will be delivered after verification"
-            Task {
+            toastDismissTask?.cancel()
+            toastDismissTask = Task {
                 try? await Task.sleep(for: .seconds(3))
                 toastMessage = nil
             }
@@ -165,8 +168,8 @@ final class MatchFeedStore {
             OfflineSwipeQueue.enqueue(targetId: targetId, direction: direction.rawValue)
             let label = direction == .left ? "Skip" : "Like"
             toastMessage = "\(label) saved, will sync when online"
-            // Auto-dismiss toast
-            Task {
+            toastDismissTask?.cancel()
+            toastDismissTask = Task {
                 try? await Task.sleep(for: .seconds(3))
                 toastMessage = nil
             }
@@ -217,7 +220,8 @@ final class MatchFeedStore {
     // MARK: - Legacy helpers (used by MatchFeedView buttons)
 
     func skip() {
-        Task { await swipe(.left, profile: currentProfile ?? dummyProfile()) }
+        guard let profile = currentProfile else { return }
+        Task { await swipe(.left, profile: profile) }
     }
 
     func interested() {

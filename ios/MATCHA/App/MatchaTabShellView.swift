@@ -132,6 +132,10 @@ struct MatchaTabShellView: View {
     }
 
     private func checkReturnExperience() {
+        Task { await _checkReturnExperience() }
+    }
+
+    private func _checkReturnExperience() async {
         let lastActiveDate = Date(timeIntervalSince1970: lastActiveDateInterval)
         let daysSinceActive = Calendar.current.dateComponents(
             [.day],
@@ -144,12 +148,22 @@ struct MatchaTabShellView: View {
             return
         }
 
-        // TODO: Fetch real metrics from API
-        // For now, generate plausible placeholder metrics
+        // Fetch real metrics from activity summary
+        var newLikes = 0
+        var newOffers = 0
+        var newProfiles = 0
+        do {
+            let summary = try await environment.repository.fetchActivitySummary()
+            newLikes = summary.likes.count
+            newOffers = summary.applications.count
+            newProfiles = summary.likes.count + summary.applications.count
+        } catch {
+            // Fallback: show 0 if API fails
+        }
         let metrics = ReturnMetrics(
-            newLikes: Int.random(in: 0...12),
-            newOffers: Int.random(in: 0...6),
-            newProfiles: Int.random(in: 0...15)
+            newLikes: newLikes,
+            newOffers: newOffers,
+            newProfiles: newProfiles
         )
 
         guard metrics.hasAnyActivity else {
