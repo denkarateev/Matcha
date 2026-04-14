@@ -207,18 +207,9 @@ struct MatchFeedView: View {
     // MARK: - Top Bar (stories row + filter)
 
     private var topBar: some View {
-        HStack(spacing: 0) {
-            // Stories row — upcoming profiles in feed
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(store.profiles.prefix(8)) { profile in
-                        storyAvatar(profile)
-                    }
-                }
-                .padding(.leading, 16)
-            }
-
-            // Filter button
+        HStack {
+            Spacer()
+            // Filter button only
             Button {
                 showFilter = true
             } label: {
@@ -229,7 +220,6 @@ struct MatchFeedView: View {
                     .background(.black.opacity(0.3), in: Circle())
             }
             .padding(.trailing, 16)
-            .padding(.leading, 8)
         }
     }
 
