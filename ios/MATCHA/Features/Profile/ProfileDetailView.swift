@@ -453,6 +453,7 @@ struct ProfileDetailView: View {
             .font(.caption.weight(.semibold))
             .foregroundStyle(MatchaTokens.Colors.textSecondary)
             .tracking(1.2)
+            .padding(.horizontal, MatchaTokens.Spacing.large)
     }
 
     private func formatCount(_ count: Int) -> String {

@@ -343,22 +343,24 @@ struct ChatsView: View {
                     .accessibilityHint("See all profiles that liked you")
 
                     // Only show uncontacted matches (awaiting first message)
+                    // Tap always opens chat (creates one if needed)
                     ForEach(uncontactedMatches) { match in
-                        if let chat = matchedConversation(for: match.profile) {
-                            NavigationLink(value: chat) {
-                                matchStoryCard(match)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("New match: \(match.profile.name)")
-                            .accessibilityHint("Open chat with \(match.profile.name)")
-                        } else {
-                            NavigationLink(value: match.profile) {
-                                matchStoryCard(match)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("New match: \(match.profile.name)")
-                            .accessibilityHint("View \(match.profile.name)'s profile")
+                        let chat = matchedConversation(for: match.profile) ?? ChatPreview(
+                            partner: match.profile,
+                            lastMessage: "",
+                            timestampText: "",
+                            unreadCount: 0,
+                            matchId: match.matchId,
+                            matchSource: "swipe",
+                            isAwaitingFirstMessage: true,
+                            matchExpiresAt: match.expiresAt
+                        )
+                        NavigationLink(value: chat) {
+                            matchStoryCard(match)
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("New match: \(match.profile.name)")
+                        .accessibilityHint("Open chat with \(match.profile.name)")
                     }
                 }
                 .padding(.horizontal, MatchaTokens.Spacing.large)
