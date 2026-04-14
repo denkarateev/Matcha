@@ -67,12 +67,7 @@ struct EditProfileView: View {
         "Eco & Sustainable", "Events & Nightlife",
     ]
 
-    private let allDistricts = [
-        "Canggu", "Seminyak", "Kuta", "Ubud", "Uluwatu",
-        "Sanur", "Nusa Dua", "Jimbaran", "Denpasar", "Kerobokan",
-        "Berawa", "Pererenan", "Echo Beach", "Tanah Lot", "Tabanan",
-        "Amed", "Lovina", "Nusa Penida", "Nusa Lembongan", "Gili Islands",
-    ]
+    private let allDistricts = FeedFilterView.baliDistricts
 
     private let allLanguages = [
         "English", "Russian", "Indonesian", "French", "German",
@@ -372,7 +367,7 @@ struct EditProfileView: View {
                         if let cat = profile.category {
                             Text(cat.title)
                         } else {
-                            Text("Creator")
+                            Text("Influencer")
                         }
                         Text("·")
                         Text(district.isEmpty ? "Bali" : district)

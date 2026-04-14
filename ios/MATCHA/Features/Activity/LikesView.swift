@@ -105,85 +105,69 @@ struct LikesView: View {
     }
 
     private func likeCard(_ profile: UserProfile) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .top, spacing: 14) {
+        HStack(spacing: 12) {
+            // Avatar — tap opens profile
+            Button { selectedLikeProfile = profile } label: {
                 profileImage(profile)
-                    .frame(width: 108, height: 132)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 6) {
-                        Text(profile.name)
-                            .font(.system(.headline, design: .rounded, weight: .semibold))
-                            .foregroundStyle(MatchaTokens.Colors.textPrimary)
-                            .lineLimit(1)
-
-                        if profile.hasBlueCheck {
-                            Image(systemName: "checkmark.seal.fill")
-                                .font(.caption2)
-                                .foregroundStyle(Color(hex: 0x1DA1F2))
-                        }
-                    }
-
-                    Text("\(profile.secondaryLine) · \(profile.district ?? "Bali")")
-                        .font(.subheadline)
-                        .foregroundStyle(MatchaTokens.Colors.textSecondary)
-                        .lineLimit(2)
-
-                    if let followers = profile.followersCount, followers > 0 {
-                        Text("\(formatCount(followers)) followers")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(MatchaTokens.Colors.accent)
-                    }
-
-                    if !profile.niches.isEmpty {
-                        Text(profile.niches.prefix(2).joined(separator: " · "))
-                            .font(.caption)
-                            .foregroundStyle(MatchaTokens.Colors.textSecondary)
-                            .lineLimit(1)
-                    }
-
-                    Spacer(minLength: 0)
-                }
+                    .frame(width: 56, height: 56)
+                    .clipShape(Circle())
             }
+            .buttonStyle(.plain)
 
-            HStack(spacing: 10) {
-                Button {
-                    selectedLikeProfile = profile
-                } label: {
-                    Text("View")
-                        .font(.subheadline.weight(.bold))
+            // Info
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 4) {
+                    Text(profile.name)
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(MatchaTokens.Colors.textPrimary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(MatchaTokens.Colors.elevated, in: Capsule())
-                }
-                .buttonStyle(.plain)
+                        .lineLimit(1)
 
-                Button {
-                    Task { await store.likeBack(profile: profile) }
-                } label: {
-                    let isMatched = store.matchedLikeIDs.contains(profile.id)
-                    HStack(spacing: 6) {
-                        Image(systemName: isMatched ? "heart.fill" : "heart")
-                            .font(.caption.weight(.bold))
-                        Text(isMatched ? "Matched" : "Like Back")
-                            .font(.subheadline.weight(.bold))
+                    if profile.hasBlueCheck {
+                        Image(systemName: "checkmark.seal.fill")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color(hex: 0x1DA1F2))
                     }
-                    .foregroundStyle(isMatched ? .black : MatchaTokens.Colors.background)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(
-                        isMatched ? MatchaTokens.Colors.accent : MatchaTokens.Colors.textPrimary,
-                        in: Capsule()
-                    )
                 }
-                .buttonStyle(.plain)
-                .disabled(store.likeBackInFlightIDs.contains(profile.id) || store.matchedLikeIDs.contains(profile.id))
+
+                Text("\(profile.secondaryLine) · \(profile.district ?? "Bali")")
+                    .font(.system(size: 13))
+                    .foregroundStyle(MatchaTokens.Colors.textSecondary)
+                    .lineLimit(1)
+
+                if let followers = profile.followersCount, followers > 0 {
+                    Text("\(formatCount(followers)) followers")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(MatchaTokens.Colors.accent)
+                }
             }
+
+            Spacer()
+
+            // Like Back button
+            Button {
+                Task { await store.likeBack(profile: profile) }
+            } label: {
+                let isMatched = store.matchedLikeIDs.contains(profile.id)
+                HStack(spacing: 4) {
+                    Image(systemName: isMatched ? "heart.fill" : "heart")
+                        .font(.system(size: 12, weight: .bold))
+                    Text(isMatched ? "Matched" : "Like Back")
+                        .font(.system(size: 13, weight: .bold))
+                }
+                .foregroundStyle(isMatched ? .black : MatchaTokens.Colors.background)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(
+                    isMatched ? MatchaTokens.Colors.accent : MatchaTokens.Colors.textPrimary,
+                    in: Capsule()
+                )
+            }
+            .buttonStyle(.plain)
+            .disabled(store.likeBackInFlightIDs.contains(profile.id) || store.matchedLikeIDs.contains(profile.id))
         }
-        .padding(16)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .strokeBorder(MatchaTokens.Colors.outline.opacity(0.7), lineWidth: 1)

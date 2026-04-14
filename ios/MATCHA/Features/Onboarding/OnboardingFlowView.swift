@@ -214,16 +214,16 @@ private struct WelcomeScreen: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 24) {
-                    // Blogger section
+                    // Influencer section
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Blogger")
+                        Text("Influencer")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(.white.opacity(0.5))
                             .padding(.leading, 4)
 
                         roleCard(
                             icon: "person.crop.rectangle.stack",
-                            title: "Content Creator",
+                            title: "Influencer",
                             subtitle: "You create content on social media",
                             role: .blogger
                         )
@@ -451,7 +451,7 @@ private struct RegistrationScreen: View {
                             .foregroundStyle(.white.opacity(0.5))
 
                         HStack(spacing: 0) {
-                            darkRoleTab("Blogger", role: .blogger)
+                            darkRoleTab("Influencer", role: .blogger)
                             darkRoleTab("Business", role: .business)
                         }
                         .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 12, style: .continuous))

@@ -680,7 +680,7 @@ struct ChatConversationView: View {
                 .font(.title3)
                 .foregroundStyle(MatchaTokens.Colors.textSecondary.opacity(0.8))
 
-            Text("Blogger writes first in this match")
+            Text("Business writes first in this match")
                 .font(.subheadline)
                 .foregroundStyle(MatchaTokens.Colors.textSecondary)
 

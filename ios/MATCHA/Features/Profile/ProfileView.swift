@@ -656,7 +656,7 @@ final class ProfileStore {
         if currentUser.role == .business {
             return currentUser.category?.title ?? "Business"
         }
-        return "Creator"
+        return "Influencer"
     }
 
     var collaborationChip: String {

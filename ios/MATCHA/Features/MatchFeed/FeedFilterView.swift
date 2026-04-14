@@ -5,14 +5,14 @@ import SwiftUI
 struct FeedFilterState: Equatable {
     var roleFilter: FeedRoleFilter = .all
     var selectedNiches: Set<String> = []
-    var district: String = ""
+    var districts: Set<String> = []
     var minimumFollowers: Double = 0
     var collaborationType: CollaborationType? = nil
 
     var isActive: Bool {
         roleFilter != .all
             || !selectedNiches.isEmpty
-            || !district.isEmpty
+            || !districts.isEmpty
             || minimumFollowers > 0
             || collaborationType != nil
     }
@@ -165,37 +165,53 @@ struct FeedFilterView: View {
 
     // MARK: - District Picker
 
-    private let baliDistricts = [
-        "All Districts", "Canggu", "Seminyak", "Ubud",
-        "Uluwatu", "Sanur", "Denpasar",
+    static let baliDistricts = [
+        "Canggu", "Seminyak", "Kuta", "Ubud",
+        "Uluwatu", "Jimbaran", "Nusa Dua",
+        "Sanur", "Denpasar", "Kerobokan",
+        "Tabanan", "Lovina", "Amed",
     ]
 
     private var locationSection: some View {
         filterCard(title: "District") {
-            FlowLayoutFilter(spacing: 8) {
-                ForEach(baliDistricts, id: \.self) { district in
-                    let isAll = district == "All Districts"
-                    let selected = isAll ? draft.district.isEmpty : draft.district == district
-                    Button {
-                        withAnimation(MatchaTokens.Animations.buttonPress) {
-                            draft.district = isAll ? "" : district
-                        }
-                    } label: {
-                        HStack(spacing: 5) {
-                            if !isAll {
-                                Image(systemName: "mappin")
-                                    .font(.caption2)
-                            }
-                            Text(district)
-                                .font(.subheadline.weight(.medium))
-                        }
-                        .foregroundStyle(selected ? .black : MatchaTokens.Colors.textSecondary)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 9)
+            FlowLayoutFilter(spacing: 6) {
+                // "All" chip
+                Button {
+                    withAnimation(MatchaTokens.Animations.buttonPress) {
+                        draft.districts.removeAll()
+                    }
+                } label: {
+                    Text("All")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(draft.districts.isEmpty ? .black : MatchaTokens.Colors.textSecondary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
                         .background(
-                            selected ? MatchaTokens.Colors.accent : MatchaTokens.Colors.elevated,
+                            draft.districts.isEmpty ? MatchaTokens.Colors.accent : MatchaTokens.Colors.elevated,
                             in: Capsule()
                         )
+                }
+
+                ForEach(Self.baliDistricts, id: \.self) { district in
+                    let selected = draft.districts.contains(district)
+                    Button {
+                        withAnimation(MatchaTokens.Animations.buttonPress) {
+                            if selected {
+                                draft.districts.remove(district)
+                            } else {
+                                draft.districts.insert(district)
+                            }
+                        }
+                    } label: {
+                        Text(district)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(selected ? .black : MatchaTokens.Colors.textSecondary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                            .background(
+                                selected ? MatchaTokens.Colors.accent : MatchaTokens.Colors.elevated,
+                                in: Capsule()
+                            )
                     }
                 }
             }
@@ -231,7 +247,7 @@ struct FeedFilterView: View {
 
     private var followersSection: some View {
         filterCard(title: "Audience Tier") {
-            VStack(spacing: 10) {
+            VStack(spacing: 6) {
                 ForEach(AudienceTier.all) { tier in
                     let selected = selectedTierId == tier.id
                     Button {
@@ -239,28 +255,22 @@ struct FeedFilterView: View {
                             draft.minimumFollowers = tier.minFollowers
                         }
                     } label: {
-                        HStack(spacing: 12) {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(tier.label)
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(selected ? .black : MatchaTokens.Colors.textPrimary)
-                                Text(tier.range)
-                                    .font(.caption)
-                                    .foregroundStyle(selected ? .black.opacity(0.7) : MatchaTokens.Colors.textSecondary)
-                            }
+                        HStack(spacing: 10) {
+                            Text(tier.label)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(selected ? .black : MatchaTokens.Colors.textPrimary)
+                            Text(tier.range)
+                                .font(.system(size: 12))
+                                .foregroundStyle(selected ? .black.opacity(0.6) : MatchaTokens.Colors.textSecondary)
 
                             Spacer()
 
-                            Text(tier.cardLabel)
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(selected ? .black.opacity(0.6) : MatchaTokens.Colors.textSecondary.opacity(0.5))
-
                             Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                                .font(.title3)
+                                .font(.system(size: 18))
                                 .foregroundStyle(selected ? MatchaTokens.Colors.accent : MatchaTokens.Colors.outline)
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
                         .background(
                             selected ? MatchaTokens.Colors.accent : MatchaTokens.Colors.elevated,
                             in: RoundedRectangle(cornerRadius: 14, style: .continuous)
