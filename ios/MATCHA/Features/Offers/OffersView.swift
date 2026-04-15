@@ -553,63 +553,51 @@ struct OffersView: View {
 
     // MARK: - Error + Empty
 
-    // MARK: - Search + Filter Header
+    // MARK: - Search + Filter Bar
 
     private var offersHeader: some View {
-        HStack(spacing: 10) {
-            // Search field
-            HStack(spacing: 8) {
+        HStack(spacing: 0) {
+            // Search bar
+            HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.4))
-                TextField("Search offers...", text: $searchText)
-                    .font(.system(size: 15))
+                    .font(.system(size: 16))
+                    .foregroundStyle(.white.opacity(0.35))
+
+                TextField("Search for offers", text: $searchText)
+                    .font(.system(size: 16))
                     .foregroundStyle(.white)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
+
                 if !searchText.isEmpty {
-                    Button {
-                        searchText = ""
-                    } label: {
+                    Button { searchText = "" } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 14))
-                            .foregroundStyle(.white.opacity(0.4))
+                            .font(.system(size: 15))
+                            .foregroundStyle(.white.opacity(0.35))
                     }
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-            )
+            .padding(.horizontal, 14)
+            .padding(.vertical, 11)
+
+            // Divider
+            Rectangle()
+                .fill(Color.white.opacity(0.1))
+                .frame(width: 1, height: 22)
 
             // Filter button
             Button { showFilter = true } label: {
-                ZStack(alignment: .topTrailing) {
-                    Image(systemName: "slider.horizontal.3")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(filterState.isActive ? .black : .white.opacity(0.7))
-                        .frame(width: 40, height: 40)
-                        .background(
-                            filterState.isActive ? MatchaTokens.Colors.accent : Color.white.opacity(0.06),
-                            in: RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .strokeBorder(filterState.isActive ? Color.clear : Color.white.opacity(0.08), lineWidth: 1)
-                        )
-
-                    if filterState.isActive {
-                        Circle()
-                            .fill(MatchaTokens.Colors.danger)
-                            .frame(width: 8, height: 8)
-                            .offset(x: 2, y: -2)
-                    }
-                }
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(filterState.isActive ? MatchaTokens.Colors.accent : .white.opacity(0.45))
+                    .frame(width: 44, height: 44)
             }
         }
+        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+        )
     }
 
     private var errorBanner: some View {

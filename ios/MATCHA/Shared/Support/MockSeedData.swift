@@ -31,7 +31,11 @@ enum MockSeedData {
             URL(string: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&h=1000&fit=crop")!
         ],
         verificationLevel: .blueCheck,
-        followersCount: 87000
+        instagramHandle: "thelawncanggu",
+        tiktokHandle: "thelawncanggu",
+        instagramFollowers: 87000,
+        instagramEngagement: 4.2,
+        tiktokFollowers: 31000
     )
 
     static let comoCanggu = UserProfile(
@@ -61,7 +65,11 @@ enum MockSeedData {
             URL(string: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800&h=1000&fit=crop")!
         ],
         verificationLevel: .blueCheck,
-        followersCount: 52000
+        instagramHandle: "comoumacanggu",
+        tiktokHandle: "comohotels",
+        instagramFollowers: 52000,
+        instagramEngagement: 3.8,
+        tiktokFollowers: 18000
     )
 
     static let revolvingDoorSeminyak = UserProfile(
@@ -91,7 +99,11 @@ enum MockSeedData {
             URL(string: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800&h=1000&fit=crop")!,
             URL(string: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=800&h=1000&fit=crop")!
         ],
-        followersCount: 124000
+        instagramHandle: "motelmexicola",
+        tiktokHandle: "motelmexicola",
+        instagramFollowers: 124000,
+        instagramEngagement: 5.1,
+        tiktokFollowers: 67000
     )
 
     // MARK: - Real Bali Bloggers
@@ -123,7 +135,14 @@ enum MockSeedData {
             URL(string: "https://images.unsplash.com/photo-1528164344705-47542687000d?w=800&h=1000&fit=crop")!,
             URL(string: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800&h=1000&fit=crop")!
         ],
-        followersCount: 34000
+        nationality: "Australian",
+        residence: "Indonesia",
+        gender: "Female",
+        instagramHandle: "sarah.adventures",
+        tiktokHandle: "sarahadventures",
+        instagramFollowers: 34000,
+        instagramEngagement: 8.1,
+        tiktokFollowers: 12000
     )
 
     static let kevinFitness = UserProfile(
@@ -152,7 +171,14 @@ enum MockSeedData {
             URL(string: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&h=1000&fit=crop")!,
             URL(string: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800&h=1000&fit=crop")!
         ],
-        followersCount: 18500
+        nationality: "German",
+        residence: "Indonesia",
+        gender: "Male",
+        instagramHandle: "kevinwellness",
+        tiktokHandle: "kevin.wellness",
+        instagramFollowers: 18500,
+        instagramEngagement: 12.0,
+        tiktokFollowers: 8200
     )
 
     static let mayaPace = UserProfile(
@@ -181,7 +207,14 @@ enum MockSeedData {
             URL(string: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800&h=1000&fit=crop")!,
             URL(string: "https://images.unsplash.com/photo-1540555700478-4be289fbec6d?w=800&h=1000&fit=crop")!
         ],
-        followersCount: 12400
+        nationality: "French",
+        residence: "Indonesia",
+        gender: "Female",
+        instagramHandle: "maya.pace",
+        tiktokHandle: "mayapace",
+        instagramFollowers: 12400,
+        instagramEngagement: 6.3,
+        tiktokFollowers: 4500
     )
 
     static let lunaYoga = UserProfile(
@@ -211,7 +244,11 @@ enum MockSeedData {
             URL(string: "https://images.unsplash.com/photo-1600618528240-fb9fc964b853?w=800&h=1000&fit=crop")!,
             URL(string: "https://images.unsplash.com/photo-1512438248247-f0f2a5a8b7f0?w=800&h=1000&fit=crop")!
         ],
-        followersCount: 21000
+        instagramHandle: "lunayogabali",
+        tiktokHandle: "lunayoga",
+        instagramFollowers: 21000,
+        instagramEngagement: 5.4,
+        tiktokFollowers: 9800
     )
 
     // Legacy aliases

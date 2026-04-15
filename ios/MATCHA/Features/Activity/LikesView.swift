@@ -95,14 +95,9 @@ struct LikesView: View {
                     .foregroundStyle(MatchaTokens.Colors.accent)
             }
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("\(store.likes.count) \(store.likes.count == 1 ? "like" : "likes")")
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundStyle(MatchaTokens.Colors.textPrimary)
-                Text("Like back to match")
-                    .font(.system(size: 13))
-                    .foregroundStyle(MatchaTokens.Colors.textSecondary)
-            }
+            Text("People who liked you")
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundStyle(MatchaTokens.Colors.textPrimary)
 
             Spacer()
         }

@@ -47,11 +47,8 @@ struct ProfileView: View {
                 portfolioSection
                 sectionDivider
 
-                // Dev tools (only for dev accounts)
-                if NetworkService.shared.currentUserID == "dev-user-1" || NetworkService.shared.currentUserID == "ded-user-1" {
-                    devToolsSection
-                    sectionDivider
-                }
+                devToolsSection
+                sectionDivider
 
                 signOutButton
             }
