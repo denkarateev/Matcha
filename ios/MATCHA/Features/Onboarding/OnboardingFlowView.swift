@@ -1,3 +1,4 @@
+import MapKit
 import Observation
 import PhotosUI
 import SwiftUI
@@ -854,6 +855,10 @@ private struct MiniProfileScreen: View {
 
 private struct CategoryScreen: View {
     @Bindable var store: OnboardingStore
+    @State private var businessSearch = ""
+    @State private var searchResults: [BusinessSearchResult] = []
+    @State private var isSearching = false
+    @State private var searchTask: Task<Void, Never>?
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -861,7 +866,7 @@ private struct CategoryScreen: View {
                 // Header
                 HStack {
                     Button {
-                        withAnimation { store.step = 3 }
+                        withAnimation { store.step = 4 }
                     } label: {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
@@ -869,7 +874,7 @@ private struct CategoryScreen: View {
                             .frame(width: 36, height: 36)
                     }
                     Spacer()
-                    Text("Your Category")
+                    Text("Your Business")
                         .font(.system(size: 17, weight: .bold))
                         .foregroundStyle(.white)
                     Spacer()
@@ -877,35 +882,187 @@ private struct CategoryScreen: View {
                 }
                 .padding(.top, 16)
 
-                progressBar(step: 3, total: 3)
+                progressBar(step: store.totalSteps, total: store.totalSteps)
 
-                // Title + Subtitle
+                // MARK: - Business Search
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("What's your business?")
+                    Text("Find your business")
                         .font(.system(size: 22, weight: .bold))
                         .foregroundStyle(.white)
-
-                    Text("This helps bloggers find relevant collabs")
-                        .font(.system(size: 15, weight: .medium))
+                    Text("Search by name or address")
+                        .font(.system(size: 14))
                         .foregroundStyle(.white.opacity(0.5))
                 }
 
-                // Category grid
-                LazyVGrid(
-                    columns: [GridItem(.flexible()), GridItem(.flexible())],
-                    spacing: 8
-                ) {
-                    ForEach(BusinessCategory.allCases) { category in
-                        CategoryChip(
-                            title: category.title,
-                            isSelected: store.selectedCategory == category
-                        )
-                        .onTapGesture {
-                            withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
-                                store.selectedCategory = category
+                // Search bar
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 16))
+                        .foregroundStyle(.white.opacity(0.35))
+                    TextField("Search for business...", text: $businessSearch)
+                        .font(.system(size: 16))
+                        .foregroundStyle(.white)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .onChange(of: businessSearch) { _, query in
+                            searchTask?.cancel()
+                            guard query.count >= 2 else {
+                                searchResults = []
+                                return
+                            }
+                            searchTask = Task {
+                                isSearching = true
+                                try? await Task.sleep(nanoseconds: 400_000_000)
+                                guard !Task.isCancelled else { return }
+                                await searchBusiness(query: query)
+                                isSearching = false
+                            }
+                        }
+                    if !businessSearch.isEmpty {
+                        Button { businessSearch = ""; searchResults = [] } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 15))
+                                .foregroundStyle(.white.opacity(0.35))
+                        }
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+                )
+
+                // Search results
+                if isSearching {
+                    HStack(spacing: 8) {
+                        ProgressView().tint(.white.opacity(0.5))
+                        Text("Searching...")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.white.opacity(0.5))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 12)
+                }
+
+                if !searchResults.isEmpty {
+                    VStack(spacing: 0) {
+                        ForEach(searchResults) { result in
+                            Button {
+                                store.businessName = result.name
+                                store.businessAddress = result.address
+                                store.businessDistrict = result.district
+                                businessSearch = result.name
+                                searchResults = []
+                            } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: "mappin.circle.fill")
+                                        .font(.system(size: 20))
+                                        .foregroundStyle(MatchaTokens.Colors.accent)
+
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(result.name)
+                                            .font(.system(size: 15, weight: .semibold))
+                                            .foregroundStyle(.white)
+                                            .lineLimit(1)
+                                        Text(result.address)
+                                            .font(.system(size: 13))
+                                            .foregroundStyle(.white.opacity(0.5))
+                                            .lineLimit(2)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 12)
+                            }
+                            .buttonStyle(.plain)
+
+                            if result.id != searchResults.last?.id {
+                                Divider().background(Color.white.opacity(0.06)).padding(.leading, 46)
                             }
                         }
                     }
+                    .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                    )
+                }
+
+                // Selected business info
+                if !store.businessName.isEmpty && searchResults.isEmpty {
+                    HStack(spacing: 12) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 18))
+                            .foregroundStyle(MatchaTokens.Colors.accent)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(store.businessName)
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(.white)
+                            if !store.businessAddress.isEmpty {
+                                Text(store.businessAddress)
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(.white.opacity(0.5))
+                            }
+                        }
+                        Spacer()
+                        Button { store.businessName = ""; store.businessAddress = ""; businessSearch = "" } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.4))
+                        }
+                    }
+                    .padding(14)
+                    .background(MatchaTokens.Colors.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(MatchaTokens.Colors.accent.opacity(0.2), lineWidth: 1)
+                    )
+                }
+
+                // MARK: - Category
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Category")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.5))
+
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                        ForEach(BusinessCategory.allCases) { category in
+                            CategoryChip(title: category.title, isSelected: store.selectedCategory == category)
+                                .onTapGesture {
+                                    withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                        store.selectedCategory = category
+                                    }
+                                }
+                        }
+                    }
+                }
+
+                // MARK: - Contact Info
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Contact info")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.5))
+
+                    MatchaTextField(
+                        icon: "person",
+                        placeholder: "First name",
+                        text: $store.contactFirstName,
+                        fieldState: .normal
+                    )
+                    MatchaTextField(
+                        icon: "person",
+                        placeholder: "Last name",
+                        text: $store.contactLastName,
+                        fieldState: .normal
+                    )
+                    MatchaTextField(
+                        icon: "briefcase",
+                        placeholder: "Position in company",
+                        text: $store.contactPosition,
+                        fieldState: .normal
+                    )
                 }
 
                 // Error
@@ -938,6 +1095,51 @@ private struct CategoryScreen: View {
         }
         .scrollBounceBehavior(.basedOnSize)
     }
+
+    // MARK: - MapKit Search
+
+    @MainActor
+    private func searchBusiness(query: String) async {
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = query
+        request.region = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: -8.65, longitude: 115.17), // Bali center
+            span: MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
+        )
+        request.resultTypes = .pointOfInterest
+
+        do {
+            let search = MKLocalSearch(request: request)
+            let response = try await search.start()
+            searchResults = response.mapItems.prefix(6).map { item in
+                let placemark = item.placemark
+                let district = placemark.locality ?? placemark.subLocality ?? ""
+                let address = [
+                    placemark.thoroughfare,
+                    placemark.locality,
+                    placemark.administrativeArea,
+                    placemark.country
+                ].compactMap { $0 }.joined(separator: ", ")
+
+                return BusinessSearchResult(
+                    name: item.name ?? "Unknown",
+                    address: address,
+                    district: district
+                )
+            }
+        } catch {
+            searchResults = []
+        }
+    }
+}
+
+// MARK: - Business Search Result
+
+private struct BusinessSearchResult: Identifiable {
+    let id = UUID()
+    let name: String
+    let address: String
+    let district: String
 }
 
 // MARK: - Shared Components
@@ -1078,6 +1280,12 @@ final class OnboardingStore {
 
     var name: String = ""
     var selectedCategory: BusinessCategory = .restaurantCafe
+    var businessName: String = ""
+    var businessAddress: String = ""
+    var businessDistrict: String = ""
+    var contactFirstName: String = ""
+    var contactLastName: String = ""
+    var contactPosition: String = ""
     var pickedPhoto: Image?
     var pickedPhotoData: Data?
 
