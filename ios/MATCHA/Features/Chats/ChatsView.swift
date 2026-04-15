@@ -685,7 +685,7 @@ struct ChatsView: View {
                 .font(.system(.title3, design: .rounded, weight: .semibold))
                 .foregroundStyle(MatchaTokens.Colors.textPrimary)
 
-            Text("Match with creators or businesses\nto start a conversation")
+            Text("Match with influencers or businesses\nto start a conversation")
                 .font(.subheadline)
                 .foregroundStyle(MatchaTokens.Colors.textSecondary)
                 .multilineTextAlignment(.center)

@@ -30,6 +30,10 @@ class ProfileUpdateRequest(BaseModel):
     bio: str | None = Field(default=None, max_length=150)
     description: str | None = Field(default=None, max_length=200)
     what_we_offer: str | None = Field(default=None, max_length=200)
+    nationality: str | None = None
+    residence: str | None = None
+    gender: str | None = None
+    birthday: str | None = None
     collab_type: str | None = None
 
     # iOS-friendly aliases (resolved via validator below)
@@ -66,6 +70,10 @@ class ProfileRead(BaseModel):
     bio: str | None
     description: str | None
     what_we_offer: str | None
+    nationality: str | None
+    residence: str | None
+    gender: str | None
+    birthday: str | None
     collab_type: str
     badges: list[str]
     verified_visits: int

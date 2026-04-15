@@ -216,7 +216,7 @@ struct OfferCard: View {
                     id: "1",
                     businessLogoURL: nil,
                     businessName: "Ku De Ta",
-                    offerTitle: "Sunset dinner collab for lifestyle creators",
+                    offerTitle: "Sunset dinner collab for lifestyle influencers",
                     offerType: "Food Review",
                     slotsLeft: 2,
                     expiresInDays: 1,

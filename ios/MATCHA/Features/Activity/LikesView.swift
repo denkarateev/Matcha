@@ -85,23 +85,37 @@ struct LikesView: View {
     }
 
     private var introCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(MatchaTokens.Colors.accent.opacity(0.15))
+                    .frame(width: 40, height: 40)
                 Image(systemName: "heart.fill")
-                    .font(.headline.weight(.bold))
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(MatchaTokens.Colors.accent)
-                Text("People who liked you")
-                    .font(.system(.headline, design: .rounded, weight: .semibold))
-                    .foregroundStyle(MatchaTokens.Colors.textPrimary)
             }
 
-            Text("This screen is only for incoming interest. Browse profiles, like back, and keep everything simple.")
-                .font(.subheadline)
-                .foregroundStyle(MatchaTokens.Colors.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(store.likes.count) \(store.likes.count == 1 ? "like" : "likes")")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(MatchaTokens.Colors.textPrimary)
+                Text("Like back to match")
+                    .font(.system(size: 13))
+                    .foregroundStyle(MatchaTokens.Colors.textSecondary)
+            }
+
+            Spacer()
         }
-        .padding(18)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.white.opacity(0.04))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .strokeBorder(MatchaTokens.Colors.accent.opacity(0.15), lineWidth: 1)
+                )
+        )
     }
 
     private func likeCard(_ profile: UserProfile) -> some View {

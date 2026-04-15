@@ -4,6 +4,9 @@ import SwiftUI
 struct OffersView: View {
     @State private var store: OffersStore
     @State private var showCreateOffer = false
+    @State private var showFilter = false
+    @State private var filterState = OfferFilterState()
+    @State private var searchText = ""
 
     var isBusiness: Bool
 
@@ -12,24 +15,63 @@ struct OffersView: View {
         self.isBusiness = isBusiness
     }
 
+    private var filteredOffers: [Offer] {
+        var result = store.offers
+
+        // Search
+        if !searchText.isEmpty {
+            let query = searchText.lowercased()
+            result = result.filter {
+                $0.title.lowercased().contains(query)
+                || $0.creator.name.lowercased().contains(query)
+                || ($0.preferredNiche?.lowercased().contains(query) ?? false)
+                || $0.rewardSummary.lowercased().contains(query)
+            }
+        }
+
+        // Collab type filter
+        if let type = filterState.collabType {
+            result = result.filter { $0.type == type }
+        }
+
+        // Niches filter
+        if !filterState.selectedNiches.isEmpty {
+            result = result.filter { offer in
+                !filterState.selectedNiches.isDisjoint(with: Set(offer.creator.niches))
+            }
+        }
+
+        // Last minute only
+        if filterState.lastMinuteOnly {
+            result = result.filter(\.isLastMinute)
+        }
+
+        return result
+    }
+
     private var lastMinuteOffers: [Offer] {
-        store.offers.filter(\.isLastMinute)
+        filteredOffers.filter(\.isLastMinute)
     }
 
     private var bestForYouOffers: [Offer] {
-        store.offers
+        filteredOffers
             .filter { !$0.isLastMinute }
             .prefix(8)
             .map { $0 }
     }
 
     private var allRegularOffers: [Offer] {
-        store.offers.filter { !$0.isLastMinute }
+        filteredOffers.filter { !$0.isLastMinute }
     }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
+                // Search + Filter bar
+                offersHeader
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+
                 // Error
                 if store.error != nil {
                     errorBanner
@@ -88,6 +130,12 @@ struct OffersView: View {
         }
         .sheet(isPresented: $showCreateOffer) {
             CreateOfferView()
+        }
+        .sheet(isPresented: $showFilter) {
+            OfferFilterView(
+                filterState: $filterState,
+                matchingCount: filteredOffers.count
+            )
         }
         .task { await store.loadIfNeeded() }
     }
@@ -504,6 +552,65 @@ struct OffersView: View {
     }
 
     // MARK: - Error + Empty
+
+    // MARK: - Search + Filter Header
+
+    private var offersHeader: some View {
+        HStack(spacing: 10) {
+            // Search field
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.4))
+                TextField("Search offers...", text: $searchText)
+                    .font(.system(size: 15))
+                    .foregroundStyle(.white)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+            )
+
+            // Filter button
+            Button { showFilter = true } label: {
+                ZStack(alignment: .topTrailing) {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(filterState.isActive ? .black : .white.opacity(0.7))
+                        .frame(width: 40, height: 40)
+                        .background(
+                            filterState.isActive ? MatchaTokens.Colors.accent : Color.white.opacity(0.06),
+                            in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .strokeBorder(filterState.isActive ? Color.clear : Color.white.opacity(0.08), lineWidth: 1)
+                        )
+
+                    if filterState.isActive {
+                        Circle()
+                            .fill(MatchaTokens.Colors.danger)
+                            .frame(width: 8, height: 8)
+                            .offset(x: 2, y: -2)
+                    }
+                }
+            }
+        }
+    }
 
     private var errorBanner: some View {
         HStack(spacing: 8) {

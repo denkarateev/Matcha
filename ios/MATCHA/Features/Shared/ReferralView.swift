@@ -185,7 +185,7 @@ struct ReferralView: View {
     // MARK: - Actions
 
     private func shareCode() {
-        let shareText = "Join me on MATCHA \u{2615} \u{2014} the collab app for creators and businesses in Bali!\n\nUse my code: \(referralCode)\n\nmatcha.app/join"
+        let shareText = "Join me on MATCHA \u{2615} \u{2014} the collab app for influencers and businesses in Bali!\n\nUse my code: \(referralCode)\n\nmatcha.app/join"
         let activityVC = UIActivityViewController(
             activityItems: [shareText],
             applicationActivities: nil

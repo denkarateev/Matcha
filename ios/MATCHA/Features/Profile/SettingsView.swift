@@ -526,7 +526,7 @@ struct PrivacySettingsView: View {
     @State private var allowMessagesFromAll = false
     @State private var showRatingPublicly = true
     @State private var shareActivityData = false
-    @State private var blockedUsers: [String] = ["@luna_creator", "@bali_food_guide"]
+    @State private var blockedUsers: [String] = ["@luna_influencer", "@bali_food_guide"]
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -736,7 +736,7 @@ struct SupportView: View {
                             icon: "book.closed.fill",
                             iconColor: MatchaTokens.Colors.accent,
                             title: "How It Works",
-                            subtitle: "Guides for creators and businesses",
+                            subtitle: "Guides for influencers and businesses",
                             action: {}
                         )
 

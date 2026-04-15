@@ -83,7 +83,7 @@ struct EmptyStateView: View {
         EmptyStateView(
             icon: "cup.and.saucer.fill",
             title: "You've finished your cup",
-            subtitle: "Come back tomorrow for a fresh brew, or broaden your filters to see more creators.",
+            subtitle: "Come back tomorrow for a fresh brew, or broaden your filters to see more influencers.",
             ctaTitle: "Adjust filters"
         ) {
             print("CTA tapped")

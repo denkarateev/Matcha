@@ -23,6 +23,10 @@ class Profile:
     bio: str | None = None
     description: str | None = None
     what_we_offer: str | None = None
+    nationality: str | None = None
+    residence: str | None = None
+    gender: str | None = None
+    birthday: str | None = None
     collab_type: str = "both"
     badges: list[str] = field(default_factory=list)
     verified_visits: int = 0

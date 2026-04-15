@@ -47,9 +47,6 @@ struct ProfileView: View {
                 portfolioSection
                 sectionDivider
 
-                settingsRow
-                sectionDivider
-
                 // Dev tools (only for dev accounts)
                 if NetworkService.shared.currentUserID == "dev-user-1" || NetworkService.shared.currentUserID == "ded-user-1" {
                     devToolsSection
@@ -671,7 +668,7 @@ final class ProfileStore {
         let trimmed = currentUser.bio.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty { return trimmed }
         return currentUser.role == .business
-            ? "Add a description so creators know what your business offers."
+            ? "Add a description so influencers know what your business offers."
             : "Write about yourself so brands know what you do."
     }
 

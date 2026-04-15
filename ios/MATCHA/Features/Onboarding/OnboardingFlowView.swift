@@ -32,6 +32,12 @@ struct OnboardingFlowView: View {
                         removal: .move(edge: .leading).combined(with: .opacity)
                     ))
             case 3:
+                PersonalDetailsScreen(store: store)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .leading).combined(with: .opacity)
+                    ))
+            case 4:
                 MiniProfileScreen(store: store)
                     .transition(.asymmetric(
                         insertion: .move(edge: .trailing).combined(with: .opacity),
@@ -443,21 +449,6 @@ private struct RegistrationScreen: View {
                     .buttonStyle(.plain)
                 }
 
-                // Role toggle (signup)
-                if !store.isLoginMode {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("I am a")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.5))
-
-                        HStack(spacing: 0) {
-                            darkRoleTab("Influencer", role: .blogger)
-                            darkRoleTab("Business", role: .business)
-                        }
-                        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    }
-                }
-
                 // Error
                 if let error = store.errorMessage {
                     ErrorBanner(message: error)
@@ -520,7 +511,224 @@ private struct RegistrationScreen: View {
 
 }
 
-// MARK: - Screen 3: Mini Profile
+// MARK: - Screen 3: Personal Details
+
+private struct PersonalDetailsScreen: View {
+    @Bindable var store: OnboardingStore
+
+    private let nationalities = [
+        "Indonesian", "Russian", "Australian", "American", "British",
+        "French", "German", "Dutch", "Japanese", "Korean",
+        "Chinese", "Indian", "Brazilian", "Canadian", "Italian",
+        "Spanish", "Thai", "Vietnamese", "Ukrainian", "Other",
+    ]
+
+    private let residences = [
+        "Indonesia", "Russia", "Australia", "USA", "UK",
+        "France", "Germany", "Netherlands", "Japan", "South Korea",
+        "China", "India", "Brazil", "Canada", "Italy",
+        "Spain", "Thailand", "Vietnam", "Ukraine", "Other",
+    ]
+
+    private let districts = [
+        "Canggu", "Seminyak", "Kuta", "Ubud", "Uluwatu",
+        "Nusa Dua", "Sanur", "Denpasar", "Jimbaran", "Kerobokan",
+        "Berawa", "Pererenan", "Tabanan", "Gianyar", "Lovina",
+        "Amed", "Nusa Penida", "Nusa Lembongan", "Other",
+    ]
+
+    private let genders = ["Male", "Female", "Non-binary", "Prefer not to say"]
+
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 20) {
+                // Header
+                HStack {
+                    Button {
+                        withAnimation { store.step = 2 }
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.6))
+                            .frame(width: 36, height: 36)
+                    }
+                    Spacer()
+                    Text("About You")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(.white)
+                    Spacer()
+                    Color.clear.frame(width: 36, height: 36)
+                }
+                .padding(.top, 16)
+
+                progressBar(step: 2, total: store.totalSteps)
+
+                Text("Please fill in your details")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.white.opacity(0.5))
+
+                // Nationality
+                dropdownField(
+                    icon: "globe",
+                    placeholder: "Nationality",
+                    selection: $store.selectedNationality,
+                    options: nationalities
+                )
+
+                // Residence + District
+                HStack(spacing: 12) {
+                    dropdownField(
+                        icon: "mappin",
+                        placeholder: "Residence",
+                        selection: $store.selectedResidence,
+                        options: residences
+                    )
+                    dropdownField(
+                        icon: "person.crop.rectangle",
+                        placeholder: "I live in",
+                        selection: $store.selectedDistrict,
+                        options: districts
+                    )
+                }
+
+                // Gender
+                dropdownField(
+                    icon: "person.2",
+                    placeholder: "Gender",
+                    selection: $store.selectedGender,
+                    options: genders
+                )
+
+                // Birthday
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Birthday")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.5))
+
+                    HStack(spacing: 12) {
+                        yearPicker
+                        monthPicker
+                        dayPicker
+                    }
+                }
+
+                // Error
+                if let error = store.errorMessage {
+                    ErrorBanner(message: error)
+                }
+
+                // Continue
+                Button {
+                    store.advanceFromPersonalDetails()
+                } label: {
+                    Text("Continue")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(.black)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 54)
+                        .background(MatchaTokens.Colors.accent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+
+                Spacer().frame(height: 40)
+            }
+            .padding(.horizontal, 24)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+    }
+
+    // MARK: - Dropdown Field
+
+    private func dropdownField(
+        icon: String,
+        placeholder: String,
+        selection: Binding<String>,
+        options: [String]
+    ) -> some View {
+        Menu {
+            ForEach(options, id: \.self) { option in
+                Button(option) {
+                    selection.wrappedValue = option
+                }
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: icon)
+                    .font(.system(size: 15))
+                    .foregroundStyle(.white.opacity(0.35))
+                    .frame(width: 20)
+
+                Text(selection.wrappedValue.isEmpty ? placeholder : selection.wrappedValue)
+                    .font(.system(size: 16))
+                    .foregroundStyle(selection.wrappedValue.isEmpty ? .white.opacity(0.35) : .white)
+
+                Spacer()
+
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.3))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 16)
+            .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+            )
+        }
+    }
+
+    // MARK: - Date Pickers
+
+    private var yearPicker: some View {
+        let currentYear = Calendar.current.component(.year, from: Date())
+        let years = Array((currentYear - 80)...(currentYear - 13)).reversed()
+
+        return Menu {
+            ForEach(years, id: \.self) { year in
+                Button("\(year)") { store.birthYear = year }
+            }
+        } label: {
+            pickerLabel(store.birthYear.map { "\($0)" } ?? "Year")
+        }
+    }
+
+    private var monthPicker: some View {
+        let months = Calendar.current.monthSymbols
+        return Menu {
+            ForEach(Array(months.enumerated()), id: \.offset) { index, name in
+                Button(name) { store.birthMonth = index + 1 }
+            }
+        } label: {
+            pickerLabel(store.birthMonth.map { Calendar.current.shortMonthSymbols[$0 - 1] } ?? "Month")
+        }
+    }
+
+    private var dayPicker: some View {
+        let days = Array(1...31)
+        return Menu {
+            ForEach(days, id: \.self) { day in
+                Button("\(day)") { store.birthDay = day }
+            }
+        } label: {
+            pickerLabel(store.birthDay.map { "\($0)" } ?? "Day")
+        }
+    }
+
+    private func pickerLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 15, weight: .medium))
+            .foregroundStyle(text == "Year" || text == "Month" || text == "Day" ? .white.opacity(0.35) : .white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 48)
+            .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+            )
+    }
+}
+
+// MARK: - Screen 4: Mini Profile
 
 private struct MiniProfileScreen: View {
     @Bindable var store: OnboardingStore
@@ -532,7 +740,7 @@ private struct MiniProfileScreen: View {
                 // Header
                 HStack {
                     Button {
-                        withAnimation { store.step = 2 }
+                        withAnimation { store.step = 3 }
                     } label: {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
@@ -859,6 +1067,15 @@ final class OnboardingStore {
     var isLoginMode: Bool = false
     var selectedRole: Role = .blogger
 
+    // Personal details (step 3)
+    var selectedNationality: String = ""
+    var selectedResidence: String = ""
+    var selectedDistrict: String = ""
+    var selectedGender: String = ""
+    var birthYear: Int?
+    var birthMonth: Int?
+    var birthDay: Int?
+
     var name: String = ""
     var selectedCategory: BusinessCategory = .restaurantCafe
     var pickedPhoto: Image?
@@ -872,7 +1089,7 @@ final class OnboardingStore {
     var nameFieldState: MatchaFieldState = .normal
 
     var totalSteps: Int {
-        selectedRole == .business ? 4 : 3
+        selectedRole == .business ? 5 : 4
     }
 
     init(appState: AppState) {
@@ -949,6 +1166,46 @@ final class OnboardingStore {
         withAnimation { step = 3 }
     }
 
+    func advanceFromPersonalDetails() {
+        errorMessage = nil
+
+        guard !selectedNationality.isEmpty else {
+            errorMessage = "Please select your nationality."
+            return
+        }
+        guard !selectedGender.isEmpty else {
+            errorMessage = "Please select your gender."
+            return
+        }
+
+        withAnimation { step = 4 }
+    }
+
+    // Kept for reference — old advanceFromRegistration login branch
+    private func _unused_login_placeholder() async {
+        let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
+        if isLoginMode {
+            isLoading = true
+            defer { isLoading = false }
+
+            do {
+                let response = try await AuthService.shared.login(
+                    email: trimmedEmail,
+                    password: password
+                )
+                appState.completeAuthOnboarding(authResponse: response)
+                await appState.loadCurrentUser()
+            } catch let networkError as NetworkError {
+                errorMessage = networkError.errorDescription ?? "Could not log in. Please try again."
+            } catch {
+                errorMessage = "Unexpected error: \(error.localizedDescription)"
+            }
+            return
+        }
+
+        withAnimation { step = 3 }
+    }
+
     func submitProfile() async {
         errorMessage = nil
         nameFieldState = .normal
@@ -976,7 +1233,7 @@ final class OnboardingStore {
 
         // Business users go to category selection first
         if selectedRole == .business {
-            withAnimation { step = 4 }
+            withAnimation { step = 5 }
             return
         }
 

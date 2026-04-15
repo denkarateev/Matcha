@@ -59,6 +59,10 @@ struct UserProfile: Identifiable, Hashable {
     let instagramHandle: String?
     let tiktokHandle: String?
     var youtubeHandle: String?
+    var nationality: String?
+    var residence: String?
+    var gender: String?
+    var birthday: Date?
     var instagramFollowers: Int?
     var instagramEngagement: Double?  // percentage
     var youtubeSubscribers: Int?
@@ -105,6 +109,10 @@ struct UserProfile: Identifiable, Hashable {
         completedCollabsCount: Int = 0,
         collabTypes: [CollaborationType] = [],
         followersCount: Int? = nil,
+        nationality: String? = nil,
+        residence: String? = nil,
+        gender: String? = nil,
+        birthday: Date? = nil,
         instagramHandle: String? = nil,
         tiktokHandle: String? = nil,
         youtubeHandle: String? = nil,
@@ -137,6 +145,10 @@ struct UserProfile: Identifiable, Hashable {
         self.locationDistrict = locationDistrict
         self.completedCollabsCount = completedCollabsCount
         self.collabTypes = collabTypes
+        self.nationality = nationality
+        self.residence = residence
+        self.gender = gender
+        self.birthday = birthday
         self.followersCount = followersCount
         self.instagramHandle = instagramHandle
         self.tiktokHandle = tiktokHandle
@@ -277,6 +289,10 @@ struct ProfileRead: Decodable, Sendable {
     let bio: String?
     let description: String?
     let whatWeOffer: String?
+    let nationality: String?
+    let residence: String?
+    let gender: String?
+    let birthday: String?
     let collabType: String
     let badges: [String]
     let verifiedVisits: Int
@@ -293,6 +309,10 @@ struct ProfileUpdateRequest: Encodable {
     var photoUrls: [String]?
     var primaryPhotoUrl: String?
     var country: String?
+    var nationality: String?
+    var residence: String?
+    var gender: String?
+    var birthday: String?
     var instagramHandle: String?
     var tiktokHandle: String?
     var audienceSize: Int?

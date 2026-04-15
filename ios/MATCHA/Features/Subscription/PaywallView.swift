@@ -24,7 +24,7 @@ enum PaywallTrigger {
         switch self {
         case .swipesExhausted: "You've used all your daily swipes"
         case .blurredLikes:    "3 businesses liked you"
-        case .offerCredits:    "Create offers to attract top creators"
+        case .offerCredits:    "Create offers to attract top influencers"
         case .superSwipe:      "Stand out with SuperSwipe"
         case .general:         "Unlock the full MATCHA experience"
         }

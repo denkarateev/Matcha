@@ -20,7 +20,7 @@ struct FeedFilterState: Equatable {
 
 enum FeedRoleFilter: String, CaseIterable, Identifiable {
     case all = "All"
-    case creators = "Creators"
+    case influencers = "Influencers"
     case businesses = "Businesses"
 
     var id: String { rawValue }
