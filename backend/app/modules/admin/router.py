@@ -487,7 +487,7 @@ async def list_reports(
 # Dev: Reset swipes for a user (allows re-swiping for testing)
 # ---------------------------------------------------------------------------
 
-@router.post("/reset-swipes/{user_id}")
+@router.post("/admin/reset-swipes/{user_id}")
 async def reset_swipes(
     user_id: str,
     container: AppContainer = Depends(get_container),
