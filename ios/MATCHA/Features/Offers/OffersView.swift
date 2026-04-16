@@ -6,6 +6,8 @@ struct OffersView: View {
     @State private var showCreateOffer = false
     @State private var showFilter = false
     @State private var showDealsCRM = false
+    @State private var isSearchActive = false
+    @FocusState private var searchFieldFocused: Bool
     @State private var filterState = OfferFilterState()
     @State private var searchText = ""
 
@@ -82,10 +84,13 @@ struct OffersView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
-                // Search + Filter bar
-                offersHeader
-                    .padding(.horizontal, 20)
-                    .padding(.top, 8)
+                // Expandable search field
+                if isSearchActive {
+                    searchFieldBar
+                        .padding(.horizontal, 20)
+                        .padding(.top, 8)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
 
                 // Error
                 if store.error != nil {
@@ -135,11 +140,32 @@ struct OffersView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: 14) {
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                            isSearchActive.toggle()
+                            if !isSearchActive { searchText = "" }
+                        }
+                        if isSearchActive {
+                            searchFieldFocused = true
+                        }
+                    } label: {
+                        Image(systemName: isSearchActive ? "xmark" : "magnifyingglass")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.8))
+                    }
+
+                    Button { showFilter = true } label: {
+                        Image(systemName: "slider.horizontal.3")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(filterState.isActive ? MatchaTokens.Colors.accent : .white.opacity(0.8))
+                    }
+
                     Button { showDealsCRM = true } label: {
                         Image(systemName: "chart.bar.doc.horizontal.fill")
                             .font(.system(size: 18))
                             .foregroundStyle(.white.opacity(0.7))
                     }
+
                     if isBusiness {
                         Button { showCreateOffer = true } label: {
                             Image(systemName: "plus.circle.fill")
@@ -583,46 +609,32 @@ struct OffersView: View {
 
     // MARK: - Error + Empty
 
-    // MARK: - Search + Filter Bar
+    // MARK: - Expandable Search Field
 
-    private var offersHeader: some View {
-        HStack(spacing: 0) {
-            // Search bar
-            HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 16))
-                    .foregroundStyle(.white.opacity(0.35))
+    private var searchFieldBar: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 16))
+                .foregroundStyle(.white.opacity(0.35))
 
-                TextField("Search for offers", text: $searchText)
-                    .font(.system(size: 16))
-                    .foregroundStyle(.white)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
+            TextField("Search for offers", text: $searchText)
+                .font(.system(size: 16))
+                .foregroundStyle(.white)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .focused($searchFieldFocused)
+                .submitLabel(.done)
 
-                if !searchText.isEmpty {
-                    Button { searchText = "" } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 15))
-                            .foregroundStyle(.white.opacity(0.35))
-                    }
+            if !searchText.isEmpty {
+                Button { searchText = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 15))
+                        .foregroundStyle(.white.opacity(0.35))
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 11)
-
-            // Divider
-            Rectangle()
-                .fill(Color.white.opacity(0.1))
-                .frame(width: 1, height: 22)
-
-            // Filter button
-            Button { showFilter = true } label: {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(filterState.isActive ? MatchaTokens.Colors.accent : .white.opacity(0.45))
-                    .frame(width: 44, height: 44)
-            }
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
         .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)

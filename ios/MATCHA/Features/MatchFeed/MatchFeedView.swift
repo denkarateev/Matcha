@@ -214,9 +214,9 @@ struct MatchFeedView: View {
             Button {
                 showFilter = true
             } label: {
-                Image(systemName: "line.3.horizontal.decrease")
+                Image(systemName: "slider.horizontal.3")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.8))
+                    .foregroundStyle(store.filterState.isActive ? MatchaTokens.Colors.accent : .white.opacity(0.8))
                     .frame(width: 36, height: 36)
                     .background(.black.opacity(0.3), in: Circle())
             }
