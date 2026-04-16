@@ -6,6 +6,7 @@ struct ProfileView: View {
     @State private var activeSheet: ActiveSheet?
     @State private var showSettings = false
     @State private var showNotifications = false
+    @State private var showPaywall = false
     private let repository: any MatchaRepository
 
     var onProfileSaved: ((UserProfile) -> Void)?
@@ -47,6 +48,9 @@ struct ProfileView: View {
                 portfolioSection
                 sectionDivider
 
+                planSection
+                sectionDivider
+
                 devToolsSection
                 sectionDivider
 
@@ -72,6 +76,9 @@ struct ProfileView: View {
                 settingsRows: store.settingsRows,
                 onSignOut: onSignOut
             )
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(.general)
         }
         .navigationDestination(isPresented: $showNotifications) {
             NotificationsView(
@@ -540,6 +547,89 @@ struct ProfileView: View {
     // MARK: - Dev Tools
 
     @State private var devToolsMessage: String?
+
+    // MARK: - Plan Section
+
+    private var planSection: some View {
+        VStack(spacing: 14) {
+            // Upgrade banner (hidden if already on top tier)
+            if store.currentUser.subscriptionPlan != .black {
+                Button { showPaywall = true } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(MatchaTokens.Colors.accent)
+                        Text("Upgrade your plan")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(
+                        LinearGradient(
+                            colors: [Color.black, Color(hex: 0x1a1a1a)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(MatchaTokens.Colors.accent.opacity(0.25), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+
+            // Your plan row
+            Button { showPaywall = true } label: {
+                HStack(spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 9, style: .continuous)
+                            .fill(planTint.opacity(0.15))
+                            .frame(width: 34, height: 34)
+                        Image(systemName: planIcon)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(planTint)
+                    }
+
+                    Text("Your plan")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(.white)
+
+                    Spacer()
+
+                    Text(store.currentUser.subscriptionPlan.title)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(planTint)
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.25))
+                }
+                .padding(.vertical, 4)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+    }
+
+    private var planTint: Color {
+        switch store.currentUser.subscriptionPlan {
+        case .free:  return MatchaTokens.Colors.textSecondary
+        case .pro:   return MatchaTokens.Colors.accent
+        case .black: return Color(hex: 0xD4B45C)
+        }
+    }
+
+    private var planIcon: String {
+        switch store.currentUser.subscriptionPlan {
+        case .free:  return "person.fill"
+        case .pro:   return "sparkles"
+        case .black: return "crown.fill"
+        }
+    }
 
     private var devToolsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
