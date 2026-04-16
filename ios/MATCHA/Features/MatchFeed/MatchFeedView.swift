@@ -994,35 +994,40 @@ private struct SwipeCard: View {
             }
             .scrollDisabled(!isTopCard)
 
-            // Page indicator — segmented bars at top (Instagram style)
+            // Page indicator — pinned below Dynamic Island / status bar
             if photoURLList.count > 1 {
-                VStack(spacing: 6) {
-                    // Segmented bars
-                    HStack(spacing: 4) {
-                        ForEach(0..<photoURLList.count, id: \.self) { index in
-                            Capsule()
-                                .fill(index == currentPhotoIndex ? Color.white : Color.white.opacity(0.35))
-                                .frame(height: 3)
-                                .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
-                                .animation(.easeInOut(duration: 0.2), value: currentPhotoIndex)
+                VStack {
+                    VStack(spacing: 6) {
+                        // Segmented bars
+                        HStack(spacing: 4) {
+                            ForEach(0..<photoURLList.count, id: \.self) { index in
+                                Capsule()
+                                    .fill(index == currentPhotoIndex ? Color.white : Color.white.opacity(0.35))
+                                    .frame(height: 3)
+                                    .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
+                                    .animation(.easeInOut(duration: 0.2), value: currentPhotoIndex)
+                            }
                         }
-                    }
-                    .padding(.horizontal, 12)
+                        .padding(.horizontal, 12)
 
-                    // Photo counter badge
-                    HStack(spacing: 5) {
-                        Image(systemName: "photo.stack.fill")
-                            .font(.system(size: 10, weight: .bold))
-                        Text("\(currentPhotoIndex + 1)/\(photoURLList.count)")
-                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                        // Photo counter badge
+                        HStack(spacing: 5) {
+                            Image(systemName: "photo.stack.fill")
+                                .font(.system(size: 10, weight: .bold))
+                            Text("\(currentPhotoIndex + 1)/\(photoURLList.count)")
+                                .font(.system(size: 11, weight: .bold, design: .rounded))
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 5)
+                        .background(.black.opacity(0.55), in: Capsule())
+                        .overlay(Capsule().strokeBorder(.white.opacity(0.2), lineWidth: 0.5))
                     }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 5)
-                    .background(.black.opacity(0.45), in: Capsule())
-                    .overlay(Capsule().strokeBorder(.white.opacity(0.2), lineWidth: 0.5))
+                    .padding(.top, 68)
+
+                    Spacer()
                 }
-                .padding(.top, 12)
+                .allowsHitTesting(false)
             }
 
             // Scroll hint at bottom of visible area (when at top)

@@ -262,14 +262,42 @@ final class MatchFeedStore {
     }
 
     func resolveChatPreview(for profile: UserProfile) async throws -> ChatPreview {
-        let home = try await repository.fetchChatHome()
-        if let chat = home.conversations.first(where: { $0.partner.id == profile.id }) {
-            return chat
+        // Retry a few times — backend may take a moment to create the chat after match
+        for attempt in 0..<4 {
+            let home = try await repository.fetchChatHome()
+            // Try to match by partner.id (UUID) first
+            if let chat = home.conversations.first(where: { $0.partner.id == profile.id }) {
+                return chat
+            }
+            // Fallback — match by serverUserId
+            if let chat = home.conversations.first(where: { $0.partner.serverUserId == profile.serverUserId && !profile.serverUserId.isEmpty }) {
+                return chat
+            }
+            // Also check new matches (unopened chats)
+            if let newMatch = home.newMatches.first(where: { $0.profile.id == profile.id || $0.profile.serverUserId == profile.serverUserId }) {
+                // Synthesise a ChatPreview from the new match
+                return ChatPreview(
+                    id: UUID(uuidString: newMatch.matchId) ?? UUID(),
+                    partner: newMatch.profile,
+                    lastMessage: "Say hi!",
+                    timestampText: "New match",
+                    unreadCount: 0,
+                    translationNote: nil,
+                    isMuted: false,
+                    activeDealStatus: nil,
+                    dealSummary: nil
+                )
+            }
+
+            // Wait briefly, then retry (chat creation is async on backend)
+            if attempt < 3 {
+                try await Task.sleep(nanoseconds: 400_000_000)
+            }
         }
 
         throw NetworkError.domainError(
             code: "chat_unavailable",
-            message: "Match created, but the chat is not ready yet. Open Messages and pull to refresh."
+            message: "Chat is taking longer than usual to open. Try again or pull to refresh in Chats."
         )
     }
 
