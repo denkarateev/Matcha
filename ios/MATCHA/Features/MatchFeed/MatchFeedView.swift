@@ -10,7 +10,6 @@ struct MatchFeedView: View {
 
     // Filter sheet
     @State private var showFilter = false
-    @State private var filterState = FeedFilterState()
 
     // Navigate into chat after a match
     @State private var navigateToChat: ChatPreview? = nil
@@ -145,7 +144,7 @@ struct MatchFeedView: View {
         }
         // Filter sheet
         .sheet(isPresented: $showFilter) {
-            FeedFilterView(filterState: $filterState)
+            FeedFilterView(filterState: Bindable(store).filterState)
         }
         // Profile detail sheet (tap on card)
         .sheet(item: $profileToShow) { profile in

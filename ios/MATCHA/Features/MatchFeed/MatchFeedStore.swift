@@ -8,6 +8,7 @@ final class MatchFeedStore {
     // MARK: - State
 
     var profiles: [UserProfile] = []
+    var filterState: FeedFilterState = FeedFilterState()
     var currentIndex: Int = 0
     var isLoading: Bool = false
     var error: NetworkError?
@@ -40,9 +41,47 @@ final class MatchFeedStore {
 
     // MARK: - Computed
 
+    var filteredProfiles: [UserProfile] {
+        var result = profiles
+
+        switch filterState.roleFilter {
+        case .all: break
+        case .influencers: result = result.filter { $0.role == .blogger }
+        case .businesses: result = result.filter { $0.role == .business }
+        }
+
+        if !filterState.selectedNiches.isEmpty {
+            result = result.filter { profile in
+                !filterState.selectedNiches.isDisjoint(with: Set(profile.niches))
+            }
+        }
+
+        if !filterState.districts.isEmpty {
+            result = result.filter { profile in
+                guard let district = profile.district else { return false }
+                return filterState.districts.contains(district)
+            }
+        }
+
+        if filterState.minimumFollowers > 0 {
+            result = result.filter { profile in
+                Double(profile.followersCount ?? 0) >= filterState.minimumFollowers
+            }
+        }
+
+        if let collab = filterState.collaborationType {
+            result = result.filter { $0.collaborationType == collab || $0.collaborationType == .both }
+        }
+
+        return result
+    }
+
     var currentProfile: UserProfile? {
-        guard profiles.indices.contains(currentIndex) else { return nil }
-        return profiles[currentIndex]
+        let list = filteredProfiles
+        guard !list.isEmpty else { return nil }
+        // Keep currentIndex within bounds of filtered list
+        let idx = min(currentIndex, list.count - 1)
+        return list[idx]
     }
 
     private var currentUserID: String? {
