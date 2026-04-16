@@ -21,12 +21,9 @@ struct OffersView: View {
     }
 
     private func apiFilters(from state: OfferFilterState) -> OfferFilterParams {
-        // Note: backend handles case-insensitively; send lowercased for clarity
-        OfferFilterParams(
-            type: state.collabType?.rawValue,
-            niche: state.selectedNiches.first?.lowercased(),
-            lastMinuteOnly: state.lastMinuteOnly
-        )
+        // Backend supports only single niche — keep everything client-side.
+        // Frontend's Set<String> lets users pick multiple niches at once.
+        OfferFilterParams()
     }
 
     private var filteredOffers: [Offer] {

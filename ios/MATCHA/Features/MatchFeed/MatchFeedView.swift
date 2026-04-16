@@ -994,18 +994,33 @@ private struct SwipeCard: View {
             }
             .scrollDisabled(!isTopCard)
 
-            // Page dots — pinned at top, always visible
+            // Page indicator — segmented bars at top (Instagram style)
             if photoURLList.count > 1 {
-                HStack(spacing: 4) {
-                    ForEach(0..<photoURLList.count, id: \.self) { index in
-                        Capsule()
-                            .fill(index == currentPhotoIndex ? Color.white : Color.white.opacity(0.4))
-                            .frame(
-                                width: index == currentPhotoIndex ? 20 : 6,
-                                height: 4
-                            )
-                            .animation(.easeInOut(duration: 0.2), value: currentPhotoIndex)
+                VStack(spacing: 6) {
+                    // Segmented bars
+                    HStack(spacing: 4) {
+                        ForEach(0..<photoURLList.count, id: \.self) { index in
+                            Capsule()
+                                .fill(index == currentPhotoIndex ? Color.white : Color.white.opacity(0.35))
+                                .frame(height: 3)
+                                .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
+                                .animation(.easeInOut(duration: 0.2), value: currentPhotoIndex)
+                        }
                     }
+                    .padding(.horizontal, 12)
+
+                    // Photo counter badge
+                    HStack(spacing: 5) {
+                        Image(systemName: "photo.stack.fill")
+                            .font(.system(size: 10, weight: .bold))
+                        Text("\(currentPhotoIndex + 1)/\(photoURLList.count)")
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 5)
+                    .background(.black.opacity(0.45), in: Capsule())
+                    .overlay(Capsule().strokeBorder(.white.opacity(0.2), lineWidth: 0.5))
                 }
                 .padding(.top, 12)
             }

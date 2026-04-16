@@ -22,6 +22,7 @@ struct EditProfileView: View {
 
     // UI state
     @State private var selectedTab: EditTab = .edit
+    @State private var previewPhotoIndex: Int = 0
     @State private var isSaving = false
     @State private var saveError: String?
     @State private var showDiscardAlert = false
@@ -304,31 +305,29 @@ struct EditProfileView: View {
     }
 
     private var previewCard: some View {
-        VStack(spacing: 0) {
-            // Photo
-            ZStack(alignment: .bottom) {
-                if let first = photoSlots.first, let img = first.image {
-                    Image(uiImage: img)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 420)
-                        .clipped()
-                } else if let first = photoSlots.first, let url = first.remoteURL {
+        let allPhotos = photoSlots.compactMap { slot -> AnyView? in
+            if let img = slot.image {
+                return AnyView(Image(uiImage: img).resizable().aspectRatio(contentMode: .fill))
+            } else if let url = slot.remoteURL {
+                return AnyView(
                     AsyncImage(url: url) { phase in
                         if case .success(let image) = phase {
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(height: 420)
-                                .clipped()
+                            image.resizable().aspectRatio(contentMode: .fill)
                         } else {
                             Rectangle()
                                 .fill(Color.white.opacity(0.06))
-                                .frame(height: 420)
                                 .overlay { ProgressView().tint(.white.opacity(0.3)) }
                         }
                     }
-                } else {
+                )
+            }
+            return nil
+        }
+
+        return VStack(spacing: 0) {
+            // Photo carousel
+            ZStack(alignment: .bottom) {
+                if allPhotos.isEmpty {
                     Rectangle()
                         .fill(Color.white.opacity(0.06))
                         .frame(height: 420)
@@ -337,6 +336,51 @@ struct EditProfileView: View {
                                 .font(.system(size: 60))
                                 .foregroundStyle(.white.opacity(0.15))
                         }
+                } else {
+                    TabView(selection: $previewPhotoIndex) {
+                        ForEach(Array(allPhotos.enumerated()), id: \.offset) { index, view in
+                            view
+                                .frame(height: 420)
+                                .clipped()
+                                .tag(index)
+                        }
+                    }
+                    .tabViewStyle(.page(indexDisplayMode: .never))
+                    .frame(height: 420)
+                }
+
+                // Page indicator — segmented bars + counter (same as match card)
+                if allPhotos.count > 1 {
+                    VStack {
+                        VStack(spacing: 6) {
+                            HStack(spacing: 4) {
+                                ForEach(0..<allPhotos.count, id: \.self) { index in
+                                    Capsule()
+                                        .fill(index == previewPhotoIndex ? Color.white : Color.white.opacity(0.35))
+                                        .frame(height: 3)
+                                        .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
+                                        .animation(.easeInOut(duration: 0.2), value: previewPhotoIndex)
+                                }
+                            }
+                            .padding(.horizontal, 12)
+
+                            HStack(spacing: 5) {
+                                Image(systemName: "photo.stack.fill")
+                                    .font(.system(size: 10, weight: .bold))
+                                Text("\(previewPhotoIndex + 1)/\(allPhotos.count)")
+                                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                            }
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 5)
+                            .background(.black.opacity(0.45), in: Capsule())
+                            .overlay(Capsule().strokeBorder(.white.opacity(0.2), lineWidth: 0.5))
+                        }
+                        .padding(.top, 12)
+
+                        Spacer()
+                    }
+                    .frame(height: 420)
                 }
 
                 // Gradient + info
