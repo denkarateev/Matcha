@@ -16,7 +16,7 @@ struct OfferFilterState: Equatable {
 
 struct OfferFilterView: View {
     @Binding var filterState: OfferFilterState
-    var allOffers: [Offer] = []
+    @Binding var allOffers: [Offer]
     var onApply: ((OfferFilterState) -> Void)? = nil
 
     @State private var draft: OfferFilterState
@@ -30,12 +30,12 @@ struct OfferFilterView: View {
 
     init(
         filterState: Binding<OfferFilterState>,
-        allOffers: [Offer] = [],
+        allOffers: Binding<[Offer]> = .constant([]),
         onApply: ((OfferFilterState) -> Void)? = nil
     ) {
         self._filterState = filterState
         self._draft = State(initialValue: filterState.wrappedValue)
-        self.allOffers = allOffers
+        self._allOffers = allOffers
         self.onApply = onApply
     }
 

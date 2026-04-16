@@ -117,7 +117,7 @@ struct OffersAndDealsView: View {
         .sheet(isPresented: $showFilter) {
             OfferFilterView(
                 filterState: $filterState,
-                allOffers: allOffers
+                allOffers: $allOffers
             )
         }
         .background(MatchaTokens.Colors.background.ignoresSafeArea())

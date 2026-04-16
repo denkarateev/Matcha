@@ -3,6 +3,7 @@ import SwiftUI
 
 struct OffersView: View {
     @State private var store: OffersStore
+    @State private var showAllBestForYou = false
     @Binding private var searchText: String
     @Binding private var filterState: OfferFilterState
     @Binding private var allOffers: [Offer]
@@ -252,9 +253,13 @@ struct OffersView: View {
 
                 Spacer()
 
-                Text("See All")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(MatchaTokens.Colors.accent)
+                Button {
+                    showAllBestForYou = true
+                } label: {
+                    Text("See All")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(MatchaTokens.Colors.accent)
+                }
             }
             .padding(.horizontal, 20)
 
@@ -268,6 +273,36 @@ struct OffersView: View {
                     }
                 }
                 .padding(.horizontal, 20)
+            }
+        }
+        .sheet(isPresented: $showAllBestForYou) {
+            allBestForYouSheet
+        }
+    }
+
+    private var allBestForYouSheet: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(filteredOffers.filter { !$0.isLastMinute }) { offer in
+                        NavigationLink(value: offer) {
+                            allOfferRow(offer)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(20)
+            }
+            .background(MatchaTokens.Colors.background.ignoresSafeArea())
+            .navigationTitle("Best for You")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(MatchaTokens.Colors.background, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { showAllBestForYou = false }
+                        .foregroundStyle(MatchaTokens.Colors.accent)
+                }
             }
         }
     }
@@ -365,6 +400,10 @@ struct OffersView: View {
             }
             .padding(.horizontal, 20)
         }
+    }
+
+    private func allOfferRow(_ offer: Offer) -> some View {
+        allOfferCard(offer)
     }
 
     private func allOfferCard(_ offer: Offer) -> some View {
