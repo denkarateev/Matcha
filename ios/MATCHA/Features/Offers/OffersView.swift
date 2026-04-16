@@ -3,18 +3,20 @@ import SwiftUI
 
 struct OffersView: View {
     @State private var store: OffersStore
-    @State private var showCreateOffer = false
-    @State private var showFilter = false
-    @State private var showDealsCRM = false
-    @State private var isSearchActive = false
-    @FocusState private var searchFieldFocused: Bool
-    @State private var filterState = OfferFilterState()
-    @State private var searchText = ""
+    @Binding private var searchText: String
+    @Binding private var filterState: OfferFilterState
 
     var isBusiness: Bool
 
-    init(repository: any MatchaRepository, isBusiness: Bool = false) {
+    init(
+        repository: any MatchaRepository,
+        isBusiness: Bool = false,
+        searchText: Binding<String> = .constant(""),
+        filterState: Binding<OfferFilterState> = .constant(OfferFilterState())
+    ) {
         _store = State(initialValue: OffersStore(repository: repository))
+        _searchText = searchText
+        _filterState = filterState
         self.isBusiness = isBusiness
     }
 
@@ -84,14 +86,6 @@ struct OffersView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
-                // Expandable search field
-                if isSearchActive {
-                    searchFieldBar
-                        .padding(.horizontal, 20)
-                        .padding(.top, 8)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                }
-
                 // Error
                 if store.error != nil {
                     errorBanner
@@ -133,62 +127,8 @@ struct OffersView: View {
         }
         .refreshable { await store.load() }
         .background(MatchaTokens.Colors.background.ignoresSafeArea())
-        .navigationBarHidden(true)
         .navigationDestination(for: Offer.self) { offer in
             OfferDetailView(offer: offer, isBusiness: isBusiness)
-        }
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                HStack(spacing: 14) {
-                    Button {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
-                            isSearchActive.toggle()
-                            if !isSearchActive { searchText = "" }
-                        }
-                        if isSearchActive {
-                            searchFieldFocused = true
-                        }
-                    } label: {
-                        Image(systemName: isSearchActive ? "xmark" : "magnifyingglass")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.8))
-                    }
-
-                    Button { showFilter = true } label: {
-                        Image(systemName: "slider.horizontal.3")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(filterState.isActive ? MatchaTokens.Colors.accent : .white.opacity(0.8))
-                    }
-
-                    Button { showDealsCRM = true } label: {
-                        Image(systemName: "chart.bar.doc.horizontal.fill")
-                            .font(.system(size: 18))
-                            .foregroundStyle(.white.opacity(0.7))
-                    }
-
-                    if isBusiness {
-                        Button { showCreateOffer = true } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 20))
-                                .foregroundStyle(MatchaTokens.Colors.accent)
-                        }
-                    }
-                }
-            }
-        }
-        .sheet(isPresented: $showCreateOffer) {
-            CreateOfferView()
-        }
-        .sheet(isPresented: $showDealsCRM) {
-            NavigationStack {
-                DealsCRMView()
-            }
-        }
-        .sheet(isPresented: $showFilter) {
-            OfferFilterView(
-                filterState: $filterState,
-                matchingCount: filteredOffers.count
-            )
         }
         .onChange(of: filterState) { _, newValue in
             Task { await store.load(filters: apiFilters(from: newValue)) }
@@ -608,39 +548,6 @@ struct OffersView: View {
     }
 
     // MARK: - Error + Empty
-
-    // MARK: - Expandable Search Field
-
-    private var searchFieldBar: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 16))
-                .foregroundStyle(.white.opacity(0.35))
-
-            TextField("Search for offers", text: $searchText)
-                .font(.system(size: 16))
-                .foregroundStyle(.white)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-                .focused($searchFieldFocused)
-                .submitLabel(.done)
-
-            if !searchText.isEmpty {
-                Button { searchText = "" } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 15))
-                        .foregroundStyle(.white.opacity(0.35))
-                }
-            }
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 11)
-        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
-        )
-    }
 
     private var errorBanner: some View {
         HStack(spacing: 8) {

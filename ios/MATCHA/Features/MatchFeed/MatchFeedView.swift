@@ -321,9 +321,7 @@ struct MatchFeedView: View {
                                 MatchaHaptic.heavy()
                             }
                         },
-                        onTap: {
-                            profileToShow = currentProfile
-                        }
+                        onTap: nil
                     )
                     .id(currentProfile.id)
                 }
