@@ -671,7 +671,6 @@ final class ProfileStore {
 
     let settingsRows = [
         SettingsRow(icon: "creditcard.fill", title: "Subscription"),
-        SettingsRow(icon: "chart.bar.doc.horizontal.fill", title: "Deals CRM"),
         SettingsRow(icon: "person.circle", title: "Account"),
         SettingsRow(icon: "bell.badge", title: "Notifications"),
         SettingsRow(icon: "lock.shield", title: "Privacy"),

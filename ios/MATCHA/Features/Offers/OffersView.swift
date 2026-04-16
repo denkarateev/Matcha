@@ -5,6 +5,7 @@ struct OffersView: View {
     @State private var store: OffersStore
     @State private var showCreateOffer = false
     @State private var showFilter = false
+    @State private var showDealsCRM = false
     @State private var filterState = OfferFilterState()
     @State private var searchText = ""
 
@@ -118,18 +119,30 @@ struct OffersView: View {
             OfferDetailView(offer: offer, isBusiness: isBusiness)
         }
         .toolbar {
-            if isBusiness {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button { showCreateOffer = true } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 20))
-                            .foregroundStyle(MatchaTokens.Colors.accent)
+            ToolbarItem(placement: .topBarTrailing) {
+                HStack(spacing: 14) {
+                    Button { showDealsCRM = true } label: {
+                        Image(systemName: "chart.bar.doc.horizontal.fill")
+                            .font(.system(size: 18))
+                            .foregroundStyle(.white.opacity(0.7))
+                    }
+                    if isBusiness {
+                        Button { showCreateOffer = true } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 20))
+                                .foregroundStyle(MatchaTokens.Colors.accent)
+                        }
                     }
                 }
             }
         }
         .sheet(isPresented: $showCreateOffer) {
             CreateOfferView()
+        }
+        .sheet(isPresented: $showDealsCRM) {
+            NavigationStack {
+                DealsCRMView()
+            }
         }
         .sheet(isPresented: $showFilter) {
             OfferFilterView(
