@@ -5,6 +5,7 @@ struct OffersView: View {
     @State private var store: OffersStore
     @Binding private var searchText: String
     @Binding private var filterState: OfferFilterState
+    @Binding private var allOffers: [Offer]
 
     var isBusiness: Bool
 
@@ -12,11 +13,13 @@ struct OffersView: View {
         repository: any MatchaRepository,
         isBusiness: Bool = false,
         searchText: Binding<String> = .constant(""),
-        filterState: Binding<OfferFilterState> = .constant(OfferFilterState())
+        filterState: Binding<OfferFilterState> = .constant(OfferFilterState()),
+        allOffers: Binding<[Offer]> = .constant([])
     ) {
         _store = State(initialValue: OffersStore(repository: repository))
         _searchText = searchText
         _filterState = filterState
+        _allOffers = allOffers
         self.isBusiness = isBusiness
     }
 
@@ -127,10 +130,13 @@ struct OffersView: View {
         .navigationDestination(for: Offer.self) { offer in
             OfferDetailView(offer: offer, isBusiness: isBusiness)
         }
-        .onChange(of: filterState) { _, newValue in
-            Task { await store.load(filters: apiFilters(from: newValue)) }
+        .onChange(of: store.offers) { _, newOffers in
+            allOffers = newOffers
         }
-        .task { await store.loadIfNeeded() }
+        .task {
+            await store.loadIfNeeded()
+            allOffers = store.offers
+        }
     }
 
     // MARK: - Last Minute Section

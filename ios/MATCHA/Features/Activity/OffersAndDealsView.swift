@@ -12,6 +12,7 @@ struct OffersAndDealsView: View {
     @FocusState private var searchFieldFocused: Bool
     @State private var searchText = ""
     @State private var filterState = OfferFilterState()
+    @State private var allOffers: [Offer] = []
 
     private var isBusiness: Bool { currentUser.role == .business }
 
@@ -102,7 +103,8 @@ struct OffersAndDealsView: View {
                 repository: repository,
                 isBusiness: isBusiness,
                 searchText: $searchText,
-                filterState: $filterState
+                filterState: $filterState,
+                allOffers: $allOffers
             )
         }
         .navigationBarHidden(true)
@@ -115,7 +117,7 @@ struct OffersAndDealsView: View {
         .sheet(isPresented: $showFilter) {
             OfferFilterView(
                 filterState: $filterState,
-                matchingCount: 0
+                allOffers: allOffers
             )
         }
         .background(MatchaTokens.Colors.background.ignoresSafeArea())

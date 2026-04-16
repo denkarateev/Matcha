@@ -16,7 +16,7 @@ struct OfferFilterState: Equatable {
 
 struct OfferFilterView: View {
     @Binding var filterState: OfferFilterState
-    var matchingCount: Int = 12
+    var allOffers: [Offer] = []
     var onApply: ((OfferFilterState) -> Void)? = nil
 
     @State private var draft: OfferFilterState
@@ -30,13 +30,32 @@ struct OfferFilterView: View {
 
     init(
         filterState: Binding<OfferFilterState>,
-        matchingCount: Int = 12,
+        allOffers: [Offer] = [],
         onApply: ((OfferFilterState) -> Void)? = nil
     ) {
         self._filterState = filterState
         self._draft = State(initialValue: filterState.wrappedValue)
-        self.matchingCount = matchingCount
+        self.allOffers = allOffers
         self.onApply = onApply
+    }
+
+    private var matchingCount: Int {
+        var result = allOffers
+        if let type = draft.collabType {
+            result = result.filter { $0.type == type }
+        }
+        if !draft.selectedNiches.isEmpty {
+            let selected = Set(draft.selectedNiches.map { $0.lowercased() })
+            result = result.filter { offer in
+                var offerNiches = Set(offer.preferredNiches.map { $0.lowercased() })
+                if let p = offer.preferredNiche { offerNiches.insert(p.lowercased()) }
+                return !selected.isDisjoint(with: offerNiches)
+            }
+        }
+        if draft.lastMinuteOnly {
+            result = result.filter(\.isLastMinute)
+        }
+        return result.count
     }
 
     var body: some View {
