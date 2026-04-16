@@ -92,10 +92,12 @@ def get_discovery_feed(
         if target_user.role != opposite_role:
             continue
 
-        # Apply filters
-        if niche and niche not in (profile.niches or []):
-            continue
-        if district and profile.district != district:
+        # Apply filters (case-insensitive for niche + district)
+        if niche:
+            profile_niches_lower = {n.lower() for n in (profile.niches or [])}
+            if niche.lower() not in profile_niches_lower:
+                continue
+        if district and (profile.district or "").lower() != district.lower():
             continue
         if min_followers is not None and (profile.audience_size is None or profile.audience_size < min_followers):
             continue

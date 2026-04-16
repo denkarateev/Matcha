@@ -43,7 +43,7 @@ final class MatchFeedStore {
 
     func apiFilterParams() -> FeedFilterParams {
         FeedFilterParams(
-            niche: filterState.selectedNiches.first,
+            niche: filterState.selectedNiches.first?.lowercased(),
             district: filterState.districts.first,
             minFollowers: filterState.minimumFollowers > 0 ? Int(filterState.minimumFollowers) : nil,
             collabType: filterState.collaborationType?.rawValue
@@ -65,15 +65,18 @@ final class MatchFeedStore {
         }
 
         if !filterState.selectedNiches.isEmpty {
+            let selected = Set(filterState.selectedNiches.map { $0.lowercased() })
             result = result.filter { profile in
-                !filterState.selectedNiches.isDisjoint(with: Set(profile.niches))
+                let profileNiches = Set(profile.niches.map { $0.lowercased() })
+                return !selected.isDisjoint(with: profileNiches)
             }
         }
 
         if !filterState.districts.isEmpty {
+            let selectedDistricts = Set(filterState.districts.map { $0.lowercased() })
             result = result.filter { profile in
                 guard let district = profile.district else { return false }
-                return filterState.districts.contains(district)
+                return selectedDistricts.contains(district.lowercased())
             }
         }
 
