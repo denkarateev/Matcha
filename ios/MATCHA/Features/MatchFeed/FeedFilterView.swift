@@ -218,62 +218,65 @@ struct FeedFilterView: View {
         }
     }
 
-    // MARK: - Audience Tier Picker
+    // MARK: - Followers Chips
 
-    private struct AudienceTier: Identifiable {
+    private struct FollowerBucket: Identifiable, Hashable {
         let id: String
         let label: String
-        let range: String
-        let cardLabel: String
-        let minFollowers: Double
+        let min: Double
+        let premium: Bool
 
-        static let all: [AudienceTier] = [
-            .init(id: "any", label: "Any", range: "All sizes", cardLabel: "Any", minFollowers: 0),
-            .init(id: "nano", label: "Nano", range: "1K – 10K", cardLabel: "✓ 5K", minFollowers: 1_000),
-            .init(id: "micro", label: "Micro", range: "10K – 100K", cardLabel: "✓ 25K", minFollowers: 10_000),
-            .init(id: "mid", label: "Mid", range: "100K – 500K", cardLabel: "✓ 250K", minFollowers: 100_000),
-            .init(id: "macro", label: "Macro", range: "500K+", cardLabel: "✓ 750K", minFollowers: 500_000),
+        static let all: [FollowerBucket] = [
+            .init(id: "0", label: "0+", min: 0, premium: false),
+            .init(id: "1k", label: "1k+", min: 1_000, premium: false),
+            .init(id: "5k", label: "5k+", min: 5_000, premium: false),
+            .init(id: "10k", label: "10k+", min: 10_000, premium: false),
+            .init(id: "25k", label: "25k+", min: 25_000, premium: true),
+            .init(id: "50k", label: "50k+", min: 50_000, premium: true),
         ]
     }
 
-    private var selectedTierId: String {
+    private var selectedBucketId: String {
         let v = draft.minimumFollowers
-        if v >= 500_000 { return "macro" }
-        if v >= 100_000 { return "mid" }
-        if v >= 10_000 { return "micro" }
-        if v >= 1_000 { return "nano" }
-        return "any"
+        if v >= 50_000 { return "50k" }
+        if v >= 25_000 { return "25k" }
+        if v >= 10_000 { return "10k" }
+        if v >= 5_000 { return "5k" }
+        if v >= 1_000 { return "1k" }
+        return "0"
     }
 
     private var followersSection: some View {
-        filterCard(title: "Audience Tier") {
-            VStack(spacing: 6) {
-                ForEach(AudienceTier.all) { tier in
-                    let selected = selectedTierId == tier.id
+        filterCard(title: "Followers") {
+            FlowLayoutFilter(spacing: 8) {
+                ForEach(FollowerBucket.all) { bucket in
+                    let selected = selectedBucketId == bucket.id
                     Button {
                         withAnimation(MatchaTokens.Animations.buttonPress) {
-                            draft.minimumFollowers = tier.minFollowers
+                            draft.minimumFollowers = bucket.min
                         }
                     } label: {
-                        HStack(spacing: 10) {
-                            Text(tier.label)
-                                .font(.system(size: 14, weight: .semibold))
+                        HStack(spacing: 6) {
+                            if bucket.premium {
+                                Image(systemName: "crown.fill")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(selected ? .black : MatchaTokens.Colors.accent)
+                            }
+                            Text(bucket.label)
+                                .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(selected ? .black : MatchaTokens.Colors.textPrimary)
-                            Text(tier.range)
-                                .font(.system(size: 12))
-                                .foregroundStyle(selected ? .black.opacity(0.6) : MatchaTokens.Colors.textSecondary)
-
-                            Spacer()
-
-                            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                                .font(.system(size: 18))
-                                .foregroundStyle(selected ? MatchaTokens.Colors.accent : MatchaTokens.Colors.outline)
                         }
-                        .padding(.horizontal, 14)
+                        .padding(.horizontal, 18)
                         .padding(.vertical, 10)
                         .background(
                             selected ? MatchaTokens.Colors.accent : MatchaTokens.Colors.elevated,
-                            in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            in: Capsule()
+                        )
+                        .overlay(
+                            Capsule().strokeBorder(
+                                selected ? Color.clear : MatchaTokens.Colors.outline,
+                                lineWidth: 1.5
+                            )
                         )
                     }
                 }
