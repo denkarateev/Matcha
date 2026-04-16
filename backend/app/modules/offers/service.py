@@ -47,10 +47,12 @@ class OfferService:
         if filters.type:
             offers = [offer for offer in offers if offer.type == filters.type]
         if filters.niche:
+            target_niche = filters.niche.lower()
             offers = [
                 offer
                 for offer in offers
-                if offer.preferred_blogger_niche in {None, filters.niche}
+                if offer.preferred_blogger_niche is None
+                or offer.preferred_blogger_niche.lower() == target_niche
             ]
         if filters.last_minute_only:
             offers = [offer for offer in offers if offer.is_last_minute]

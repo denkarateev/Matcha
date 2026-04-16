@@ -17,9 +17,10 @@ struct OffersView: View {
     }
 
     private func apiFilters(from state: OfferFilterState) -> OfferFilterParams {
+        // Note: backend handles case-insensitively; send lowercased for clarity
         OfferFilterParams(
             type: state.collabType?.rawValue,
-            niche: state.selectedNiches.first,
+            niche: state.selectedNiches.first?.lowercased(),
             lastMinuteOnly: state.lastMinuteOnly
         )
     }
@@ -43,10 +44,15 @@ struct OffersView: View {
             result = result.filter { $0.type == type }
         }
 
-        // Niches filter
+        // Niches filter — case-insensitive, checks offer.preferredNiche + preferredNiches
         if !filterState.selectedNiches.isEmpty {
+            let selected = Set(filterState.selectedNiches.map { $0.lowercased() })
             result = result.filter { offer in
-                !filterState.selectedNiches.isDisjoint(with: Set(offer.creator.niches))
+                var offerNiches = Set(offer.preferredNiches.map { $0.lowercased() })
+                if let primary = offer.preferredNiche {
+                    offerNiches.insert(primary.lowercased())
+                }
+                return !selected.isDisjoint(with: offerNiches)
             }
         }
 
