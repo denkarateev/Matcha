@@ -4,6 +4,7 @@ import Foundation
 protocol MatchaRepository {
     // MARK: - Feed & Swipe
     func fetchMatchFeed() async throws -> [UserProfile]
+    func fetchMatchFeed(filters: FeedFilterParams) async throws -> [UserProfile]
     func swipe(targetId: String, direction: SwipeDirection) async throws -> SwipeOutcome
     func matchBack(targetId: String) async throws -> MatchBackResult
 
@@ -13,6 +14,7 @@ protocol MatchaRepository {
 
     // MARK: - Offers
     func fetchOffers() async throws -> [Offer]
+    func fetchOffers(filters: OfferFilterParams) async throws -> [Offer]
     func createOffer(_ request: OfferCreateRequest) async throws -> Offer
     func closeOffer(offerId: String) async throws -> Offer
 
@@ -48,6 +50,51 @@ protocol MatchaRepository {
 
     // MARK: - Account
     func deleteAccount() async throws
+}
+
+// MARK: - Filter Params for API
+
+struct FeedFilterParams: Sendable {
+    let niche: String?
+    let district: String?
+    let minFollowers: Int?
+    let collabType: String?
+
+    init(niche: String? = nil, district: String? = nil, minFollowers: Int? = nil, collabType: String? = nil) {
+        self.niche = niche
+        self.district = district
+        self.minFollowers = minFollowers
+        self.collabType = collabType
+    }
+
+    var queryItems: [URLQueryItem] {
+        var items: [URLQueryItem] = []
+        if let niche { items.append(URLQueryItem(name: "niche", value: niche)) }
+        if let district { items.append(URLQueryItem(name: "district", value: district)) }
+        if let minFollowers { items.append(URLQueryItem(name: "min_followers", value: String(minFollowers))) }
+        if let collabType { items.append(URLQueryItem(name: "collab_type", value: collabType)) }
+        return items
+    }
+}
+
+struct OfferFilterParams: Sendable {
+    let type: String?
+    let niche: String?
+    let lastMinuteOnly: Bool
+
+    init(type: String? = nil, niche: String? = nil, lastMinuteOnly: Bool = false) {
+        self.type = type
+        self.niche = niche
+        self.lastMinuteOnly = lastMinuteOnly
+    }
+
+    var queryItems: [URLQueryItem] {
+        var items: [URLQueryItem] = []
+        if let type { items.append(URLQueryItem(name: "type", value: type)) }
+        if let niche { items.append(URLQueryItem(name: "niche", value: niche)) }
+        if lastMinuteOnly { items.append(URLQueryItem(name: "last_minute_only", value: "true")) }
+        return items
+    }
 }
 
 // MARK: - Deal Review Request

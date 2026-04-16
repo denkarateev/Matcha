@@ -144,7 +144,9 @@ struct MatchFeedView: View {
         }
         // Filter sheet
         .sheet(isPresented: $showFilter) {
-            FeedFilterView(filterState: Bindable(store).filterState)
+            FeedFilterView(filterState: Bindable(store).filterState) { _ in
+                Task { await store.applyFilterChange() }
+            }
         }
         // Profile detail sheet (tap on card)
         .sheet(item: $profileToShow) { profile in

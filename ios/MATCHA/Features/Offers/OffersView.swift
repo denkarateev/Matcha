@@ -16,6 +16,14 @@ struct OffersView: View {
         self.isBusiness = isBusiness
     }
 
+    private func apiFilters(from state: OfferFilterState) -> OfferFilterParams {
+        OfferFilterParams(
+            type: state.collabType?.rawValue,
+            niche: state.selectedNiches.first,
+            lastMinuteOnly: state.lastMinuteOnly
+        )
+    }
+
     private var filteredOffers: [Offer] {
         var result = store.offers
 
@@ -149,6 +157,9 @@ struct OffersView: View {
                 filterState: $filterState,
                 matchingCount: filteredOffers.count
             )
+        }
+        .onChange(of: filterState) { _, newValue in
+            Task { await store.load(filters: apiFilters(from: newValue)) }
         }
         .task { await store.loadIfNeeded() }
     }
@@ -669,12 +680,12 @@ final class OffersStore {
         await load()
     }
 
-    func load() async {
+    func load(filters: OfferFilterParams = OfferFilterParams()) async {
         error = nil
         isLoading = true
         defer { isLoading = false; hasLoaded = true }
         do {
-            offers = try await repository.fetchOffers()
+            offers = try await repository.fetchOffers(filters: filters)
         } catch let networkError as NetworkError {
             self.error = networkError
             offers = []

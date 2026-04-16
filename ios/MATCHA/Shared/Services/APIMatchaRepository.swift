@@ -13,8 +13,16 @@ final class APIMatchaRepository: MatchaRepository {
     // MARK: - Feed & Swipe
 
     func fetchMatchFeed() async throws -> [UserProfile] {
+        try await fetchMatchFeed(filters: FeedFilterParams())
+    }
+
+    func fetchMatchFeed(filters: FeedFilterParams) async throws -> [UserProfile] {
         let session = try await resolveCurrentSession()
-        let profiles: [ProfileRead] = try await network.request(.GET, path: "/matches/feed")
+        let profiles: [ProfileRead] = try await network.request(
+            .GET,
+            path: "/matches/feed",
+            queryItems: filters.queryItems.isEmpty ? nil : filters.queryItems
+        )
         let fallbackRole = counterpartRole(for: session.role)
         return profiles.map {
             let resolvedRole = $0.role.flatMap { Role(rawValue: $0) } ?? fallbackRole
@@ -54,7 +62,15 @@ final class APIMatchaRepository: MatchaRepository {
     // MARK: - Offers
 
     func fetchOffers() async throws -> [Offer] {
-        let dtos: [OfferReadDTO] = try await network.request(.GET, path: "/offers")
+        try await fetchOffers(filters: OfferFilterParams())
+    }
+
+    func fetchOffers(filters: OfferFilterParams) async throws -> [Offer] {
+        let dtos: [OfferReadDTO] = try await network.request(
+            .GET,
+            path: "/offers",
+            queryItems: filters.queryItems.isEmpty ? nil : filters.queryItems
+        )
         return dtos.map { $0.toDomain() }
     }
 

@@ -10,6 +10,24 @@ final class MockMatchaRepository: MatchaRepository {
         return MockSeedData.feedProfiles
     }
 
+    func fetchMatchFeed(filters: FeedFilterParams) async throws -> [UserProfile] {
+        try await Task.sleep(for: .milliseconds(180))
+        var result = MockSeedData.feedProfiles
+        if let niche = filters.niche {
+            result = result.filter { $0.niches.contains(niche) }
+        }
+        if let district = filters.district {
+            result = result.filter { $0.district == district }
+        }
+        if let min = filters.minFollowers {
+            result = result.filter { ($0.followersCount ?? 0) >= min }
+        }
+        if let collab = filters.collabType, let type = CollaborationType(rawValue: collab) {
+            result = result.filter { $0.collaborationType == type || $0.collaborationType == .both }
+        }
+        return result
+    }
+
     func swipe(targetId: String, direction: SwipeDirection) async throws -> SwipeOutcome {
         try await Task.sleep(for: .milliseconds(120))
         // Simulate occasional match on right/super swipe
@@ -42,6 +60,21 @@ final class MockMatchaRepository: MatchaRepository {
     func fetchOffers() async throws -> [Offer] {
         try await Task.sleep(for: .milliseconds(180))
         return MockSeedData.offers
+    }
+
+    func fetchOffers(filters: OfferFilterParams) async throws -> [Offer] {
+        try await Task.sleep(for: .milliseconds(180))
+        var result = MockSeedData.offers
+        if let type = filters.type, let ct = CollaborationType(rawValue: type) {
+            result = result.filter { $0.type == ct }
+        }
+        if let niche = filters.niche {
+            result = result.filter { $0.preferredNiche == niche || $0.preferredNiches.contains(niche) }
+        }
+        if filters.lastMinuteOnly {
+            result = result.filter { $0.isLastMinute }
+        }
+        return result
     }
 
     func createOffer(_ request: OfferCreateRequest) async throws -> Offer {

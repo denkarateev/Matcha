@@ -41,6 +41,20 @@ final class MatchFeedStore {
 
     // MARK: - Computed
 
+    func apiFilterParams() -> FeedFilterParams {
+        FeedFilterParams(
+            niche: filterState.selectedNiches.first,
+            district: filterState.districts.first,
+            minFollowers: filterState.minimumFollowers > 0 ? Int(filterState.minimumFollowers) : nil,
+            collabType: filterState.collaborationType?.rawValue
+        )
+    }
+
+    func applyFilterChange() async {
+        hasLoaded = false
+        await loadFeed()
+    }
+
     var filteredProfiles: [UserProfile] {
         var result = profiles
 
@@ -108,7 +122,7 @@ final class MatchFeedStore {
         var summaryError: NetworkError?
 
         do {
-            let fetchedProfiles = try await repository.fetchMatchFeed()
+            let fetchedProfiles = try await repository.fetchMatchFeed(filters: apiFilterParams())
             profiles = ProcessedDiscoveryProfileStore.filter(
                 fetchedProfiles,
                 currentUserID: currentUserID
