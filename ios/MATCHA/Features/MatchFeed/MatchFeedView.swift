@@ -277,6 +277,7 @@ struct MatchFeedView: View {
                         programmaticSwipe: .constant(nil),
                         onSwipeCompleted: { _ in }
                     )
+                    .id(thirdProfile.id)
                 }
 
                 // Second card (behind)
@@ -290,6 +291,7 @@ struct MatchFeedView: View {
                         programmaticSwipe: .constant(nil),
                         onSwipeCompleted: { _ in }
                     )
+                    .id(nextProfile.id)
                 }
 
                 // Top card — interactive
@@ -323,6 +325,7 @@ struct MatchFeedView: View {
                             profileToShow = currentProfile
                         }
                     )
+                    .id(currentProfile.id)
                 }
             }
             .frame(width: geo.size.width, height: cardHeight)
