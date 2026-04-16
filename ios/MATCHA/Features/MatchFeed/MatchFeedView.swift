@@ -994,7 +994,7 @@ private struct SwipeCard: View {
             }
             .scrollDisabled(!isTopCard)
 
-            // Page indicator — segmented bars pinned below Dynamic Island
+            // Page indicator — segmented bars, offset so they don't overlap filter icon
             if photoURLList.count > 1 {
                 VStack {
                     HStack(spacing: 4) {
@@ -1006,7 +1006,8 @@ private struct SwipeCard: View {
                                 .animation(.easeInOut(duration: 0.2), value: currentPhotoIndex)
                         }
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.leading, 16)
+                    .padding(.trailing, 68) // clears the filter icon (36pt + 16pt + margin)
                     .padding(.top, 72)
 
                     Spacer()
