@@ -1536,6 +1536,20 @@ async function apiJson(path, opts = {}) {
   return res.json();
 }
 
+function formatRelativeTime(isoString) {
+  if (!isoString) return '—';
+  const then = new Date(isoString);
+  const seconds = Math.max(0, Math.floor((Date.now() - then.getTime()) / 1000));
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return then.toLocaleDateString();
+}
+
 // =========================================================================
 // NAVIGATION
 // =========================================================================
@@ -1599,24 +1613,25 @@ async function loadDashboard() {
     // Animate counters
     requestAnimationFrame(() => animateCounters());
 
-    // Activity feed (placeholder)
+    // Activity feed — live from /admin/activity
     const feed = document.getElementById('activity-feed');
-    const activities = [
-      { color: 'green',  text: '<strong>New user</strong> registered via Instagram', time: '2 min ago' },
-      { color: 'blue',   text: '<strong>Match created</strong> between @foodie and CafeDeluxe', time: '8 min ago' },
-      { color: 'purple', text: '<strong>Deal completed</strong> for brand collaboration', time: '23 min ago' },
-      { color: 'orange', text: '<strong>Verification</strong> submitted by @travel_diary', time: '45 min ago' },
-      { color: 'green',  text: '<strong>New offer</strong> published by TechStartup', time: '1h ago' },
-    ];
-
-    feed.innerHTML = activities.map(a => `
-      <li class="timeline-item">
-        <span class="timeline-dot ${a.color}"></span>
-        <div>
-          <div class="timeline-text">${a.text}</div>
-          <div class="timeline-time">${a.time}</div>
-        </div>
-      </li>`).join('');
+    try {
+      const activities = await apiJson('/admin/activity?limit=15');
+      if (!activities.length) {
+        feed.innerHTML = '<li class="timeline-item"><span class="timeline-dot green"></span><div><div class="timeline-text">No activity yet</div><div class="timeline-time">—</div></div></li>';
+      } else {
+        feed.innerHTML = activities.map(a => `
+          <li class="timeline-item">
+            <span class="timeline-dot ${a.color}"></span>
+            <div>
+              <div class="timeline-text">${a.text}</div>
+              <div class="timeline-time">${formatRelativeTime(a.timestamp)}</div>
+            </div>
+          </li>`).join('');
+      }
+    } catch (e) {
+      feed.innerHTML = `<li class="timeline-item"><span class="timeline-dot orange"></span><div><div class="timeline-text">Failed to load activity</div><div class="timeline-time">${e.message || 'error'}</div></div></li>`;
+    }
 
     // Quick actions
     const qa = document.getElementById('quick-actions');

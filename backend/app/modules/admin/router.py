@@ -84,6 +84,82 @@ async def dashboard(
     )
 
 
+@router.get("/admin/activity")
+async def recent_activity(
+    limit: int = Query(default=15, ge=1, le=50),
+    _token: str = Depends(verify_admin_token),
+    container: AppContainer = Depends(get_container),
+) -> list[dict]:
+    """
+    Последние события из store: регистрации, матчи, завершённые сделки,
+    заявки на верификацию, новые офферы — собрано в один хронологический
+    список для admin dashboard.
+    """
+    store = _get_store(container)
+    events: list[dict] = []
+
+    users = store.users if isinstance(store.users, dict) else {u.id: u for u in store.users}
+    profiles = store.profiles if isinstance(store.profiles, dict) else {p.user_id: p for p in store.profiles}
+
+    def display(uid: str) -> str:
+        p = profiles.get(uid)
+        return p.display_name if p else uid[:8]
+
+    # New users
+    for user in (users.values() if isinstance(users, dict) else users):
+        created = getattr(user, "created_at", None)
+        if created is None:
+            continue
+        role = getattr(user.role, "value", str(user.role))
+        events.append({
+            "color": "green",
+            "text": f"<strong>New {role}</strong> {display(user.id)} registered",
+            "timestamp": created.isoformat() if hasattr(created, "isoformat") else str(created),
+        })
+
+    # Matches
+    matches = store.matches if isinstance(store.matches, dict) else {m.id: m for m in store.matches}
+    for match in matches.values():
+        created = getattr(match, "created_at", None)
+        if created is None:
+            continue
+        a, b = match.user_ids if hasattr(match, "user_ids") else (None, None)
+        events.append({
+            "color": "blue",
+            "text": f"<strong>Match created</strong> between {display(a)} and {display(b)}",
+            "timestamp": created.isoformat() if hasattr(created, "isoformat") else str(created),
+        })
+
+    # Deals
+    deals = store.deals if isinstance(store.deals, dict) else {d.id: d for d in store.deals}
+    for deal in deals.values():
+        created = getattr(deal, "updated_at", None) or getattr(deal, "created_at", None)
+        if created is None:
+            continue
+        status = getattr(deal.status, "value", str(getattr(deal, "status", "")))
+        color = "purple" if status in ("visited", "reviewed", "completed") else "orange"
+        events.append({
+            "color": color,
+            "text": f"<strong>Deal {status}</strong> — {getattr(deal, 'title', '')}".strip(" —"),
+            "timestamp": created.isoformat() if hasattr(created, "isoformat") else str(created),
+        })
+
+    # Offers
+    offers = store.offers if isinstance(store.offers, dict) else {o.id: o for o in store.offers}
+    for offer in offers.values():
+        created = getattr(offer, "created_at", None)
+        if created is None:
+            continue
+        events.append({
+            "color": "green",
+            "text": f"<strong>New offer</strong> by {display(getattr(offer, 'creator_id', ''))}",
+            "timestamp": created.isoformat() if hasattr(created, "isoformat") else str(created),
+        })
+
+    events.sort(key=lambda e: e["timestamp"], reverse=True)
+    return events[:limit]
+
+
 # ---------------------------------------------------------------------------
 # Users
 # ---------------------------------------------------------------------------
