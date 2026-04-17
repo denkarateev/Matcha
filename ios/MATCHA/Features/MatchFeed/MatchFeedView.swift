@@ -32,6 +32,9 @@ struct MatchFeedView: View {
     // Match celebration animation state
     @State private var celebrationAppeared = false
 
+    // Bumble scroll position — id of currently-visible profile in the feed.
+    @State private var scrollPositionID: UUID? = nil
+
     // Share sheet for post-match sharing
     @State private var showMatchShareSheet = false
     @State private var matchShareText = ""
@@ -265,32 +268,37 @@ struct MatchFeedView: View {
             let cardWidth = geo.size.width
             let cardHeight = geo.size.height
 
-            ScrollViewReader { scrollProxy in
-                ScrollView(.vertical, showsIndicators: false) {
-                    LazyVStack(spacing: 0) {
-                        ForEach(Array(store.filteredProfiles.enumerated()), id: \.element.id) { index, profile in
-                            BumbleProfileCard(
-                                profile: profile,
-                                cardSize: CGSize(width: cardWidth, height: cardHeight)
-                            )
-                            .id(profile.id)
-                            .frame(width: cardWidth, height: cardHeight)
-                            .onAppear {
-                                if store.currentIndex != index {
-                                    store.currentIndex = index
-                                }
-                            }
-                        }
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVStack(spacing: 0) {
+                    ForEach(store.filteredProfiles) { profile in
+                        BumbleProfileCard(
+                            profile: profile,
+                            cardSize: CGSize(width: cardWidth, height: cardHeight)
+                        )
+                        .id(profile.id)
+                        .frame(width: cardWidth, height: cardHeight)
                     }
-                    .scrollTargetLayout()
                 }
-                .scrollTargetBehavior(.paging)
-                .onChange(of: store.currentIndex) { _, newIdx in
-                    // Programmatic scroll to newly-current profile (after Like/Pass button).
-                    let list = store.filteredProfiles
-                    guard newIdx < list.count else { return }
+                .scrollTargetLayout()
+            }
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: $scrollPositionID, anchor: .top)
+            .onChange(of: scrollPositionID) { _, newID in
+                // User scrolled → sync currentIndex to visible profile
+                guard let newID,
+                      let idx = store.filteredProfiles.firstIndex(where: { $0.id == newID }) else { return }
+                if store.currentIndex != idx {
+                    store.currentIndex = idx
+                }
+            }
+            .onChange(of: store.currentIndex) { _, newIdx in
+                // Store advanced (e.g. after Like/Pass button) → scroll to matching card
+                let list = store.filteredProfiles
+                guard newIdx >= 0, newIdx < list.count else { return }
+                let targetID = list[newIdx].id
+                if scrollPositionID != targetID {
                     withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
-                        scrollProxy.scrollTo(list[newIdx].id, anchor: .top)
+                        scrollPositionID = targetID
                     }
                 }
             }

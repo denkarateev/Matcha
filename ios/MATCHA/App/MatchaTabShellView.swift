@@ -42,7 +42,7 @@ struct MatchaTabShellView: View {
                     )
                 }
                 .tabItem {
-                    Label("Activity", systemImage: "heart.fill")
+                    Label("Likes", systemImage: "heart.fill")
                 }
                 .tag(AppTab.notifications)
 
