@@ -30,7 +30,7 @@ struct MatchaTabShellView: View {
                     )
                 }
                 .tabItem {
-                    Label("Offers", systemImage: "tag.fill")
+                    Label("Discover", systemImage: "tag.fill")
                 }
                 .tag(AppTab.offers)
 

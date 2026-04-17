@@ -323,19 +323,31 @@ struct OffersView: View {
                 endPoint: .bottom
             )
 
-            // Type badge — top right
+            // Top: type pill left + countdown right (matching main hero cards)
             VStack {
-                HStack {
-                    Spacer()
+                HStack(alignment: .top) {
                     typeBadge(offer.type)
+                    Spacer()
+                    if let expiry = offer.expiryDate {
+                        CountdownPill(deadline: expiry)
+                    }
                 }
                 .padding(12)
                 Spacer()
             }
 
             // Bottom content
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
                 Spacer()
+
+                // Creator row
+                HStack(spacing: 6) {
+                    creatorAvatar(offer.creator, size: 20)
+                    Text(offer.creator.name)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .lineLimit(1)
+                }
 
                 Text(offer.title.replacingOccurrences(of: "[LAST MINUTE] ", with: ""))
                     .font(.system(size: 17, weight: .bold, design: .rounded))
@@ -345,7 +357,7 @@ struct OffersView: View {
                     .shadow(color: .black.opacity(0.5), radius: 4, y: 2)
 
                 Text(offer.rewardSummary)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(MatchaTokens.Colors.accent)
                     .lineLimit(1)
 
