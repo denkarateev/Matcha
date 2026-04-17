@@ -97,8 +97,12 @@ def get_discovery_feed(
             profile_niches_lower = {n.lower() for n in (profile.niches or [])}
             if niche.lower() not in profile_niches_lower:
                 continue
-        if district and (profile.district or "").lower() != district.lower():
-            continue
+        if district:
+            profile_districts = {d.lower() for d in (profile.districts or [])}
+            if profile.district:
+                profile_districts.add(profile.district.lower())
+            if district.lower() not in profile_districts:
+                continue
         if min_followers is not None and (profile.audience_size is None or profile.audience_size < min_followers):
             continue
         if collab_type and collab_type != "both" and profile.collab_type not in (collab_type, "both"):

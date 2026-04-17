@@ -24,6 +24,7 @@ class ProfileUpdateRequest(BaseModel):
     audience_size: int | None = Field(default=None, ge=1)
     category: str | None = None
     district: str | None = None
+    districts: list[str] | None = None
     website: HttpUrl | None = None
     niches: list[str] | None = None
     languages: list[str] | None = None
@@ -49,6 +50,11 @@ class ProfileUpdateRequest(BaseModel):
             self.primary_photo_url = self.photo_url
         if self.collaboration_type is not None and self.collab_type is None:
             self.collab_type = self.collaboration_type
+        # Sync district <-> districts (backward compat for iOS single-district clients)
+        if self.districts is not None and self.district is None:
+            self.district = self.districts[0] if self.districts else None
+        elif self.district is not None and self.districts is None:
+            self.districts = [self.district]
         return self
 
 
@@ -64,6 +70,7 @@ class ProfileRead(BaseModel):
     audience_size: int | None
     category: str | None
     district: str | None
+    districts: list[str] = []
     website: str | None
     niches: list[str]
     languages: list[str]

@@ -213,7 +213,7 @@ struct CreateOfferView: View {
     private var typeSection: some View {
         formCard(title: "Collaboration Type") {
             HStack(spacing: 0) {
-                ForEach([CollaborationType.barter, .paid, .both], id: \.self) { type in
+                ForEach([CollaborationType.barter, .paid], id: \.self) { type in
                     let selected = offerType == type
                     Button(action: {
                         withAnimation(MatchaTokens.Animations.buttonPress) { offerType = type }
@@ -241,7 +241,7 @@ struct CreateOfferView: View {
         switch type {
         case .barter: "arrow.trianglehead.2.counterclockwise.rotate.90"
         case .paid: "dollarsign.circle.fill"
-        case .both: "plus.circle.fill"
+        case .both: "arrow.trianglehead.2.counterclockwise.rotate.90"
         }
     }
 
@@ -249,7 +249,7 @@ struct CreateOfferView: View {
         switch type {
         case .barter: MatchaTokens.Colors.accent
         case .paid: MatchaTokens.Colors.success
-        case .both: Color(hex: 0x7EB2FF)
+        case .both: MatchaTokens.Colors.accent
         }
     }
 

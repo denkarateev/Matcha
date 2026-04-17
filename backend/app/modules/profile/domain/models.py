@@ -17,6 +17,7 @@ class Profile:
     audience_size: int | None = None
     category: str | None = None
     district: str | None = None
+    districts: list[str] = field(default_factory=list)
     website: str | None = None
     niches: list[str] = field(default_factory=list)
     languages: list[str] = field(default_factory=list)

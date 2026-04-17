@@ -37,6 +37,7 @@ struct UserProfile: Identifiable, Hashable {
     let audience: String           // Human-readable audience string, derived locally
     let category: BusinessCategory?
     let district: String?
+    var districts: [String]?
     let niches: [String]
     let languages: [String]
     let bio: String
@@ -92,6 +93,7 @@ struct UserProfile: Identifiable, Hashable {
         audience: String,
         category: BusinessCategory?,
         district: String?,
+        districts: [String]? = nil,
         niches: [String],
         languages: [String],
         bio: String,
@@ -129,6 +131,14 @@ struct UserProfile: Identifiable, Hashable {
         self.audience = audience
         self.category = category
         self.district = district
+        // Migration: if districts is empty/nil but district is set, seed districts.
+        if let provided = districts, !provided.isEmpty {
+            self.districts = provided
+        } else if let single = district, !single.isEmpty {
+            self.districts = [single]
+        } else {
+            self.districts = nil
+        }
         self.niches = niches
         self.languages = languages
         self.bio = bio
@@ -318,6 +328,7 @@ struct ProfileUpdateRequest: Encodable {
     var audienceSize: Int?
     var category: String?
     var district: String?
+    var districts: [String]?
     var website: String?
     var niches: [String]?
     var languages: [String]?

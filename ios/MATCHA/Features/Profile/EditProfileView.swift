@@ -15,10 +15,10 @@ struct EditProfileView: View {
     @State private var instagramHandle: String
     @State private var tiktokHandle: String
     @State private var selectedNiches: Set<String>
-    @State private var collaborationType: CollaborationType
     @State private var languageInput: String = ""
     @State private var languages: [String]
     @State private var photoSlots: [PhotoSlot] = []
+    @State private var selectedDistricts: Set<String> = []
 
     // UI state
     @State private var selectedTab: EditTab = .edit
@@ -33,8 +33,8 @@ struct EditProfileView: View {
     @State private var initialName: String = ""
     @State private var initialBio: String = ""
     @State private var initialDistrict: String = ""
+    @State private var initialDistricts: Set<String> = []
     @State private var initialNiches: Set<String> = []
-    @State private var initialCollaborationType: CollaborationType = .both
     @State private var initialLanguages: [String] = []
     @State private var initialPhotoCount: Int = 0
     @State private var initialInstagramHandle: String = ""
@@ -44,10 +44,10 @@ struct EditProfileView: View {
         name != initialName ||
         bio != initialBio ||
         district != initialDistrict ||
+        selectedDistricts != initialDistricts ||
         instagramHandle != initialInstagramHandle ||
         tiktokHandle != initialTiktokHandle ||
         selectedNiches != initialNiches ||
-        collaborationType != initialCollaborationType ||
         languages != initialLanguages ||
         photoSlots.count != initialPhotoCount
     }
@@ -71,10 +71,33 @@ struct EditProfileView: View {
     private let allDistricts = FeedFilterView.baliDistricts
 
     private let allLanguages = [
-        "English", "Russian", "Indonesian", "French", "German",
+        "English", "Russian", "Indonesian", "Mandarin", "French", "German",
         "Spanish", "Italian", "Portuguese", "Japanese", "Korean",
-        "Chinese", "Arabic", "Hindi", "Dutch", "Swedish",
+        "Arabic", "Hindi", "Dutch", "Hebrew",
         "Thai", "Vietnamese", "Turkish", "Polish", "Ukrainian",
+    ]
+
+    private let languageFlag: [String: String] = [
+        "Russian": "\u{1F1F7}\u{1F1FA}",
+        "English": "\u{1F1EC}\u{1F1E7}",
+        "Indonesian": "\u{1F1EE}\u{1F1E9}",
+        "Mandarin": "\u{1F1E8}\u{1F1F3}",
+        "Japanese": "\u{1F1EF}\u{1F1F5}",
+        "Korean": "\u{1F1F0}\u{1F1F7}",
+        "French": "\u{1F1EB}\u{1F1F7}",
+        "German": "\u{1F1E9}\u{1F1EA}",
+        "Spanish": "\u{1F1EA}\u{1F1F8}",
+        "Italian": "\u{1F1EE}\u{1F1F9}",
+        "Portuguese": "\u{1F1F5}\u{1F1F9}",
+        "Dutch": "\u{1F1F3}\u{1F1F1}",
+        "Arabic": "\u{1F1F8}\u{1F1E6}",
+        "Hindi": "\u{1F1EE}\u{1F1F3}",
+        "Turkish": "\u{1F1F9}\u{1F1F7}",
+        "Thai": "\u{1F1F9}\u{1F1ED}",
+        "Vietnamese": "\u{1F1FB}\u{1F1F3}",
+        "Polish": "\u{1F1F5}\u{1F1F1}",
+        "Ukrainian": "\u{1F1FA}\u{1F1E6}",
+        "Hebrew": "\u{1F1EE}\u{1F1F1}",
     ]
 
     // MARK: - Completion score
@@ -105,10 +128,17 @@ struct EditProfileView: View {
         _instagramHandle = State(initialValue: profile.instagramHandle ?? "")
         _tiktokHandle = State(initialValue: profile.tiktokHandle ?? "")
         _selectedNiches = State(initialValue: Set(profile.niches))
-        _collaborationType = State(initialValue: profile.collaborationType)
         _languages = State(initialValue: profile.languages)
         // Load existing photos as remote-URL slots
         _photoSlots = State(initialValue: profile.photoURLs.map { PhotoSlot(remoteURL: $0) })
+
+        // Multi-district state: seed from profile.districts if present, else
+        // from the singular profile.district (migration).
+        var initialDistrictSet = Set(profile.districts ?? [])
+        if initialDistrictSet.isEmpty, let single = profile.district, !single.isEmpty {
+            initialDistrictSet = [single]
+        }
+        _selectedDistricts = State(initialValue: initialDistrictSet)
     }
 
     // MARK: - Body
@@ -167,10 +197,10 @@ struct EditProfileView: View {
                 initialName = name
                 initialBio = bio
                 initialDistrict = district
+                initialDistricts = selectedDistricts
                 initialInstagramHandle = instagramHandle
                 initialTiktokHandle = tiktokHandle
                 initialNiches = selectedNiches
-                initialCollaborationType = collaborationType
                 initialLanguages = languages
                 initialPhotoCount = photoSlots.count
             }
@@ -238,17 +268,14 @@ struct EditProfileView: View {
                     }
                 }
 
-                // Niches
-                editSection(title: "NICHES", bonus: selectedNiches.isEmpty ? nil : "+20%") {
-                    nichesGrid
+                // Niches — blogger only
+                if profile.role == .blogger {
+                    editSection(title: "NICHES", bonus: selectedNiches.isEmpty ? nil : "+20%") {
+                        nichesGrid
+                    }
                 }
 
-                // Collab Type
-                editSection(title: "COLLAB TYPE") {
-                    collabPicker
-                }
-
-                // Languages — picker chips
+                // Languages — type-ahead with flags
                 editSection(title: "LANGUAGES") {
                     languagesPicker
                 }
@@ -282,9 +309,10 @@ struct EditProfileView: View {
                         .padding(.top, 8)
                 }
 
-                Color.clear.frame(height: 60)
+                Color.clear.frame(height: 120)
             }
         }
+        .safeAreaPadding(.bottom, MatchaTokens.Spacing.xLarge)
     }
 
     // MARK: - Preview Content
@@ -571,34 +599,18 @@ struct EditProfileView: View {
         }
     }
 
-    // MARK: - Collab Picker
+    // MARK: - District Picker
 
-    private var collabPicker: some View {
-        HStack(spacing: 8) {
-            ForEach([CollaborationType.barter, .paid, .both], id: \.self) { type in
-                let selected = collaborationType == type
-                Button {
-                    withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
-                        collaborationType = type
-                    }
-                } label: {
-                    Text(type.title)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(selected ? .black : .white.opacity(0.6))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(
-                            selected ? MatchaTokens.Colors.accent : Color.white.opacity(0.08),
-                            in: RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        )
-                }
-            }
+    @ViewBuilder
+    private var districtPicker: some View {
+        if profile.role == .business {
+            multiDistrictPicker
+        } else {
+            singleDistrictPicker
         }
     }
 
-    // MARK: - District Picker
-
-    private var districtPicker: some View {
+    private var singleDistrictPicker: some View {
         FlowLayout(spacing: 8) {
             ForEach(allDistricts, id: \.self) { name in
                 let selected = district == name
@@ -634,18 +646,16 @@ struct EditProfileView: View {
         }
     }
 
-    // MARK: - Languages Picker
-
-    private var languagesPicker: some View {
+    private var multiDistrictPicker: some View {
         FlowLayout(spacing: 8) {
-            ForEach(allLanguages, id: \.self) { lang in
-                let selected = languages.contains(lang)
+            ForEach(allDistricts, id: \.self) { name in
+                let selected = selectedDistricts.contains(name)
                 Button {
                     withAnimation(.spring(response: 0.25)) {
                         if selected {
-                            languages.removeAll { $0 == lang }
+                            selectedDistricts.remove(name)
                         } else {
-                            languages.append(lang)
+                            selectedDistricts.insert(name)
                         }
                     }
                 } label: {
@@ -654,7 +664,7 @@ struct EditProfileView: View {
                             Image(systemName: "checkmark")
                                 .font(.system(size: 10, weight: .bold))
                         }
-                        Text(lang)
+                        Text(name)
                             .font(.system(size: 13, weight: .medium))
                     }
                     .foregroundStyle(selected ? .black : .white.opacity(0.7))
@@ -676,19 +686,126 @@ struct EditProfileView: View {
         }
     }
 
+    // MARK: - Languages Picker (type-ahead + flag chips)
+
+    private var languagesPicker: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Selected chips with flags
+            if !languages.isEmpty {
+                FlowLayout(spacing: 8) {
+                    ForEach(languages, id: \.self) { lang in
+                        Button {
+                            withAnimation(.spring(response: 0.25)) {
+                                languages.removeAll { $0 == lang }
+                            }
+                        } label: {
+                            HStack(spacing: 6) {
+                                if let flag = languageFlag[lang] {
+                                    Text(flag)
+                                        .font(.system(size: 14))
+                                }
+                                Text(lang)
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(.black)
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 9, weight: .bold))
+                                    .foregroundStyle(.black.opacity(0.5))
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(MatchaTokens.Colors.accent, in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            // Type-ahead text field
+            TextField("Type to search...", text: $languageInput)
+                .font(.system(size: 15))
+                .foregroundStyle(.white)
+                .focused($focusedField, equals: .language)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
+                }
+                .submitLabel(.done)
+
+            // Suggestions list
+            if !languageInput.isEmpty {
+                let filtered = allLanguages.filter { lang in
+                    !languages.contains(lang)
+                    && lang.localizedCaseInsensitiveContains(languageInput)
+                }
+                if filtered.isEmpty {
+                    Text("No matches")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.white.opacity(0.3))
+                        .padding(.top, 4)
+                } else {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(filtered.prefix(6), id: \.self) { lang in
+                            Button {
+                                withAnimation(.spring(response: 0.25)) {
+                                    if !languages.contains(lang) {
+                                        languages.append(lang)
+                                    }
+                                    languageInput = ""
+                                }
+                            } label: {
+                                HStack(spacing: 8) {
+                                    if let flag = languageFlag[lang] {
+                                        Text(flag).font(.system(size: 16))
+                                    }
+                                    Text(lang)
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(.white.opacity(0.85))
+                                    Spacer()
+                                    Image(systemName: "plus.circle")
+                                        .font(.system(size: 13))
+                                        .foregroundStyle(MatchaTokens.Colors.accent)
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 8)
+                            }
+                            .buttonStyle(.plain)
+                            if lang != filtered.prefix(6).last {
+                                Divider().background(Color.white.opacity(0.06))
+                            }
+                        }
+                    }
+                    .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+            }
+        }
+    }
+
     // MARK: - Portfolio Wall Placeholder
 
     private var portfolioWallPlaceholder: some View {
-        VStack(spacing: 12) {
+        let title: String
+        let subtitle: String
+        switch profile.role {
+        case .business:
+            title = "Showcase your space"
+            subtitle = "Add photos of your venue, menu, or products"
+        case .blogger:
+            title = "Your portfolio"
+            subtitle = "Add past collabs to get 3x more matches"
+        }
+        return VStack(spacing: 12) {
             Image(systemName: "square.grid.2x2")
                 .font(.system(size: 28))
                 .foregroundStyle(.white.opacity(0.2))
 
-            Text("Showcase your best work")
+            Text(title)
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.6))
 
-            Text("Add past collabs to get 3x more matches")
+            Text(subtitle)
                 .font(.system(size: 13))
                 .foregroundStyle(.white.opacity(0.35))
         }
@@ -779,16 +896,29 @@ struct EditProfileView: View {
                 }
 
                 // 2. Build update request
+                // For business: send `districts` multi-select (also send first as legacy `district`).
+                // For blogger: send singular `district` string.
+                let districtValue: String
+                let districtsValue: [String]?
+                if profile.role == .business {
+                    let arr = Array(selectedDistricts).sorted()
+                    districtsValue = arr
+                    districtValue = arr.first ?? ""
+                } else {
+                    districtsValue = nil
+                    districtValue = district.trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+
                 var update = ProfileUpdateRequest(
                     displayName: name.trimmingCharacters(in: .whitespacesAndNewlines),
                     country: profile.countryCode,
                     instagramHandle: instagramHandle.trimmingCharacters(in: .whitespacesAndNewlines),
                     tiktokHandle: tiktokHandle.trimmingCharacters(in: .whitespacesAndNewlines),
-                    district: district.trimmingCharacters(in: .whitespacesAndNewlines),
-                    niches: Array(selectedNiches).sorted(),
+                    district: districtValue,
+                    districts: districtsValue,
+                    niches: profile.role == .blogger ? Array(selectedNiches).sorted() : [],
                     languages: languages,
-                    bio: bio.trimmingCharacters(in: .whitespacesAndNewlines),
-                    collabType: collaborationType.rawValue
+                    bio: bio.trimmingCharacters(in: .whitespacesAndNewlines)
                 )
 
                 // Always send full photo array — primary is always first slot
