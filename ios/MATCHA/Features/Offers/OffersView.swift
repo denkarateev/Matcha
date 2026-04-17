@@ -407,56 +407,99 @@ struct OffersView: View {
     }
 
     private func allOfferCard(_ offer: Offer) -> some View {
+        // Large Hero Card — photo на весь фон (~340pt), градиент, Barter/Paid
+        // pill + deadline countdown сверху, внизу business name + title + reward.
         ZStack(alignment: .topLeading) {
-            // Photo fill
             offerPhoto(offer)
-                .frame(height: 160)
+                .frame(height: 340)
+                .frame(maxWidth: .infinity)
+                .clipped()
 
-            // Gradient overlay
+            // Deep cinematic gradient — сильный внизу, лёгкий сверху для badges
             LinearGradient(
-                colors: [.black.opacity(0.1), .black.opacity(0.2), .black.opacity(0.75)],
+                stops: [
+                    .init(color: .black.opacity(0.35), location: 0.0),
+                    .init(color: .clear, location: 0.18),
+                    .init(color: .clear, location: 0.45),
+                    .init(color: .black.opacity(0.6), location: 0.72),
+                    .init(color: .black.opacity(0.95), location: 1.0),
+                ],
                 startPoint: .top,
                 endPoint: .bottom
             )
+            .allowsHitTesting(false)
 
-            // Barter badge — top right
+            // Top row: type pill (left) + deadline (right)
             VStack {
-                HStack {
-                    Spacer()
+                HStack(alignment: .top) {
                     typeBadge(offer.type)
+                    Spacer()
+                    if let expiry = offer.expiryDate {
+                        CountdownPill(deadline: expiry)
+                    }
                 }
-                .padding(10)
+                .padding(14)
                 Spacer()
             }
 
             // Bottom content
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 10) {
                 Spacer()
 
+                // Creator row — mini avatar + business name
+                HStack(spacing: 8) {
+                    creatorAvatar(offer.creator, size: 28)
+                    Text(offer.creator.name)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.9))
+                        .lineLimit(1)
+                    if let district = offer.creator.district {
+                        Text("·")
+                            .foregroundStyle(.white.opacity(0.4))
+                        Text(district)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.white.opacity(0.6))
+                            .lineLimit(1)
+                    }
+                }
+
                 Text(offer.title.replacingOccurrences(of: "[LAST MINUTE] ", with: ""))
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
+                    .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
 
-                Text(offer.rewardSummary)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(MatchaTokens.Colors.accent)
-                    .lineLimit(1)
+                HStack(spacing: 10) {
+                    Text(offer.rewardSummary)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(MatchaTokens.Colors.accent)
+                        .lineLimit(1)
 
-                if offer.slotsRemaining > 0 && offer.slotsRemaining <= 5 {
-                    slotsBadge(offer.slotsRemaining)
+                    if offer.slotsRemaining > 0 && offer.slotsRemaining <= 5 {
+                        slotsBadge(offer.slotsRemaining)
+                    }
                 }
             }
-            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 18)
         }
-        .frame(height: 160)
+        .frame(height: 340)
         .frame(maxWidth: .infinity)
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.06), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [.white.opacity(0.12), .white.opacity(0.03)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 0.5
+                )
         }
+        .shadow(color: .black.opacity(0.45), radius: 14, y: 8)
     }
 
     // MARK: - Shared Components
