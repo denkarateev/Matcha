@@ -62,30 +62,30 @@ class ProfileRead(BaseModel):
     user_id: str
     role: str
     display_name: str
-    photo_urls: list[str]
-    primary_photo_url: str
-    country: str | None
-    instagram_handle: str | None
-    tiktok_handle: str | None
-    audience_size: int | None
-    category: str | None
-    district: str | None
+    photo_urls: list[str] = []
+    primary_photo_url: str = ""
+    country: str | None = None
+    instagram_handle: str | None = None
+    tiktok_handle: str | None = None
+    audience_size: int | None = None
+    category: str | None = None
+    district: str | None = None
     districts: list[str] = []
-    website: str | None
-    niches: list[str]
-    languages: list[str]
-    bio: str | None
-    description: str | None
-    what_we_offer: str | None
-    nationality: str | None
-    residence: str | None
-    gender: str | None
-    birthday: str | None
-    collab_type: str
-    badges: list[str]
-    verified_visits: int
-    rating: float | None
-    review_count: int
+    website: str | None = None
+    niches: list[str] = []
+    languages: list[str] = []
+    bio: str | None = None
+    description: str | None = None
+    what_we_offer: str | None = None
+    nationality: str | None = None
+    residence: str | None = None
+    gender: str | None = None
+    birthday: str | None = None
+    collab_type: str = "barter"
+    badges: list[str] = []
+    verified_visits: int = 0
+    rating: float | None = None
+    review_count: int = 0
     created_at: datetime
     updated_at: datetime
 
