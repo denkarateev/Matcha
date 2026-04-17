@@ -395,6 +395,7 @@ struct ProfileView: View {
             ("Residence", user.residence ?? ""),
             ("Gender", user.gender ?? ""),
             ("Birthday", formatBirthday(user.birthday)),
+            ("Languages", formatLanguages(user.languages)),
         ].filter { !$0.1.isEmpty }
 
         if !rows.isEmpty {
@@ -434,6 +435,25 @@ struct ProfileView: View {
                 .padding(.vertical, 18)
             }
         }
+    }
+
+    private func formatLanguages(_ langs: [String]) -> String {
+        guard !langs.isEmpty else { return "" }
+        let flags: [String: String] = [
+            "russian": "🇷🇺", "english": "🇬🇧", "indonesian": "🇮🇩", "mandarin": "🇨🇳",
+            "japanese": "🇯🇵", "korean": "🇰🇷", "french": "🇫🇷", "german": "🇩🇪",
+            "spanish": "🇪🇸", "italian": "🇮🇹", "portuguese": "🇵🇹", "dutch": "🇳🇱",
+            "arabic": "🇸🇦", "hindi": "🇮🇳", "turkish": "🇹🇷", "thai": "🇹🇭",
+            "vietnamese": "🇻🇳", "polish": "🇵🇱", "ukrainian": "🇺🇦", "hebrew": "🇮🇱",
+            "en": "🇬🇧", "ru": "🇷🇺", "id": "🇮🇩", "zh": "🇨🇳", "ja": "🇯🇵", "ko": "🇰🇷",
+            "fr": "🇫🇷", "de": "🇩🇪", "es": "🇪🇸", "it": "🇮🇹",
+        ]
+        return langs.map { lang in
+            let key = lang.lowercased()
+            let flag = flags[key] ?? ""
+            let display = lang.count <= 2 ? lang.uppercased() : lang.capitalized
+            return flag.isEmpty ? display : "\(flag) \(display)"
+        }.joined(separator: "  ")
     }
 
     private func formatBirthday(_ date: Date?) -> String {
