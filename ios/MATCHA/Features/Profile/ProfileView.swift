@@ -34,6 +34,9 @@ struct ProfileView: View {
                 aboutSection
                 sectionDivider
 
+                personalInfoSection
+                sectionDivider
+
                 socialAccountsSection
                 if store.currentUser.hasSocialAccounts {
                     sectionDivider
@@ -380,6 +383,65 @@ struct ProfileView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 20)
         .padding(.vertical, 18)
+    }
+
+    // MARK: - Personal Info
+
+    @ViewBuilder
+    private var personalInfoSection: some View {
+        let user = store.currentUser
+        let rows: [(String, String)] = [
+            ("Nationality", user.nationality ?? ""),
+            ("Residence", user.residence ?? ""),
+            ("Gender", user.gender ?? ""),
+            ("Birthday", formatBirthday(user.birthday)),
+        ].filter { !$0.1.isEmpty }
+
+        if !rows.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Personal Info")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(.white)
+
+                VStack(spacing: 8) {
+                    ForEach(rows, id: \.0) { label, value in
+                        HStack {
+                            Text(label)
+                                .font(.system(size: 14))
+                                .foregroundStyle(.white.opacity(0.55))
+                            Spacer()
+                            Text(value)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(.white)
+                        }
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 18)
+        } else {
+            Button { activeSheet = .editProfile } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 13, weight: .bold))
+                    Text("Add personal info")
+                        .font(.system(size: 14, weight: .medium))
+                }
+                .foregroundStyle(MatchaTokens.Colors.accent)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 18)
+            }
+        }
+    }
+
+    private func formatBirthday(_ date: Date?) -> String {
+        guard let date else { return "" }
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .none
+        return f.string(from: date)
     }
 
     // MARK: - Niches

@@ -5,6 +5,7 @@ struct ChatsView: View {
     @State private var store: ChatsStore
     @State private var searchText = ""
     private let repository: any MatchaRepository
+    let currentUser: UserProfile
 
     // Actions
     @State private var unmatchTarget: ChatPreview? = nil
@@ -25,8 +26,9 @@ struct ChatsView: View {
         case deals = "Deals"
     }
 
-    init(repository: any MatchaRepository) {
+    init(repository: any MatchaRepository, currentUser: UserProfile) {
         self.repository = repository
+        self.currentUser = currentUser
         _store = State(initialValue: ChatsStore(repository: repository))
     }
 
@@ -332,13 +334,22 @@ struct ChatsView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
-                    // Likes card — navigates to LikesListView
-                    Button {
-                        showPaywall = true
-                    } label: {
-                        likesStoryCard
+                    // Likes card — blogger sees list free, business hits paywall
+                    Group {
+                        if currentUser.role == .blogger {
+                            NavigationLink(value: ChatsNavDestination.likes(store.likeProfiles)) {
+                                likesStoryCard
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            Button {
+                                showPaywall = true
+                            } label: {
+                                likesStoryCard
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
-                    .buttonStyle(.plain)
                     .accessibilityLabel("View people who liked you")
                     .accessibilityHint("See all profiles that liked you")
 
@@ -716,6 +727,7 @@ final class ChatsStore {
     var error: NetworkError?
     var hasLoaded = false
     var incomingLikesCount: Int = 0
+    var likeProfiles: [UserProfile] = []
 
     init(repository: any MatchaRepository) {
         self.repository = repository
@@ -734,6 +746,7 @@ final class ChatsStore {
             // Fetch incoming likes count for badge
             let activity = try await repository.fetchActivitySummary()
             incomingLikesCount = activity.likes.count
+            likeProfiles = activity.likes
             print("[MATCHA] Chats loaded: \(home.conversations.count) conversations, \(home.newMatches.count) matches, \(incomingLikesCount) likes")
         } catch let networkError as NetworkError {
             print("[MATCHA] Chats error: \(networkError)")
@@ -810,7 +823,7 @@ final class ChatsStore {
 
 #Preview {
     NavigationStack {
-        ChatsView(repository: MockMatchaRepository())
+        ChatsView(repository: MockMatchaRepository(), currentUser: MockSeedData.makeCurrentUser(role: .blogger, name: "Nadia"))
     }
     .preferredColorScheme(.dark)
 }

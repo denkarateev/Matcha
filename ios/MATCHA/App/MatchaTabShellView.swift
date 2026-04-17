@@ -57,7 +57,7 @@ struct MatchaTabShellView: View {
 
                 // Tab 4: Chats
                 NavigationStack {
-                    ChatsView(repository: environment.repository)
+                    ChatsView(repository: environment.repository, currentUser: appState.currentUser)
                 }
                 .tabItem {
                     Label("Chats", systemImage: "bubble.fill")
