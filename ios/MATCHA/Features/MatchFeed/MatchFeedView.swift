@@ -257,76 +257,68 @@ struct MatchFeedView: View {
         .animation(.spring(response: 0.3), value: store.currentIndex)
     }
 
-    // MARK: - Card Stack Area
+    // MARK: - Card Stack Area — Bumble-style vertical scroll
 
     @ViewBuilder
     private var cardStackArea: some View {
         GeometryReader { geo in
-            let cardWidth = geo.size.width  // padding applied by parent
+            let cardWidth = geo.size.width
             let cardHeight = geo.size.height
 
-            ZStack {
-                // Third card (deepest) — barely visible
-                if let thirdProfile = store.profiles[safe: store.currentIndex + 2] {
-                    SwipeCard(
-                        profile: thirdProfile,
-                        cardSize: CGSize(width: cardWidth, height: cardHeight),
-                        stackScale: 0.90,
-                        stackYOffset: -12,
-                        isTopCard: false,
-                        programmaticSwipe: .constant(nil),
-                        onSwipeCompleted: { _ in }
-                    )
-                    .id(thirdProfile.id)
-                }
-
-                // Second card (behind)
-                if let nextProfile = store.profiles[safe: store.currentIndex + 1] {
-                    SwipeCard(
-                        profile: nextProfile,
-                        cardSize: CGSize(width: cardWidth, height: cardHeight),
-                        stackScale: 0.95,
-                        stackYOffset: -6,
-                        isTopCard: false,
-                        programmaticSwipe: .constant(nil),
-                        onSwipeCompleted: { _ in }
-                    )
-                    .id(nextProfile.id)
-                }
-
-                // Top card — interactive
-                if let currentProfile = store.currentProfile {
-                    SwipeCard(
-                        profile: currentProfile,
-                        cardSize: CGSize(width: cardWidth, height: cardHeight),
-                        stackScale: 1.0,
-                        stackYOffset: 0,
-                        isTopCard: true,
-                        programmaticSwipe: Binding(
-                            get: { store.programmaticSwipe },
-                            set: { store.programmaticSwipe = $0 }
-                        ),
-                        onSwipeCompleted: { direction in
-                            store.clearProgrammaticSwipe()
-                            switch direction {
-                            case .left:
-                                store.skip()
-                                MatchaHaptic.light()
-                                triggerUndoWindow()
-                            case .right:
-                                store.interested()
-                                MatchaHaptic.medium()
-                            case .super:
-                                store.superSwipe()
-                                MatchaHaptic.heavy()
+            ScrollViewReader { scrollProxy in
+                ScrollView(.vertical, showsIndicators: false) {
+                    LazyVStack(spacing: 0) {
+                        ForEach(Array(store.filteredProfiles.enumerated()), id: \.element.id) { index, profile in
+                            BumbleProfileCard(
+                                profile: profile,
+                                cardSize: CGSize(width: cardWidth, height: cardHeight)
+                            )
+                            .id(profile.id)
+                            .frame(width: cardWidth, height: cardHeight)
+                            .onAppear {
+                                // Sync store.currentIndex to the visible profile
+                                if store.currentIndex != index {
+                                    store.currentIndex = index
+                                }
                             }
-                        },
-                        onTap: nil
-                    )
-                    .id(currentProfile.id)
+                        }
+                    }
+                    .scrollTargetLayout()
+                }
+                .scrollTargetBehavior(.paging)
+                .onChange(of: store.programmaticSwipe) { _, newValue in
+                    guard let direction = newValue else { return }
+                    handleBumbleAction(direction, scrollProxy: scrollProxy)
+                    store.clearProgrammaticSwipe()
                 }
             }
-            .frame(width: geo.size.width, height: cardHeight)
+        }
+    }
+
+    private func handleBumbleAction(_ direction: SwipeDirection, scrollProxy: ScrollViewProxy) {
+        let list = store.filteredProfiles
+        guard !list.isEmpty else { return }
+        let currentIdx = min(store.currentIndex, list.count - 1)
+
+        switch direction {
+        case .left:
+            store.skip()
+            MatchaHaptic.light()
+            triggerUndoWindow()
+        case .right:
+            store.interested()
+            MatchaHaptic.medium()
+        case .super:
+            store.superSwipe()
+            MatchaHaptic.heavy()
+        }
+
+        // Scroll to next profile after action
+        let nextIdx = currentIdx + 1
+        if nextIdx < list.count {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                scrollProxy.scrollTo(list[nextIdx].id, anchor: .top)
+            }
         }
     }
 
@@ -835,6 +827,163 @@ private struct ScrollViewOffsetPreferenceKey: PreferenceKey {
     nonisolated(unsafe) static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()
+    }
+}
+
+// MARK: - BumbleProfileCard
+//
+// Pure Bumble-style card: full-screen vertical scroll inside the card.
+// Users vertical-scroll через фото/био/ниши/ещё фото, а outer ScrollView
+// (в MatchFeedView.cardStackArea) снапит между профилями по страницам.
+// Никаких horizontal swipe gestures — Pass/Like делают кнопки в actionButtonsRow.
+
+private struct BumbleProfileCard: View {
+    let profile: UserProfile
+    let cardSize: CGSize
+
+    @State private var currentPhotoIndex: Int = 0
+
+    private var photoURLList: [URL] {
+        if !profile.photoURLs.isEmpty { return profile.photoURLs }
+        if let url = profile.photoURL { return [url] }
+        return []
+    }
+
+    var body: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 0) {
+                // Hero photo — takes ~60% of screen
+                ZStack(alignment: .bottom) {
+                    heroPhoto
+                        .frame(width: cardSize.width, height: cardSize.height * 0.6)
+                        .clipped()
+
+                    if photoURLList.count > 1 {
+                        HStack(spacing: 0) {
+                            Color.clear
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        currentPhotoIndex = max(0, currentPhotoIndex - 1)
+                                    }
+                                }
+                            Color.clear
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        currentPhotoIndex = min(photoURLList.count - 1, currentPhotoIndex + 1)
+                                    }
+                                }
+                        }
+                    }
+
+                    // Gradient for readability
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0.0),
+                            .init(color: .black.opacity(0.7), location: 1.0),
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .allowsHitTesting(false)
+
+                    // Name + info overlay
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text(profile.name)
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundStyle(.white)
+                            if profile.verificationLevel.isVerified {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .foregroundStyle(MatchaTokens.Colors.accent)
+                                    .font(.system(size: 18))
+                            }
+                        }
+                        Text(profile.secondaryLine)
+                            .font(.system(size: 15))
+                            .foregroundStyle(.white.opacity(0.85))
+                        if let district = profile.district {
+                            HStack(spacing: 4) {
+                                Image(systemName: "mappin.circle.fill")
+                                    .font(.system(size: 12))
+                                Text(district)
+                                    .font(.system(size: 13, weight: .medium))
+                            }
+                            .foregroundStyle(.white.opacity(0.7))
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 24)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                // Bio
+                if !profile.bio.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("About")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.5))
+                        Text(profile.bio)
+                            .font(.system(size: 15))
+                            .foregroundStyle(.white)
+                            .lineSpacing(4)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
+                    .padding(.bottom, 16)
+                }
+
+                // Niches
+                if !profile.niches.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Niches")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.5))
+                        WrappingNicheTags(niches: profile.niches)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 16)
+                }
+
+                // Additional photos interleaved with info
+                ForEach(Array(photoURLList.enumerated().dropFirst()), id: \.offset) { _, url in
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let img):
+                            img.resizable().scaledToFill()
+                        default:
+                            Color.black
+                        }
+                    }
+                    .frame(width: cardSize.width, height: cardSize.height * 0.55)
+                    .clipped()
+                    .padding(.top, 16)
+                }
+
+                // Bottom padding so last content isn't flush with action bar
+                Color.clear.frame(height: 120)
+            }
+        }
+        .background(Color.black)
+    }
+
+    @ViewBuilder
+    private var heroPhoto: some View {
+        if let url = photoURLList[safe: currentPhotoIndex] {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let img):
+                    img.resizable().scaledToFill()
+                default:
+                    Color.black
+                }
+            }
+        } else {
+            Color(white: 0.08)
+        }
     }
 }
 
