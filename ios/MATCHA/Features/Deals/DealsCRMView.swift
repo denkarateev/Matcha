@@ -5,6 +5,7 @@ import SwiftUI
 
 struct DealsCRMView: View {
     @StateObject private var vm = DealsCRMViewModel()
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -18,6 +19,16 @@ struct DealsCRMView: View {
             .padding(.bottom, MatchaTokens.Spacing.xLarge)
         }
         .background(MatchaTokens.backgroundGradient.ignoresSafeArea())
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(MatchaTokens.Colors.background, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Done") { dismiss() }
+                    .foregroundStyle(MatchaTokens.Colors.accent)
+                    .font(.system(size: 16, weight: .semibold))
+            }
+        }
         .task { await vm.loadDeals() }
         .refreshable { await vm.loadDeals() }
     }
