@@ -276,7 +276,6 @@ struct MatchFeedView: View {
                             .id(profile.id)
                             .frame(width: cardWidth, height: cardHeight)
                             .onAppear {
-                                // Sync store.currentIndex to the visible profile
                                 if store.currentIndex != index {
                                     store.currentIndex = index
                                 }
@@ -286,38 +285,14 @@ struct MatchFeedView: View {
                     .scrollTargetLayout()
                 }
                 .scrollTargetBehavior(.paging)
-                .onChange(of: store.programmaticSwipe) { _, newValue in
-                    guard let direction = newValue else { return }
-                    handleBumbleAction(direction, scrollProxy: scrollProxy)
-                    store.clearProgrammaticSwipe()
+                .onChange(of: store.currentIndex) { _, newIdx in
+                    // Programmatic scroll to newly-current profile (after Like/Pass button).
+                    let list = store.filteredProfiles
+                    guard newIdx < list.count else { return }
+                    withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
+                        scrollProxy.scrollTo(list[newIdx].id, anchor: .top)
+                    }
                 }
-            }
-        }
-    }
-
-    private func handleBumbleAction(_ direction: SwipeDirection, scrollProxy: ScrollViewProxy) {
-        let list = store.filteredProfiles
-        guard !list.isEmpty else { return }
-        let currentIdx = min(store.currentIndex, list.count - 1)
-
-        switch direction {
-        case .left:
-            store.skip()
-            MatchaHaptic.light()
-            triggerUndoWindow()
-        case .right:
-            store.interested()
-            MatchaHaptic.medium()
-        case .super:
-            store.superSwipe()
-            MatchaHaptic.heavy()
-        }
-
-        // Scroll to next profile after action
-        let nextIdx = currentIdx + 1
-        if nextIdx < list.count {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                scrollProxy.scrollTo(list[nextIdx].id, anchor: .top)
             }
         }
     }
@@ -333,12 +308,11 @@ struct MatchFeedView: View {
                 bg: .clear,
                 fg: MatchaTokens.Colors.danger
             ) {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                store.animateSwipe(.left)
+                MatchaHaptic.light()
+                store.skip()
                 triggerUndoWindow()
             }
             .accessibilityLabel("Skip this profile")
-            .accessibilityHint("Swipe left to skip")
 
             // Super swipe (bolt) — 48pt glass circle
             actionButton(
@@ -347,11 +321,10 @@ struct MatchFeedView: View {
                 bg: .clear,
                 fg: MatchaTokens.Colors.warning
             ) {
-                UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-                store.animateSwipe(.super)
+                MatchaHaptic.heavy()
+                store.superSwipe()
             }
             .accessibilityLabel("Super like this profile")
-            .accessibilityHint("Send a super like to stand out")
 
             // Like (heart) — 56pt accent green filled circle
             actionButton(
@@ -360,11 +333,10 @@ struct MatchFeedView: View {
                 bg: MatchaTokens.Colors.accent,
                 fg: .white
             ) {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                store.animateSwipe(.right)
+                MatchaHaptic.medium()
+                store.interested()
             }
             .accessibilityLabel("Like this profile")
-            .accessibilityHint("Swipe right to like")
         }
     }
 

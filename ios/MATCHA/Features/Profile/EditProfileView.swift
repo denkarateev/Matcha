@@ -318,18 +318,229 @@ struct EditProfileView: View {
     // MARK: - Preview Content
 
     private var previewContent: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 0) {
-                // Preview card (simulates how others see you)
-                previewCard
-                    .padding(20)
+        GeometryReader { geo in
+            let previewHeight = max(geo.size.height - 40, 600)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    // Caption — outside the card, above
+                    Text("This is how others see your profile in the match feed")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.4))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 16)
 
-                Text("This is how other users see your profile")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.4))
-                    .padding(.bottom, 40)
+                    // Bumble-style preview card — matches MatchFeedView exactly
+                    bumblePreviewCard(width: geo.size.width - 32, height: previewHeight)
+                        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 32)
+                }
             }
         }
+    }
+
+    // MARK: - Bumble-style preview card
+    // Mirrors BumbleProfileCard in MatchFeedView — hero photo + scrollable info.
+    @ViewBuilder
+    private func bumblePreviewCard(width: CGFloat, height: CGFloat) -> some View {
+        let localPhotos: [AnyView] = photoSlots.compactMap { slot in
+            if let img = slot.image {
+                return AnyView(Image(uiImage: img).resizable().aspectRatio(contentMode: .fill))
+            } else if let url = slot.remoteURL {
+                return AnyView(
+                    AsyncImage(url: url) { phase in
+                        if case .success(let image) = phase {
+                            image.resizable().aspectRatio(contentMode: .fill)
+                        } else {
+                            Color(white: 0.08).overlay { ProgressView().tint(.white.opacity(0.3)) }
+                        }
+                    }
+                )
+            }
+            return nil
+        }
+
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 0) {
+                // Hero photo — 60% height
+                ZStack(alignment: .bottom) {
+                    if localPhotos.isEmpty {
+                        Rectangle()
+                            .fill(Color(white: 0.08))
+                            .frame(width: width, height: height * 0.6)
+                            .overlay {
+                                Image(systemName: "person.fill")
+                                    .font(.system(size: 60))
+                                    .foregroundStyle(.white.opacity(0.15))
+                            }
+                    } else {
+                        localPhotos[min(previewPhotoIndex, localPhotos.count - 1)]
+                            .frame(width: width, height: height * 0.6)
+                            .clipped()
+                    }
+
+                    if localPhotos.count > 1 {
+                        HStack(spacing: 0) {
+                            Color.clear
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        previewPhotoIndex = max(0, previewPhotoIndex - 1)
+                                    }
+                                }
+                            Color.clear
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        previewPhotoIndex = min(localPhotos.count - 1, previewPhotoIndex + 1)
+                                    }
+                                }
+                        }
+                        .frame(width: width, height: height * 0.6)
+
+                        // Photo indicator bars
+                        VStack {
+                            HStack(spacing: 4) {
+                                ForEach(0..<localPhotos.count, id: \.self) { index in
+                                    Capsule()
+                                        .fill(index == previewPhotoIndex ? Color.white : Color.white.opacity(0.35))
+                                        .frame(height: 3)
+                                        .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.top, 12)
+                            Spacer()
+                        }
+                        .frame(height: height * 0.6)
+                    }
+
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0.0),
+                            .init(color: .black.opacity(0.7), location: 1.0),
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .allowsHitTesting(false)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text(name.isEmpty ? "Your Name" : name)
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundStyle(.white)
+                            if profile.isVerified {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .foregroundStyle(MatchaTokens.Colors.accent)
+                                    .font(.system(size: 18))
+                            }
+                        }
+                        if profile.role == .business, let cat = profile.category {
+                            Text(cat.title)
+                                .font(.system(size: 15))
+                                .foregroundStyle(.white.opacity(0.85))
+                        } else if profile.role == .blogger {
+                            Text("Influencer")
+                                .font(.system(size: 15))
+                                .foregroundStyle(.white.opacity(0.85))
+                        }
+                        let displayDistrict = profile.role == .business && !selectedDistricts.isEmpty
+                            ? selectedDistricts.sorted().joined(separator: " · ")
+                            : (district.isEmpty ? "Bali" : district)
+                        HStack(spacing: 4) {
+                            Image(systemName: "mappin.circle.fill")
+                                .font(.system(size: 12))
+                            Text(displayDistrict)
+                                .font(.system(size: 13, weight: .medium))
+                        }
+                        .foregroundStyle(.white.opacity(0.7))
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 24)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                // Bio
+                if !bio.trimmingCharacters(in: .whitespaces).isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("About")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.5))
+                        Text(bio)
+                            .font(.system(size: 15))
+                            .foregroundStyle(.white)
+                            .lineSpacing(4)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
+                    .padding(.bottom, 16)
+                }
+
+                // Niches — blogger only
+                if profile.role == .blogger && !selectedNiches.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Niches")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.5))
+                        FlowLayout(spacing: 8) {
+                            ForEach(Array(selectedNiches).sorted(), id: \.self) { niche in
+                                Text(niche)
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 7)
+                                    .background(Color.white.opacity(0.12), in: Capsule())
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 16)
+                }
+
+                // Languages
+                if !languages.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Languages")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.5))
+                        FlowLayout(spacing: 8) {
+                            ForEach(languages, id: \.self) { lang in
+                                let flag = languageFlag[lang] ?? ""
+                                Text("\(flag) \(lang)".trimmingCharacters(in: .whitespaces))
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 7)
+                                    .background(Color.white.opacity(0.12), in: Capsule())
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 16)
+                }
+
+                // Remaining photos
+                ForEach(Array(localPhotos.enumerated().dropFirst()), id: \.offset) { _, view in
+                    view
+                        .frame(width: width, height: height * 0.55)
+                        .clipped()
+                        .padding(.top, 16)
+                }
+
+                Color.clear.frame(height: 40)
+            }
+        }
+        .frame(width: width, height: height)
+        .background(Color.black)
     }
 
     private var previewCard: some View {
