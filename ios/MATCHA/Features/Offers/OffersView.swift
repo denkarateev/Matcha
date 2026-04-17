@@ -421,10 +421,10 @@ struct OffersView: View {
     private func allOfferCard(_ offer: Offer) -> some View {
         // Large Hero Card — photo на весь фон (~340pt), градиент, Barter/Paid
         // pill + deadline countdown сверху, внизу business name + title + reward.
+        GeometryReader { geo in
         ZStack(alignment: .topLeading) {
             offerPhoto(offer)
-                .aspectRatio(contentMode: .fill)
-                .frame(maxWidth: .infinity, maxHeight: 340)
+                .frame(width: geo.size.width, height: 340)
                 .clipped()
 
             // Deep cinematic gradient — сильный внизу, лёгкий сверху для badges
@@ -497,8 +497,7 @@ struct OffersView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 18)
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 340)
+        .frame(width: geo.size.width, height: 340)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
@@ -513,6 +512,8 @@ struct OffersView: View {
         }
         .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: .black.opacity(0.45), radius: 14, y: 8)
+        } // GeometryReader
+        .frame(height: 340)
     }
 
     // MARK: - Shared Components
