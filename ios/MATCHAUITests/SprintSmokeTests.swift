@@ -34,13 +34,15 @@ final class SprintSmokeTests: XCTestCase {
         app.launch()
         sleep(8)
 
-        let offersTab = app.tabBars.buttons["Offers"]
+        let offersTab = app.tabBars.buttons["Discover"]
         XCTAssertTrue(offersTab.waitForExistence(timeout: 10))
         offersTab.tap()
         sleep(2)
 
-        // Top bar title
-        XCTAssertTrue(app.staticTexts["Offers"].waitForExistence(timeout: 5), "Offers title must render")
+        // Top bar title — may be "Offers" (section header) or "Discover" depending on state
+        let hasHeader = app.staticTexts["Offers"].waitForExistence(timeout: 3) ||
+                        app.staticTexts["Discover"].waitForExistence(timeout: 3)
+        XCTAssertTrue(hasHeader, "Offers/Discover top section must render")
 
         snap("02_offers_top_bar")
     }
@@ -51,7 +53,7 @@ final class SprintSmokeTests: XCTestCase {
         app.launch()
         sleep(8)
 
-        app.tabBars.buttons["Offers"].tap()
+        app.tabBars.buttons["Discover"].tap()
         sleep(2)
 
         // Filter button (slider.horizontal.3 icon — by position in top bar)
@@ -100,7 +102,7 @@ final class SprintSmokeTests: XCTestCase {
         app.launch()
         sleep(8)
 
-        app.tabBars.buttons["Activity"].tap()
+        app.tabBars.buttons["Likes"].tap()
         sleep(2)
 
         XCTAssertTrue(

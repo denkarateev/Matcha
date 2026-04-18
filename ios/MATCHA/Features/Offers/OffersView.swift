@@ -419,101 +419,201 @@ struct OffersView: View {
     }
 
     private func allOfferCard(_ offer: Offer) -> some View {
-        // Large Hero Card — photo на весь фон (~340pt), градиент, Barter/Paid
-        // pill + deadline countdown сверху, внизу business name + title + reward.
-        GeometryReader { geo in
-        ZStack(alignment: .topLeading) {
-            offerPhoto(offer)
-                .frame(width: geo.size.width, height: 340)
-                .clipped()
+        // Split Card — hero area (180pt фото + LAST MINUTE бейдж + offer/id label),
+        // инфо-блок снизу: creator → title → teg row (BARTER + niches + audience)
+        // → divider → You receive / You offer → slots + Apply.
+        VStack(spacing: 0) {
+            // MARK: Hero area
+            ZStack(alignment: .topTrailing) {
+                offerPhoto(offer)
+                    .frame(height: 180)
+                    .frame(maxWidth: .infinity)
+                    .clipped()
 
-            // Deep cinematic gradient — сильный внизу, лёгкий сверху для badges
-            LinearGradient(
-                stops: [
-                    .init(color: .black.opacity(0.35), location: 0.0),
-                    .init(color: .clear, location: 0.18),
-                    .init(color: .clear, location: 0.45),
-                    .init(color: .black.opacity(0.6), location: 0.72),
-                    .init(color: .black.opacity(0.95), location: 1.0),
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .allowsHitTesting(false)
-
-            // Top row: type pill (left) + deadline (right)
-            VStack {
-                HStack(alignment: .top) {
-                    typeBadge(offer.type)
-                    Spacer()
-                    if let expiry = offer.expiryDate {
-                        CountdownPill(deadline: expiry)
-                    }
+                // LAST MINUTE pill (если срочный оффер)
+                if offer.isLastMinute {
+                    lastMinuteBadge(offer)
+                        .padding(12)
                 }
-                .padding(14)
-                Spacer()
+
+                // offer / id метка в левом нижнем углу
+                VStack {
+                    Spacer()
+                    HStack {
+                        Text("offer / \(String(offer.id.prefix(4)))")
+                            .font(.system(size: 11, weight: .medium, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.55))
+                        Spacer()
+                    }
+                    .padding(12)
+                }
             }
+            .frame(height: 180)
 
-            // Bottom content
-            VStack(alignment: .leading, spacing: 10) {
-                Spacer()
-
-                // Creator row — mini avatar + business name
-                HStack(spacing: 8) {
-                    creatorAvatar(offer.creator, size: 28)
+            // MARK: Info area
+            VStack(alignment: .leading, spacing: 12) {
+                // Creator row
+                HStack(spacing: 10) {
+                    creatorAvatar(offer.creator, size: 30)
                     Text(offer.creator.name)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.9))
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(MatchaTokens.Colors.textPrimary)
                         .lineLimit(1)
                     if let district = offer.creator.district {
                         Text("·")
-                            .foregroundStyle(.white.opacity(0.4))
+                            .foregroundStyle(MatchaTokens.Colors.textSecondary.opacity(0.5))
                         Text(district)
-                            .font(.system(size: 12))
-                            .foregroundStyle(.white.opacity(0.6))
+                            .font(.system(size: 13))
+                            .foregroundStyle(MatchaTokens.Colors.textSecondary)
                             .lineLimit(1)
                     }
+                    Spacer()
                 }
 
+                // Title
                 Text(offer.title.replacingOccurrences(of: "[LAST MINUTE] ", with: ""))
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                    .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(MatchaTokens.Colors.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                HStack(spacing: 10) {
-                    Text(offer.rewardSummary)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(MatchaTokens.Colors.accent)
-                        .lineLimit(1)
+                // Tag row: type + niches + audience
+                tagRow(offer)
 
-                    if offer.slotsRemaining > 0 && offer.slotsRemaining <= 5 {
-                        slotsBadge(offer.slotsRemaining)
-                    }
+                Divider().background(MatchaTokens.Colors.outline.opacity(0.4))
+
+                // Exchange rows
+                VStack(alignment: .leading, spacing: 10) {
+                    exchangeLine(
+                        label: "You receive",
+                        labelColor: MatchaTokens.Colors.accent,
+                        value: offer.bloggerReceives.isEmpty ? offer.rewardSummary : offer.bloggerReceives
+                    )
+                    exchangeLine(
+                        label: "You offer",
+                        labelColor: MatchaTokens.Colors.textSecondary,
+                        value: offer.businessReceives.isEmpty ? offer.deliverableSummary : offer.businessReceives
+                    )
                 }
+
+                // Footer: slots + Apply
+                HStack(alignment: .center) {
+                    slotsFooter(offer)
+                    Spacer()
+                    applyButton
+                }
+                .padding(.top, 4)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 16)
-            .padding(.bottom, 18)
+            .padding(16)
         }
-        .frame(width: geo.size.width, height: 340)
+        .background(MatchaTokens.Colors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [.white.opacity(0.12), .white.opacity(0.03)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 0.5
-                )
+                .strokeBorder(MatchaTokens.Colors.outline.opacity(0.35), lineWidth: 0.5)
         }
         .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .shadow(color: .black.opacity(0.45), radius: 14, y: 8)
-        } // GeometryReader
-        .frame(height: 340)
+        .shadow(color: .black.opacity(0.3), radius: 10, y: 4)
+    }
+
+    // MARK: - Card sub-components
+
+    @ViewBuilder
+    private func tagRow(_ offer: Offer) -> some View {
+        let niches = offer.preferredNiches.prefix(2)
+        let audienceText = offer.audienceTier.shortLabel
+
+        FlowLayout(spacing: 6) {
+            typeBadge(offer.type)
+            ForEach(Array(niches), id: \.self) { niche in
+                nicheTag(niche)
+            }
+            if !audienceText.isEmpty && offer.audienceTier != .any {
+                audienceTag(audienceText)
+            }
+        }
+    }
+
+    private func nicheTag(_ text: String) -> some View {
+        Text(text.capitalized)
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(MatchaTokens.Colors.textSecondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(Color.white.opacity(0.06), in: Capsule())
+    }
+
+    private func audienceTag(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(MatchaTokens.Colors.textSecondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(Color.white.opacity(0.06), in: Capsule())
+    }
+
+    private func exchangeLine(label: String, labelColor: Color, value: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text(label)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(labelColor)
+                .frame(width: 86, alignment: .leading)
+            Text(value)
+                .font(.system(size: 13))
+                .foregroundStyle(MatchaTokens.Colors.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+    }
+
+    @ViewBuilder
+    private func slotsFooter(_ offer: Offer) -> some View {
+        HStack(spacing: 4) {
+            if offer.isUnlimitedSlots {
+                Text("Unlimited slots")
+                    .font(.system(size: 13))
+                    .foregroundStyle(MatchaTokens.Colors.textSecondary)
+            } else {
+                Text("\(offer.slotsRemaining)/\(offer.slotsTotal) slots left")
+                    .font(.system(size: 13))
+                    .foregroundStyle(MatchaTokens.Colors.textSecondary)
+            }
+            if offer.guests == .plusOne {
+                Text("·")
+                    .foregroundStyle(MatchaTokens.Colors.textSecondary.opacity(0.5))
+                Text("+1")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(MatchaTokens.Colors.textSecondary)
+            }
+        }
+    }
+
+    private var applyButton: some View {
+        Text("Apply")
+            .font(.system(size: 15, weight: .bold))
+            .foregroundStyle(MatchaTokens.Colors.background)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 10)
+            .background(MatchaTokens.Colors.accent, in: Capsule())
+    }
+
+    @ViewBuilder
+    private func lastMinuteBadge(_ offer: Offer) -> some View {
+        HStack(spacing: 4) {
+            Text("LAST MINUTE")
+                .font(.system(size: 10, weight: .bold))
+                .tracking(0.6)
+            if !offer.expiryText.isEmpty {
+                Text("·")
+                Text(offer.expiryText)
+                    .font(.system(size: 11, weight: .semibold))
+            }
+        }
+        .foregroundStyle(MatchaTokens.Colors.warning)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(.black.opacity(0.65), in: Capsule())
+        .overlay(Capsule().strokeBorder(MatchaTokens.Colors.warning.opacity(0.5), lineWidth: 0.5))
     }
 
     // MARK: - Shared Components
