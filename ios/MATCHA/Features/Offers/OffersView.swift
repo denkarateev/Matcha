@@ -153,17 +153,17 @@ struct OffersView: View {
             }
             .padding(.horizontal, 20)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(lastMinuteOffers) { offer in
-                        NavigationLink(value: offer) {
-                            lastMinuteCard(offer)
-                        }
-                        .buttonStyle(.plain)
+            // Vertical list of split cards (убрал horizontal carousel для
+            // единообразия с "All Offers" — один дизайн везде).
+            LazyVStack(spacing: 12) {
+                ForEach(lastMinuteOffers) { offer in
+                    NavigationLink(value: offer) {
+                        allOfferCard(offer)
                     }
+                    .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 20)
             }
+            .padding(.horizontal, 20)
         }
     }
 
@@ -263,17 +263,16 @@ struct OffersView: View {
             }
             .padding(.horizontal, 20)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 14) {
-                    ForEach(bestForYouOffers) { offer in
-                        NavigationLink(value: offer) {
-                            bestForYouCard(offer)
-                        }
-                        .buttonStyle(.plain)
+            // Показываем первые 3 split-карточки, остальные — через See All.
+            LazyVStack(spacing: 12) {
+                ForEach(Array(bestForYouOffers.prefix(3))) { offer in
+                    NavigationLink(value: offer) {
+                        allOfferCard(offer)
                     }
+                    .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 20)
             }
+            .padding(.horizontal, 20)
         }
         .sheet(isPresented: $showAllBestForYou) {
             allBestForYouSheet
