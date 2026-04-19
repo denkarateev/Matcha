@@ -585,14 +585,93 @@ struct ProfileView: View {
         .padding(.vertical, 18)
     }
 
-    // MARK: - Social Accounts
+    // MARK: - Social Accounts (per design: simple rows с colored square icon)
 
     @ViewBuilder
     private var socialAccountsSection: some View {
         if store.currentUser.hasSocialAccounts {
-            SocialAccountsSectionContent(user: store.currentUser)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 18)
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Social")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(.white)
+
+                VStack(spacing: 0) {
+                    if let handle = store.currentUser.instagramHandle {
+                        socialRow(
+                            name: "Instagram",
+                            handle: "@\(handle)",
+                            followers: store.currentUser.instagramFollowers ?? store.currentUser.followersCount,
+                            color: Color(hex: 0xE1306C),
+                            showDivider: store.currentUser.tiktokHandle != nil
+                        )
+                    }
+                    if let handle = store.currentUser.tiktokHandle {
+                        socialRow(
+                            name: "TikTok",
+                            handle: "@\(handle)",
+                            followers: store.currentUser.tiktokFollowers,
+                            color: .white,
+                            showDivider: false
+                        )
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 18)
+        }
+    }
+
+    private func socialRow(name: String, handle: String, followers: Int?, color: Color, showDivider: Bool) -> some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                // Colored square icon с буквой (I / T)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [color, color.opacity(0.55)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 36, height: 36)
+                    Text(String(name.prefix(1)))
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(name)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.white)
+                    HStack(spacing: 4) {
+                        Text(handle)
+                            .font(.system(size: 13))
+                            .foregroundStyle(.white.opacity(0.5))
+                        if let f = followers, f > 0 {
+                            Text("·")
+                                .foregroundStyle(.white.opacity(0.3))
+                            Text(formatCount(f))
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.5))
+                        }
+                    }
+                }
+
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.3))
+            }
+            .padding(.vertical, 10)
+
+            if showDivider {
+                Rectangle()
+                    .fill(Color.white.opacity(0.06))
+                    .frame(height: 0.5)
+                    .padding(.leading, 48)
+            }
         }
     }
 
@@ -634,54 +713,62 @@ struct ProfileView: View {
             .frame(width: 1, height: 36)
     }
 
-    // MARK: - Portfolio
+    // MARK: - Portfolio (per design: 3-col grid градиентных плиток)
 
     private var portfolioSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Portfolio Wall")
+                Text("Portfolio")
                     .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(.white)
                 Spacer()
-            }
-
-            // Empty state
-            Button { activeSheet = .editProfile } label: {
-                HStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(Color.white.opacity(0.06))
-                            .frame(width: 48, height: 48)
-                        Image(systemName: "plus")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(.white.opacity(0.3))
-                    }
-
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Showcase your best work")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.white)
-                        Text("Add past collabs to get 3x more matches")
-                            .font(.system(size: 13))
-                            .foregroundStyle(.white.opacity(0.4))
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.25))
-                }
-                .padding(14)
-                .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.06), lineWidth: 1)
+                Button { activeSheet = .editProfile } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(MatchaTokens.Colors.accent)
                 }
             }
-            .buttonStyle(.plain)
+
+            // Grid из 6 градиентных плиток как плейсхолдер (по дизайну).
+            // Реальные URL появятся когда backend подгрузит portfolio items.
+            let hues: [Double] = [20, 80, 160, 200, 260, 300]
+            LazyVGrid(
+                columns: [GridItem(.flexible(), spacing: 6), GridItem(.flexible(), spacing: 6), GridItem(.flexible(), spacing: 6)],
+                spacing: 6
+            ) {
+                ForEach(Array(hues.enumerated()), id: \.offset) { _, hue in
+                    portfolioTile(hue: hue)
+                }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 20)
         .padding(.vertical, 18)
+    }
+
+    private func portfolioTile(hue: Double) -> some View {
+        // Cinematic градиентная плитка 4:5 с diagonal stripe overlay — как в дизайне.
+        ZStack {
+            LinearGradient(
+                colors: [
+                    Color(hue: hue / 360, saturation: 0.55, brightness: 0.28),
+                    Color(hue: (hue + 30) / 360, saturation: 0.45, brightness: 0.12),
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            // Diagonal stripe pattern (repeating)
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.04), Color.clear, Color.white.opacity(0.04), Color.clear],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        }
+        .aspectRatio(4.0 / 5.0, contentMode: .fit)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     // MARK: - Settings
@@ -855,12 +942,18 @@ struct ProfileView: View {
         Button(role: .destructive) {
             onSignOut?()
         } label: {
-            Text("Sign Out")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(.red.opacity(0.7))
+            Text("Sign out")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(MatchaTokens.Colors.danger)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
+                .padding(.vertical, 14)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(MatchaTokens.Colors.danger.opacity(0.35), lineWidth: 1)
+                )
         }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
     }
 
     private func formatCount(_ count: Int) -> String {
