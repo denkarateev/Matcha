@@ -69,19 +69,32 @@ struct OffersView: View {
         return result
     }
 
+    /// Оффер считается "Ending Soon" если флаг isLastMinute стоит
+    /// ИЛИ если до expiryDate меньше 48 часов.
+    private func isEndingSoon(_ offer: Offer) -> Bool {
+        if offer.isLastMinute { return true }
+        guard let expiry = offer.expiryDate else { return false }
+        return expiry.timeIntervalSinceNow < 48 * 3600 && expiry.timeIntervalSinceNow > 0
+    }
+
     private var lastMinuteOffers: [Offer] {
-        filteredOffers.filter(\.isLastMinute)
+        filteredOffers.filter(isEndingSoon).sorted { (a, b) -> Bool in
+            // Сортировка: ближайшая дедлайн — первой
+            let aExp = a.expiryDate?.timeIntervalSinceNow ?? .infinity
+            let bExp = b.expiryDate?.timeIntervalSinceNow ?? .infinity
+            return aExp < bExp
+        }
     }
 
     private var bestForYouOffers: [Offer] {
         filteredOffers
-            .filter { !$0.isLastMinute }
+            .filter { !isEndingSoon($0) }
             .prefix(8)
             .map { $0 }
     }
 
     private var allRegularOffers: [Offer] {
-        filteredOffers.filter { !$0.isLastMinute }
+        filteredOffers.filter { !isEndingSoon($0) }
     }
 
     var body: some View {
@@ -145,11 +158,16 @@ struct OffersView: View {
     private var lastMinuteSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 6) {
-                Text("\u{1F525}")
+                Image(systemName: "clock.badge.exclamationmark.fill")
                     .font(.system(size: 16))
-                Text("Last Minute")
+                    .foregroundStyle(MatchaTokens.Colors.warning)
+                Text("Ending Soon")
                     .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(.white)
+                Text("\(lastMinuteOffers.count)")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(MatchaTokens.Colors.warning)
+                Spacer()
             }
             .padding(.horizontal, 20)
 
@@ -429,11 +447,17 @@ struct OffersView: View {
                     .frame(maxWidth: .infinity)
                     .clipped()
 
-                // LAST MINUTE pill (если срочный оффер)
-                if offer.isLastMinute {
-                    lastMinuteBadge(offer)
-                        .padding(12)
+                // Top-right overlay: LAST MINUTE pill + countdown timer
+                // Показывается если офер срочный ИЛИ до дедлайна < 48h.
+                VStack(alignment: .trailing, spacing: 6) {
+                    if offer.isLastMinute {
+                        lastMinuteBadge(offer)
+                    }
+                    if let expiry = offer.expiryDate, expiry.timeIntervalSinceNow > 0 {
+                        CountdownPill(deadline: expiry)
+                    }
                 }
+                .padding(12)
 
                 // offer / id метка в левом нижнем углу
                 VStack {

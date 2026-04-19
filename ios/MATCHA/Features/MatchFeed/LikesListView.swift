@@ -6,7 +6,10 @@ import SwiftUI
 /// Opened as a sheet from the pending likes pill in MatchFeedView.
 struct LikesListView: View {
     let profiles: [UserProfile]
+    var repository: (any MatchaRepository)? = nil
     @State private var matchedBack: Set<UUID> = []
+    @State private var inFlightIDs: Set<UUID> = []
+    @State private var errorMessage: String?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -103,20 +106,17 @@ struct LikesListView: View {
 
             Spacer()
 
-            // Match back button
-            Button(action: {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    if matchedBack.contains(profile.id) {
-                        matchedBack.remove(profile.id)
-                    } else {
-                        matchedBack.insert(profile.id)
-                    }
-                }
-            }) {
+            // Match back button — wires to backend matchBack endpoint
+            Button(action: { Task { await performMatchBack(profile) } }) {
                 let isMatched = matchedBack.contains(profile.id)
+                let inFlight = inFlightIDs.contains(profile.id)
                 HStack(spacing: 6) {
-                    Image(systemName: isMatched ? "heart.fill" : "heart")
-                        .font(.system(size: 13))
+                    if inFlight {
+                        ProgressView().scaleEffect(0.6).tint(.black)
+                    } else {
+                        Image(systemName: isMatched ? "heart.fill" : "heart")
+                            .font(.system(size: 13))
+                    }
                     Text(isMatched ? "Matched" : "Match Back")
                         .font(.caption.weight(.bold))
                 }
@@ -128,9 +128,35 @@ struct LikesListView: View {
                     in: Capsule()
                 )
             }
+            .disabled(inFlightIDs.contains(profile.id) || matchedBack.contains(profile.id))
         }
         .padding(12)
         .background(MatchaTokens.Colors.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    // MARK: - Match Back action
+
+    private func performMatchBack(_ profile: UserProfile) async {
+        guard !inFlightIDs.contains(profile.id),
+              !matchedBack.contains(profile.id) else { return }
+        inFlightIDs.insert(profile.id)
+        defer { inFlightIDs.remove(profile.id) }
+
+        guard let repository else {
+            // Fallback без репозитория — mock mode, просто toggling state
+            matchedBack.insert(profile.id)
+            return
+        }
+
+        do {
+            let targetId = profile.serverUserId.isEmpty ? profile.id.uuidString : profile.serverUserId
+            _ = try await repository.matchBack(targetId: targetId)
+            withAnimation(.easeInOut(duration: 0.2)) {
+                matchedBack.insert(profile.id)
+            }
+        } catch {
+            errorMessage = "Failed to match. Try again."
+        }
     }
 
     // MARK: - Helpers

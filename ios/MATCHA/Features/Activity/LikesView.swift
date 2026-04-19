@@ -153,8 +153,15 @@ struct LikesView: View {
             Spacer()
 
             // Like Back button
+            // - Blogger: работает бесплатно (он и так видит лайки)
+            // - Business free: paywall (он видит blurred — платит чтобы открыть)
+            // - Business pro/black: работает
             Button {
-                Task { await store.likeBack(profile: profile) }
+                if currentUser.role == .business && currentUser.subscriptionPlan == .free {
+                    showLikesPaywall = true
+                } else {
+                    Task { await store.likeBack(profile: profile) }
+                }
             } label: {
                 let isMatched = store.matchedLikeIDs.contains(profile.id)
                 HStack(spacing: 4) {
