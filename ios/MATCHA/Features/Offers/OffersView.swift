@@ -447,17 +447,20 @@ struct OffersView: View {
                     .frame(maxWidth: .infinity)
                     .clipped()
 
-                // Top-right overlay: LAST MINUTE pill + countdown timer
-                // Показывается если офер срочный ИЛИ до дедлайна < 48h.
-                VStack(alignment: .trailing, spacing: 6) {
-                    if offer.isLastMinute {
-                        lastMinuteBadge(offer)
+                // Top-right overlay: LAST MINUTE pill + countdown — только
+                // для офферов которые скоро закончатся (isEndingSoon).
+                // Обычные офферы без таймера чтобы не создавать лишнюю срочность.
+                if isEndingSoon(offer) {
+                    VStack(alignment: .trailing, spacing: 6) {
+                        if offer.isLastMinute {
+                            lastMinuteBadge(offer)
+                        }
+                        if let expiry = offer.expiryDate, expiry.timeIntervalSinceNow > 0 {
+                            CountdownPill(deadline: expiry)
+                        }
                     }
-                    if let expiry = offer.expiryDate, expiry.timeIntervalSinceNow > 0 {
-                        CountdownPill(deadline: expiry)
-                    }
+                    .padding(12)
                 }
-                .padding(12)
 
                 // offer / id метка в левом нижнем углу
                 VStack {
