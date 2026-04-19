@@ -92,14 +92,13 @@ struct DealPipelineView: View {
             .padding(.top, 8)
             .padding(.bottom, 4)
 
-            VStack(alignment: .leading, spacing: 10) {
-                // Vertical timeline — same component used in DealCardView, так
-                // пользователь видит одинаковый паттерн везде.
-                VerticalDealTimeline(deal: deal)
+            VStack(alignment: .leading, spacing: 8) {
+                pipelineRow
+                stageLabelsRow
                 dealInfoRow
             }
             .padding(.horizontal, MatchaTokens.Spacing.medium)
-            .padding(.vertical, 12)
+            .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .fill(
