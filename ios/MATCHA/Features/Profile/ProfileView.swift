@@ -28,34 +28,22 @@ struct ProfileView: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
                 heroSection
+                statsGridRow
                 actionRow
-                sectionDivider
 
                 aboutSection
-                sectionDivider
-
-                personalInfoSection
-                sectionDivider
-
-                socialAccountsSection
-                if store.currentUser.hasSocialAccounts {
-                    sectionDivider
-                }
 
                 nichesSection
-                sectionDivider
 
-                statsSection
-                sectionDivider
+                personalInfoSection
+
+                socialAccountsSection
 
                 portfolioSection
-                sectionDivider
 
                 planSection
-                sectionDivider
 
                 devToolsSection
-                sectionDivider
 
                 signOutButton
             }
@@ -101,7 +89,7 @@ struct ProfileView: View {
     // MARK: - Hero
 
     private var hasPhoto: Bool { store.primaryPhotoURL != nil }
-    private var heroHeight: CGFloat { hasPhoto ? 460 : 240 }
+    private var heroHeight: CGFloat { hasPhoto ? 340 : 240 }
 
     private var heroSection: some View {
         VStack(spacing: 0) {
@@ -124,7 +112,7 @@ struct ProfileView: View {
                     MatchaTokens.Colors.background
                 }
             }
-            .frame(height: 460)
+            .frame(height: 340)
             .clipped()
 
             LinearGradient(
@@ -136,7 +124,7 @@ struct ProfileView: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .frame(height: 460)
+            .frame(height: 340)
 
             topBar
 
@@ -147,7 +135,7 @@ struct ProfileView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 20)
             .padding(.bottom, 20)
-            .frame(height: 460)
+            .frame(height: 340)
         }
         .frame(height: 460)
     }
@@ -344,27 +332,107 @@ struct ProfileView: View {
         }
     }
 
-    // MARK: - Action Row
+    // MARK: - Stats Grid Row (4 cards: Rating / Collabs / Visits / Badges)
+
+    private var statsGridRow: some View {
+        HStack(spacing: 10) {
+            statCard(
+                label: "Rating",
+                value: store.currentUser.rating.map { String(format: "%.1f", $0) } ?? "—",
+                icon: "star.fill",
+                iconColor: MatchaTokens.Colors.warning
+            )
+            statCard(
+                label: "Collabs",
+                value: "\(store.currentUser.completedCollabsCount)",
+                icon: nil,
+                iconColor: .clear
+            )
+            statCard(
+                label: "Visits",
+                value: "\(store.currentUser.verifiedVisits)",
+                icon: nil,
+                iconColor: .clear
+            )
+            statCard(
+                label: "Badges",
+                value: "\(store.currentUser.badges.count)",
+                icon: nil,
+                iconColor: .clear
+            )
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 8)
+        .padding(.bottom, 4)
+    }
+
+    private func statCard(label: String, value: String, icon: String?, iconColor: Color) -> some View {
+        VStack(spacing: 2) {
+            HStack(spacing: 4) {
+                if let icon {
+                    Image(systemName: icon)
+                        .font(.system(size: 12))
+                        .foregroundStyle(iconColor)
+                }
+                Text(value)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(.white)
+            }
+            Text(label.uppercased())
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(.white.opacity(0.5))
+                .tracking(0.5)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 10)
+        .background(MatchaTokens.Colors.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+        }
+    }
+
+    // MARK: - Action Row (Edit Profile + Go Pro)
 
     private var actionRow: some View {
-        Button { activeSheet = .editProfile } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "pencil")
-                    .font(.system(size: 13, weight: .semibold))
+        HStack(spacing: 10) {
+            Button { activeSheet = .editProfile } label: {
                 Text("Edit Profile")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .background(MatchaTokens.Colors.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
+                    }
             }
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .frame(height: 44)
-            .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+
+            Button { showPaywall = true } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 12, weight: .bold))
+                    Text("Go Pro")
+                        .font(.system(size: 14, weight: .bold))
+                }
+                .foregroundStyle(.black)
+                .padding(.horizontal, 18)
+                .frame(height: 44)
+                .background(
+                    LinearGradient(
+                        colors: [MatchaTokens.Colors.accent, Color(hex: 0x9BE62E)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                )
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
+        .padding(.horizontal, 24)
+        .padding(.top, 14)
+        .padding(.bottom, 4)
     }
 
     // MARK: - About
@@ -487,10 +555,11 @@ struct ProfileView: View {
                     ForEach(store.currentUser.niches, id: \.self) { niche in
                         Text(niche)
                             .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(MatchaTokens.Colors.accent)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 7)
-                            .background(Color.white.opacity(0.08), in: Capsule())
+                            .background(MatchaTokens.Colors.accent.opacity(0.12), in: Capsule())
+                            .overlay(Capsule().strokeBorder(MatchaTokens.Colors.accent.opacity(0.25), lineWidth: 1))
                     }
                 }
             }
