@@ -183,7 +183,9 @@ struct ChatConversationView: View {
             }
 
             ToolbarItem(placement: .topBarTrailing) {
-                HStack(spacing: 8) {
+                // Outer frame — тёмная capsule объединяет Deal pill + ellipsis menu
+                // в один визуальный блок (как на дизайне).
+                HStack(spacing: 10) {
                     if store.activeDeal == nil {
                         Button(action: { showCreateDeal = true }) {
                             HStack(spacing: 6) {
@@ -210,10 +212,18 @@ struct ChatConversationView: View {
                         }
                     } label: {
                         Image(systemName: "ellipsis")
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(MatchaTokens.Colors.textSecondary)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.55))
                     }
                 }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule().fill(MatchaTokens.Colors.surface.opacity(0.9))
+                )
+                .overlay(
+                    Capsule().strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
+                )
             }
         }
         .navigationBarTitleDisplayMode(.inline)
