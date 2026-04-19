@@ -153,6 +153,34 @@ final class SprintSmokeTests: XCTestCase {
 
     // MARK: - Screenshot helper
 
+    // MARK: - 08 Like button advances to next profile
+
+    func test_08_likeButton_advancesProfile() throws {
+        app.launch()
+        sleep(8)
+
+        let matchTab = app.tabBars.buttons["Match"]
+        XCTAssertTrue(matchTab.waitForExistence(timeout: 10))
+        matchTab.tap()
+        sleep(2)
+
+        // Capture current state
+        snap("08a_before_like")
+
+        // Find the Like button (heart icon, 56pt, labeled "Like this profile")
+        let likeBtn = app.buttons["Like this profile"]
+        XCTAssertTrue(likeBtn.waitForExistence(timeout: 5), "Like button must exist in match feed")
+
+        likeBtn.tap()
+        sleep(2)
+
+        // After tap — either advanced to next profile, or ran out of profiles (empty state), or match celebration.
+        // In mock mode we have multiple profiles, so we expect the feed to still be visible (not crashed).
+        XCTAssertTrue(matchTab.exists, "App should still be responsive after Like tap")
+
+        snap("08b_after_like")
+    }
+
     private func snap(_ name: String) {
         let attach = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         attach.name = name

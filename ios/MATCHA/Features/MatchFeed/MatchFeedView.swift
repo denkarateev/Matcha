@@ -260,7 +260,7 @@ struct MatchFeedView: View {
         .animation(.spring(response: 0.3), value: store.currentIndex)
     }
 
-    // MARK: - Card Stack Area — Bumble-style vertical scroll
+    // MARK: - Card Stack Area — Bumble-style vertical paging scroll
 
     @ViewBuilder
     private var cardStackArea: some View {
@@ -284,7 +284,6 @@ struct MatchFeedView: View {
             .scrollTargetBehavior(.paging)
             .scrollPosition(id: $scrollPositionID, anchor: .top)
             .onChange(of: scrollPositionID) { _, newID in
-                // User scrolled → sync currentIndex to visible profile
                 guard let newID,
                       let idx = store.filteredProfiles.firstIndex(where: { $0.id == newID }) else { return }
                 if store.currentIndex != idx {
@@ -292,7 +291,6 @@ struct MatchFeedView: View {
                 }
             }
             .onChange(of: store.currentIndex) { _, newIdx in
-                // Store advanced (e.g. after Like/Pass button) → scroll to matching card
                 let list = store.filteredProfiles
                 guard newIdx >= 0, newIdx < list.count else { return }
                 let targetID = list[newIdx].id
