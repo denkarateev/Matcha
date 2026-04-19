@@ -33,6 +33,9 @@ final class MatchFeedStore {
 
     private let repository: any MatchaRepository
     private var lastSkippedProfileID: UUID?
+    /// Snapshot for undo: (profile, original index в массиве profiles до удаления).
+    /// Позволяет восстановить скипнутый профиль при Undo tap.
+    private var lastSkippedSnapshot: (profile: UserProfile, index: Int)?
     private var toastDismissTask: Task<Void, Never>?
 
     init(repository: any MatchaRepository) {
@@ -178,8 +181,24 @@ final class MatchFeedStore {
         ProcessedDiscoveryProfileStore.add(profile.id, currentUserID: currentUserID)
         lastSkippedProfileID = direction == .left ? profile.id : nil
 
-        // Optimistically advance the card
-        moveForward()
+        // Remove the swiped profile from feed — user can't scroll back to it.
+        // For skip: save snapshot чтобы UndoSkip мог восстановить на исходный индекс.
+        if let idx = profiles.firstIndex(where: { $0.id == profile.id }) {
+            if direction == .left {
+                lastSkippedSnapshot = (profile: profile, index: idx)
+            } else {
+                lastSkippedSnapshot = nil
+            }
+            profiles.remove(at: idx)
+            // currentIndex теперь указывает на следующий профиль (тот, что был after
+            // removed). Держим в пределах списка.
+            if currentIndex >= profiles.count {
+                currentIndex = max(0, profiles.count - 1)
+            }
+        } else {
+            // Fallback: old behaviour (should never happen, но на всякий)
+            moveForward()
+        }
 
         let targetId = profile.serverUserId.isEmpty ? profile.id.uuidString : profile.serverUserId
 
@@ -320,14 +339,16 @@ final class MatchFeedStore {
 
     // MARK: - Undo
 
-    /// Reverses the last left swipe — decrements currentIndex so the previous card is shown again.
-    /// Only valid immediately after a skip (the undo window).
+    /// Reverses the last left swipe — восстанавливает профиль в массиве на
+    /// исходный индекс, убирает из processed store и scrollPosition
+    /// автоматически синхронизируется (onChange of currentIndex).
     func undoSkip() {
-        guard currentIndex > 0 else { return }
-        currentIndex -= 1
-        if let lastSkippedProfileID {
-            ProcessedDiscoveryProfileStore.remove(lastSkippedProfileID, currentUserID: currentUserID)
-        }
+        guard let snapshot = lastSkippedSnapshot else { return }
+        let insertIndex = min(snapshot.index, profiles.count)
+        profiles.insert(snapshot.profile, at: insertIndex)
+        currentIndex = insertIndex  // наводим курсор на восстановленный профиль
+        ProcessedDiscoveryProfileStore.remove(snapshot.profile.id, currentUserID: currentUserID)
+        lastSkippedSnapshot = nil
         lastSkippedProfileID = nil
     }
 
