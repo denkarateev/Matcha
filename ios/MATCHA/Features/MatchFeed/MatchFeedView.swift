@@ -827,6 +827,30 @@ private struct BumbleProfileCard: View {
         return []
     }
 
+    @ViewBuilder
+    private var verificationBadgePill: some View {
+        switch profile.verificationLevel {
+        case .blueCheck:
+            HStack(spacing: 3) {
+                Image(systemName: "checkmark.seal.fill").font(.system(size: 9, weight: .bold))
+                Text("BLUE CHECK").font(.system(size: 10, weight: .bold)).tracking(0.5)
+            }
+            .foregroundStyle(.black)
+            .padding(.horizontal, 8).padding(.vertical, 3)
+            .background(MatchaTokens.Colors.accent, in: Capsule())
+        case .verified:
+            HStack(spacing: 3) {
+                Image(systemName: "checkmark.shield.fill").font(.system(size: 9, weight: .bold))
+                Text("VERIFIED").font(.system(size: 10, weight: .bold)).tracking(0.5)
+            }
+            .foregroundStyle(MatchaTokens.Colors.baliBlue)
+            .padding(.horizontal, 8).padding(.vertical, 3)
+            .background(MatchaTokens.Colors.baliBlue.opacity(0.2), in: Capsule())
+        case .shadow:
+            EmptyView()
+        }
+    }
+
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 0) {
@@ -866,8 +890,11 @@ private struct BumbleProfileCard: View {
                     )
                     .allowsHitTesting(false)
 
-                    // Name + info overlay
-                    VStack(alignment: .leading, spacing: 4) {
+                    // Name + info overlay (спека §3.4: имя, роль, район, рейтинг, бейджи)
+                    VStack(alignment: .leading, spacing: 6) {
+                        // Верификационная плашка (VERIFIED / BLUE CHECK)
+                        verificationBadgePill
+                        // Имя + чекмарк
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
                             Text(profile.name)
                                 .font(.system(size: 28, weight: .bold))
@@ -881,14 +908,36 @@ private struct BumbleProfileCard: View {
                         Text(profile.secondaryLine)
                             .font(.system(size: 15))
                             .foregroundStyle(.white.opacity(0.85))
-                        if let district = profile.district {
-                            HStack(spacing: 4) {
-                                Image(systemName: "mappin.circle.fill")
-                                    .font(.system(size: 12))
-                                Text(district)
-                                    .font(.system(size: 13, weight: .medium))
+                        // Район + рейтинг + collabs одной строкой
+                        HStack(spacing: 12) {
+                            if let district = profile.district {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "mappin.circle.fill")
+                                        .font(.system(size: 11))
+                                    Text(district)
+                                        .font(.system(size: 13, weight: .medium))
+                                }
+                                .foregroundStyle(.white.opacity(0.7))
                             }
-                            .foregroundStyle(.white.opacity(0.7))
+                            if let rating = profile.rating, rating > 0 {
+                                HStack(spacing: 3) {
+                                    Image(systemName: "star.fill")
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(MatchaTokens.Colors.warning)
+                                    Text(String(format: "%.1f", rating))
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(.white)
+                                }
+                            }
+                            if profile.completedCollabsCount > 0 {
+                                HStack(spacing: 3) {
+                                    Image(systemName: "handshake.fill")
+                                        .font(.system(size: 11))
+                                    Text("\(profile.completedCollabsCount) collabs")
+                                        .font(.system(size: 13, weight: .medium))
+                                }
+                                .foregroundStyle(.white.opacity(0.7))
+                            }
                         }
                     }
                     .padding(.horizontal, 24)
