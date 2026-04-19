@@ -1096,14 +1096,33 @@ private struct CategoryScreen: View {
         .scrollBounceBehavior(.basedOnSize)
     }
 
-    // MARK: - MapKit Search
+    // MARK: - Google Places Search
 
     @MainActor
     private func searchBusiness(query: String) async {
+        do {
+            let places = try await GooglePlacesService.shared.searchPlaces(query: query)
+            searchResults = places.map {
+                BusinessSearchResult(
+                    name: $0.name,
+                    address: $0.address,
+                    district: $0.district
+                )
+            }
+        } catch GooglePlacesError.missingAPIKey {
+            // Fallback to MapKit when key missing (dev builds)
+            await searchBusinessMapKitFallback(query: query)
+        } catch {
+            searchResults = []
+        }
+    }
+
+    @MainActor
+    private func searchBusinessMapKitFallback(query: String) async {
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = query
         request.region = MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: -8.65, longitude: 115.17), // Bali center
+            center: CLLocationCoordinate2D(latitude: -8.65, longitude: 115.17),
             span: MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
         )
         request.resultTypes = .pointOfInterest
@@ -1120,12 +1139,7 @@ private struct CategoryScreen: View {
                     placemark.administrativeArea,
                     placemark.country
                 ].compactMap { $0 }.joined(separator: ", ")
-
-                return BusinessSearchResult(
-                    name: item.name ?? "Unknown",
-                    address: address,
-                    district: district
-                )
+                return BusinessSearchResult(name: item.name ?? "Unknown", address: address, district: district)
             }
         } catch {
             searchResults = []
