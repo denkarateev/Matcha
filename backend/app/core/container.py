@@ -596,7 +596,13 @@ def _seed_store(store: InMemoryStore) -> None:
     p_dev = Profile(
         user_id="dev-user-1",
         display_name="Dev User",
-        photo_urls=["https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=1000&fit=crop"],
+        photo_urls=[
+            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=1000&fit=crop",
+            "https://images.unsplash.com/photo-1506863530036-1efeddceb993?w=800&h=1000&fit=crop",
+            "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&h=1000&fit=crop",
+            "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=800&h=1000&fit=crop",
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&h=1000&fit=crop",
+        ],
         primary_photo_url="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=1000&fit=crop",
         country="Russia",
         instagram_handle="devuser",
