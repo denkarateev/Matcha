@@ -829,25 +829,27 @@ private struct BumbleProfileCard: View {
 
     @ViewBuilder
     private var verificationBadgePill: some View {
-        switch profile.verificationLevel {
-        case .blueCheck:
-            HStack(spacing: 3) {
-                Image(systemName: "checkmark.seal.fill").font(.system(size: 9, weight: .bold))
-                Text("BLUE CHECK").font(.system(size: 10, weight: .bold)).tracking(0.5)
+        // Иерархия: verified → 1 pill, blueCheck → 2 pills (VERIFIED + APPROVED).
+        HStack(spacing: 6) {
+            if profile.verificationLevel == .verified
+                || profile.verificationLevel == .blueCheck {
+                HStack(spacing: 3) {
+                    Image(systemName: "checkmark.shield.fill").font(.system(size: 9, weight: .bold))
+                    Text("VERIFIED").font(.system(size: 10, weight: .bold)).tracking(0.5)
+                }
+                .foregroundStyle(MatchaTokens.Colors.baliBlue)
+                .padding(.horizontal, 8).padding(.vertical, 3)
+                .background(MatchaTokens.Colors.baliBlue.opacity(0.2), in: Capsule())
             }
-            .foregroundStyle(.black)
-            .padding(.horizontal, 8).padding(.vertical, 3)
-            .background(MatchaTokens.Colors.accent, in: Capsule())
-        case .verified:
-            HStack(spacing: 3) {
-                Image(systemName: "checkmark.shield.fill").font(.system(size: 9, weight: .bold))
-                Text("VERIFIED").font(.system(size: 10, weight: .bold)).tracking(0.5)
+            if profile.verificationLevel == .blueCheck {
+                HStack(spacing: 3) {
+                    Image(systemName: "checkmark.seal.fill").font(.system(size: 9, weight: .bold))
+                    Text("APPROVED").font(.system(size: 10, weight: .bold)).tracking(0.5)
+                }
+                .foregroundStyle(.black)
+                .padding(.horizontal, 8).padding(.vertical, 3)
+                .background(MatchaTokens.Colors.accent, in: Capsule())
             }
-            .foregroundStyle(MatchaTokens.Colors.baliBlue)
-            .padding(.horizontal, 8).padding(.vertical, 3)
-            .background(MatchaTokens.Colors.baliBlue.opacity(0.2), in: Capsule())
-        case .shadow:
-            EmptyView()
         }
     }
 

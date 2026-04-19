@@ -304,32 +304,48 @@ struct ProfileView: View {
 
     @ViewBuilder
     private var verificationStatusPill: some View {
-        switch store.currentUser.verificationLevel {
-        case .blueCheck:
-            HStack(spacing: 6) {
-                Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: 11, weight: .bold))
-                Text("Blue Check")
-                    .font(.system(size: 12, weight: .bold))
+        // Иерархия бейджей:
+        // - .verified (паспорт+selfie) → VERIFIED (bali blue)
+        // - .blueCheck (3+ deals + content proof) → VERIFIED + APPROVED (обе видны)
+        // - .shadow → ничего
+        HStack(spacing: 8) {
+            if store.currentUser.verificationLevel == .verified
+                || store.currentUser.verificationLevel == .blueCheck {
+                verifiedPill
             }
-            .foregroundStyle(.black)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 7)
-            .background(MatchaTokens.Colors.baliBlue, in: Capsule())
-        case .verified:
-            HStack(spacing: 6) {
-                Image(systemName: "checkmark.shield.fill")
-                    .font(.system(size: 11, weight: .bold))
-                Text("Approved by MATCHA")
-                    .font(.system(size: 12, weight: .bold))
+            if store.currentUser.verificationLevel == .blueCheck {
+                approvedPill
             }
-            .foregroundStyle(.black)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 7)
-            .background(MatchaTokens.Colors.accent, in: Capsule())
-        case .shadow:
-            EmptyView()
         }
+    }
+
+    private var verifiedPill: some View {
+        HStack(spacing: 5) {
+            Image(systemName: "checkmark.shield.fill")
+                .font(.system(size: 10, weight: .bold))
+            Text("VERIFIED")
+                .font(.system(size: 11, weight: .bold))
+                .tracking(0.6)
+        }
+        .foregroundStyle(MatchaTokens.Colors.baliBlue)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(MatchaTokens.Colors.baliBlue.opacity(0.18), in: Capsule())
+        .overlay(Capsule().strokeBorder(MatchaTokens.Colors.baliBlue.opacity(0.35), lineWidth: 0.5))
+    }
+
+    private var approvedPill: some View {
+        HStack(spacing: 5) {
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 10, weight: .bold))
+            Text("APPROVED")
+                .font(.system(size: 11, weight: .bold))
+                .tracking(0.6)
+        }
+        .foregroundStyle(.black)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(MatchaTokens.Colors.accent, in: Capsule())
     }
 
     // MARK: - Stats Grid Row (4 cards: Rating / Collabs / Visits / Badges)

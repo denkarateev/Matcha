@@ -271,6 +271,7 @@ enum MockSeedData {
             slotsRemaining: 2,
             slotsTotal: 3,
             expiryText: "Ends tomorrow",
+            expiryDate: Date().addingTimeInterval(22 * 3600), // 22 часа
             preferredNiche: "Food & Drink",
             preferredNiches: ["Food", "Lifestyle"],
             minimumAudience: "10K+",
@@ -295,6 +296,7 @@ enum MockSeedData {
             slotsRemaining: 4,
             slotsTotal: 5,
             expiryText: "Open",
+            expiryDate: Date().addingTimeInterval(14 * 24 * 3600), // 14 дней
             preferredNiche: "Wellness",
             preferredNiches: ["Fitness", "Health"],
             minimumAudience: "Any",
@@ -318,6 +320,7 @@ enum MockSeedData {
             slotsRemaining: 1,
             slotsTotal: 2,
             expiryText: "3 days left",
+            expiryDate: Date().addingTimeInterval(3 * 24 * 3600),
             preferredNiche: "Travel",
             preferredNiches: ["Travel", "Lifestyle"],
             minimumAudience: "25K+",
@@ -342,6 +345,7 @@ enum MockSeedData {
             slotsRemaining: 3,
             slotsTotal: 5,
             expiryText: "5 days left",
+            expiryDate: Date().addingTimeInterval(5 * 24 * 3600),
             preferredNiche: "Events & Nightlife",
             preferredNiches: ["Lifestyle", "Travel"],
             minimumAudience: "15K+",
