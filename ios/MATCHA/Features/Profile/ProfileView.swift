@@ -729,21 +729,44 @@ struct ProfileView: View {
                 }
             }
 
-            // Grid из 6 градиентных плиток как плейсхолдер (по дизайну).
-            // Реальные URL появятся когда backend подгрузит portfolio items.
-            let hues: [Double] = [20, 80, 160, 200, 260, 300]
+            // Реальные загруженные фото + добор плейсхолдерами до 6 плиток.
+            let uploaded = store.currentUser.photoURLs
+            let placeholderCount = max(0, 6 - uploaded.count)
+            let placeholderHues: [Double] = [20, 80, 160, 200, 260, 300]
             LazyVGrid(
                 columns: [GridItem(.flexible(), spacing: 6), GridItem(.flexible(), spacing: 6), GridItem(.flexible(), spacing: 6)],
                 spacing: 6
             ) {
-                ForEach(Array(hues.enumerated()), id: \.offset) { _, hue in
-                    portfolioTile(hue: hue)
+                ForEach(Array(uploaded.enumerated()), id: \.offset) { _, url in
+                    portfolioPhotoTile(url: url)
+                }
+                ForEach(0..<placeholderCount, id: \.self) { idx in
+                    portfolioTile(hue: placeholderHues[(uploaded.count + idx) % placeholderHues.count])
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 20)
         .padding(.vertical, 18)
+    }
+
+    private func portfolioPhotoTile(url: URL) -> some View {
+        // Реальная загруженная фотка в сетке Portfolio — 4:5 crop.
+        AsyncImage(url: url) { phase in
+            switch phase {
+            case .success(let img):
+                img.resizable().scaledToFill()
+            case .failure:
+                Color(white: 0.08)
+            default:
+                ZStack {
+                    Color(white: 0.08)
+                    ProgressView().tint(MatchaTokens.Colors.accent.opacity(0.6)).scaleEffect(0.7)
+                }
+            }
+        }
+        .aspectRatio(4.0 / 5.0, contentMode: .fit)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     private func portfolioTile(hue: Double) -> some View {

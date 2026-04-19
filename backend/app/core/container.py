@@ -607,9 +607,9 @@ def _seed_store(store: InMemoryStore) -> None:
         bio="Testing MATCHA app. Looking for collab opportunities in Bali.",
         collab_type="both",
         badges=[],
-        verified_visits=0,
-        rating=None,
-        review_count=0,
+        verified_visits=3,
+        rating=4.8,
+        review_count=5,
         created_at=_ago(days=7),
         updated_at=_now(),
     )
@@ -1536,7 +1536,22 @@ def _seed_store(store: InMemoryStore) -> None:
         offer6, offer7, offer8, offer9, offer10,
         offer11, offer12, offer13, offer14, offer15,
     ]
+    # Rolling expires_at: last-minute офферы → 12-36h вперёд (countdown running),
+    # обычные → 3-14 дней вперёд. Вычисляется на момент seed чтобы таймеры
+    # на клиенте всегда показывали актуальное время.
+    _last_minute_hours = [14, 20, 28, 36]
+    _regular_days = [3, 5, 7, 10, 14]
+    lm_idx = 0
+    reg_idx = 0
     for o in all_offers:
+        if o.is_last_minute:
+            hours = _last_minute_hours[lm_idx % len(_last_minute_hours)]
+            o.expires_at = _now() + timedelta(hours=hours)
+            lm_idx += 1
+        else:
+            days = _regular_days[reg_idx % len(_regular_days)]
+            o.expires_at = _now() + timedelta(days=days)
+            reg_idx += 1
         store.offers[o.id] = o
 
     # Offer response — blogger-5 (Marco Surf) responded to the COMO stay offer
