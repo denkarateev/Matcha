@@ -186,17 +186,17 @@ struct ChatConversationView: View {
                 HStack(spacing: 8) {
                     if store.activeDeal == nil {
                         Button(action: { showCreateDeal = true }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "person.2.circle.fill")
-                                    .font(.system(size: 11, weight: .semibold))
+                            HStack(spacing: 6) {
+                                Image(systemName: "link")
+                                    .font(.system(size: 13, weight: .bold))
                                 Text("Deal")
-                                    .font(.system(size: 12, weight: .semibold))
+                                    .font(.system(size: 15, weight: .semibold))
                             }
                             .foregroundStyle(MatchaTokens.Colors.accent)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(MatchaTokens.Colors.accent.opacity(0.12), in: Capsule())
-                            .overlay(Capsule().strokeBorder(MatchaTokens.Colors.accent.opacity(0.3), lineWidth: 0.5))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 7)
+                            .background(MatchaTokens.Colors.accent.opacity(0.18), in: Capsule())
+                            .overlay(Capsule().strokeBorder(MatchaTokens.Colors.accent.opacity(0.5), lineWidth: 1))
                         }
                         .buttonStyle(.plain)
                         .disabled(!store.canStartDeal)
