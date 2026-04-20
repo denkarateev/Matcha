@@ -686,10 +686,12 @@ private struct PersonalDetailsScreen: View {
 
         return Menu {
             ForEach(years, id: \.self) { year in
-                Button("\(year)") { store.birthYear = year }
+                // String(year) вместо "\(year)" — в RU locale Int-interp
+                // вставляет thousand separator ("2 026" с non-breaking space).
+                Button(String(year)) { store.birthYear = year }
             }
         } label: {
-            pickerLabel(store.birthYear.map { "\($0)" } ?? "Year")
+            pickerLabel(store.birthYear.map { String($0) } ?? "Year")
         }
     }
 
@@ -708,10 +710,10 @@ private struct PersonalDetailsScreen: View {
         let days = Array(1...31)
         return Menu {
             ForEach(days, id: \.self) { day in
-                Button("\(day)") { store.birthDay = day }
+                Button(String(day)) { store.birthDay = day }
             }
         } label: {
-            pickerLabel(store.birthDay.map { "\($0)" } ?? "Day")
+            pickerLabel(store.birthDay.map { String($0) } ?? "Day")
         }
     }
 
