@@ -7,9 +7,12 @@ import SwiftUI
 struct LikesListView: View {
     let profiles: [UserProfile]
     var repository: (any MatchaRepository)? = nil
+    /// Передаётся из ChatsView чтобы решить показывать paywall или делать match.
+    var currentUser: UserProfile? = nil
     @State private var matchedBack: Set<UUID> = []
     @State private var inFlightIDs: Set<UUID> = []
     @State private var errorMessage: String?
+    @State private var showPaywall = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -37,6 +40,9 @@ struct LikesListView: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(MatchaTokens.Colors.accent)
                 }
+            }
+            .sheet(isPresented: $showPaywall) {
+                PaywallView(.blurredLikes)
             }
         }
     }
@@ -106,8 +112,14 @@ struct LikesListView: View {
 
             Spacer()
 
-            // Match back button — wires to backend matchBack endpoint
-            Button(action: { Task { await performMatchBack(profile) } }) {
+            // Match back button — free plan → paywall, pro/black → backend matchBack
+            Button(action: {
+                if currentUser?.subscriptionPlan == .free {
+                    showPaywall = true
+                } else {
+                    Task { await performMatchBack(profile) }
+                }
+            }) {
                 let isMatched = matchedBack.contains(profile.id)
                 let inFlight = inFlightIDs.contains(profile.id)
                 HStack(spacing: 6) {

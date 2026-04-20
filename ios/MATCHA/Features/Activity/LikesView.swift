@@ -153,11 +153,11 @@ struct LikesView: View {
             Spacer()
 
             // Like Back button
-            // - Blogger: работает бесплатно (он и так видит лайки)
-            // - Business free: paywall (он видит blurred — платит чтобы открыть)
-            // - Business pro/black: работает
+            // - Blogger free: видит лайки unblurred но tap → paywall
+            // - Business free: видит blurred + paywall при tap
+            // - Любой Pro/Black: tap работает сразу → match
             Button {
-                if currentUser.role == .business && currentUser.subscriptionPlan == .free {
+                if currentUser.subscriptionPlan == .free {
                     showLikesPaywall = true
                 } else {
                     Task { await store.likeBack(profile: profile) }

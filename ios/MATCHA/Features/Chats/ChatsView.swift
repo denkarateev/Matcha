@@ -181,7 +181,7 @@ struct ChatsView: View {
         .navigationDestination(for: ChatsNavDestination.self) { dest in
             switch dest {
             case .likes(let profiles):
-                LikesListView(profiles: profiles, repository: repository)
+                LikesListView(profiles: profiles, repository: repository, currentUser: currentUser)
             }
         }
         .confirmationDialog(
