@@ -270,7 +270,7 @@ def _seed_store(store: InMemoryStore) -> None:
         full_name="Dev User",
         is_active=True,
         verification_level=VerificationLevel.VERIFIED,
-        plan_tier=PlanTier.PRO,
+        plan_tier=PlanTier.FREE,  # Free чтобы тестировать paywall на Like Back
         offer_credits=5,
         created_at=_ago(days=7),
         updated_at=_now(),
