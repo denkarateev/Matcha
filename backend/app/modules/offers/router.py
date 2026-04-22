@@ -56,7 +56,25 @@ def list_offers(
         last_minute_only=last_minute_only,
     )
     offers = container.offer_service.list_offers(filters)
-    return [OfferRead.model_validate(offer) for offer in offers]
+    return [_enrich_offer(offer, container) for offer in offers]
+
+
+def _enrich_offer(offer, container: AppContainer) -> OfferRead:
+    """BUG-09: добавляет creator_name/photo/district/category в OfferRead
+    чтобы iOS не отрисовывал placeholder "Business"."""
+    dto = OfferRead.model_validate(offer)
+    try:
+        profile = container.profile_service.profile_repo.get_by_user_id(offer.business_id)
+        if profile is not None:
+            dto = dto.model_copy(update={
+                "creator_name": profile.display_name,
+                "creator_photo_url": profile.primary_photo_url,
+                "creator_district": profile.district,
+                "creator_category": profile.category,
+            })
+    except Exception:
+        pass
+    return dto
 
 
 # ---------------------------------------------------------------------------
@@ -70,7 +88,7 @@ def create_offer(
     container: AppContainer = Depends(get_container),
 ) -> OfferRead:
     offer = container.offer_service.create_offer(current_user_id, payload)
-    return OfferRead.model_validate(offer)
+    return _enrich_offer(offer, container)
 
 
 # ---------------------------------------------------------------------------

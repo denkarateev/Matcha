@@ -55,7 +55,6 @@
 		6453A82404867D208EDCB080 /* ChatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FA0C0B3FA4C764D5061DD33 /* ChatsView.swift */; };
 		69280EAF41FDDFC5359C0F54 /* CreateOfferView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324AFCD1BC40C6746AE271E7 /* CreateOfferView.swift */; };
 		71028EC69C16C1846A457806 /* DealPipelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB5BEB8F57BEB337012119F1 /* DealPipelineView.swift */; };
-		744D6ECD451BAE337CEE3AD8 /* MatchaTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F291661231282316FD1E393 /* MatchaTabBar.swift */; };
 		745A99750779A8AC7BD4CA15 /* LottieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACF9597609DE19CD110C1A3 /* LottieView.swift */; };
 		74F70BB7C713138E7CF0981C /* ChatDealSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E5FECDEB965263C81E6B852 /* ChatDealSummary.swift */; };
 		76F56360467504A2D45A1C91 /* MatchaRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF24243F93A60F1B9F9F7FEE /* MatchaRepository.swift */; };
@@ -73,6 +72,7 @@
 		91E47A3C17D4CE5492DAB9E4 /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 859205E705E506750889B431 /* GlassCard.swift */; };
 		9D514213BE76368583A7F1A4 /* MatchaAnimations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22CDC083CBFFBBC39B791A4A /* MatchaAnimations.swift */; };
 		9DAEBB619FDFACDD04E45D8A /* ActivitySummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6285BEC82B497B5709D457E /* ActivitySummary.swift */; };
+		9ED516E52AD86314014C6762 /* MatchaPill.swift in Sources */ = {isa = PBXBuildFile; fileRef = C98B2443CE933DD3DF6DA0E8 /* MatchaPill.swift */; };
 		AAFC6AADC43114777C190DC7 /* ProfileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E9E2FFDC591E0328E91CF4 /* ProfileDetailView.swift */; };
 		ACD6C31DD747D7E5E3374F3E /* CollaborationType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DC41BE444F0C567A3792ECF /* CollaborationType.swift */; };
 		AE2080D5C76975D717E6EA68 /* ShareDealCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89E2F38002195A75FF75543A /* ShareDealCard.swift */; };
@@ -140,7 +140,6 @@
 		25F08BC01673487DAB52A64E /* ShadowAccountManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShadowAccountManager.swift; sourceTree = "<group>"; };
 		298CAF1CD216A5C0AF5C629C /* ReturnExperienceSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnExperienceSheet.swift; sourceTree = "<group>"; };
 		2D2B39C011E2A6D325292238 /* DealStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DealStatus.swift; sourceTree = "<group>"; };
-		2F291661231282316FD1E393 /* MatchaTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchaTabBar.swift; sourceTree = "<group>"; };
 		308B7F365F1D19BA92763F40 /* ShareSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheetView.swift; sourceTree = "<group>"; };
 		324AFCD1BC40C6746AE271E7 /* CreateOfferView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateOfferView.swift; sourceTree = "<group>"; };
 		352AF40D340AE7981D7A1DCE /* MockMatchaRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockMatchaRepository.swift; sourceTree = "<group>"; };
@@ -203,6 +202,7 @@
 		C10FE19D172F78AC66978C28 /* MockSeedDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSeedDataTests.swift; sourceTree = "<group>"; };
 		C41C73BA927CF0691656CF8E /* Deal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Deal.swift; sourceTree = "<group>"; };
 		C7BF70C285AB3645532D1F4A /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
+		C98B2443CE933DD3DF6DA0E8 /* MatchaPill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchaPill.swift; sourceTree = "<group>"; };
 		CA5C0B86B0FD65C6E97D0CE1 /* ChatsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatsUITests.swift; sourceTree = "<group>"; };
 		CACF9597609DE19CD110C1A3 /* LottieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieView.swift; sourceTree = "<group>"; };
 		CF051A757A6FA0382DA38A88 /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
@@ -422,7 +422,7 @@
 				D0BC055AFF1DE65AB8B68DE4 /* MatchaAvatar.swift */,
 				E6108026B226E54FE975CF29 /* MatchaBadge.swift */,
 				F5B9CBF092EF571B57CDAA6E /* MatchaButtonStyles.swift */,
-				2F291661231282316FD1E393 /* MatchaTabBar.swift */,
+				C98B2443CE933DD3DF6DA0E8 /* MatchaPill.swift */,
 				DB780332D23EC651A73B8CDD /* MatchaTextField.swift */,
 				B647AE383ADF8FDE0AE3EDCC /* MatchaToast.swift */,
 				6D14AE3741E1726299E1173C /* OfferCard.swift */,
@@ -733,8 +733,8 @@
 				F26E600CD0036C4E014918F3 /* MatchaAvatar.swift in Sources */,
 				7D4C417BF810088F2125567C /* MatchaBadge.swift in Sources */,
 				57A321BA4AA1BFEED6ED76E9 /* MatchaButtonStyles.swift in Sources */,
+				9ED516E52AD86314014C6762 /* MatchaPill.swift in Sources */,
 				76F56360467504A2D45A1C91 /* MatchaRepository.swift in Sources */,
-				744D6ECD451BAE337CEE3AD8 /* MatchaTabBar.swift in Sources */,
 				D9D6A299B1EAC0764A2FC3C8 /* MatchaTabShellView.swift in Sources */,
 				D34DF8FED9D0D2B0A1EF87DE /* MatchaTextField.swift in Sources */,
 				CD7153A5E9869502120B8DF3 /* MatchaToast.swift in Sources */,

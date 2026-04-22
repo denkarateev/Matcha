@@ -45,7 +45,7 @@ struct UserProfile: Identifiable, Hashable {
     let rating: Double?
     let verifiedVisits: Int
     let badges: [ProfileBadge]
-    let subscriptionPlan: SubscriptionPlan
+    var subscriptionPlan: SubscriptionPlan
     let hasActiveOffer: Bool
     let isVerified: Bool
     let photoURL: URL?

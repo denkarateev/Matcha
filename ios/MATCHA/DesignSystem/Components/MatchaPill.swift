@@ -68,6 +68,13 @@ struct MatchaPill: View {
     /// Ставь false для niche-chips и tag-ов.
     var uppercase: Bool = true
 
+    init(_ text: String, icon: String? = nil, variant: Variant = .neutral, uppercase: Bool = true) {
+        self.text = text
+        self.icon = icon
+        self.variant = variant
+        self.uppercase = uppercase
+    }
+
     var body: some View {
         HStack(spacing: 3) {
             if let icon {

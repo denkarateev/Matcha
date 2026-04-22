@@ -835,6 +835,11 @@ struct OfferReadDTO: Decodable, Sendable {
     let status: String
     let createdAt: Date
     let updatedAt: Date
+    // BUG-09 fix: embedded creator info чтобы не показывать placeholder "Business"
+    let creatorName: String?
+    let creatorPhotoUrl: String?
+    let creatorDistrict: String?
+    let creatorCategory: String?
 
     func toDomain() -> Offer {
         let collabType: CollaborationType = {
@@ -852,15 +857,21 @@ struct OfferReadDTO: Decodable, Sendable {
             return "Ends " + formatter.localizedString(for: date, relativeTo: Date())
         }()
 
+        // BUG-09 fix: используем embedded creator info от backend если есть,
+        // placeholder "Business" остаётся fallback-ом только когда поле nil.
+        let creatorPhotoURLs: [URL] = {
+            if let p = creatorPhotoUrl, let url = URL(string: p) { return [url] }
+            return []
+        }()
         let placeholderCreator = UserProfile(
             id: UUID(uuidString: businessId) ?? UUID(),
-            name: "Business",
+            name: creatorName ?? "Business",
             role: .business,
             heroSymbol: "storefront.circle.fill",
             countryCode: "ID",
             audience: "—",
-            category: nil,
-            district: nil,
+            category: creatorCategory.flatMap { BusinessCategory(rawValue: $0) },
+            district: creatorDistrict,
             niches: [],
             languages: [],
             bio: "",
@@ -870,7 +881,9 @@ struct OfferReadDTO: Decodable, Sendable {
             badges: [],
             subscriptionPlan: .free,
             hasActiveOffer: true,
-            isVerified: false
+            isVerified: false,
+            photoURL: creatorPhotoURLs.first,
+            photoURLs: creatorPhotoURLs
         )
 
         return Offer(

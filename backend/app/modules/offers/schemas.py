@@ -55,6 +55,11 @@ class OfferRead(BaseModel):
     status: OfferStatus
     created_at: datetime
     updated_at: datetime
+    # BUG-09 fix: embed creator info так iOS не надо дополнительно fetchить profile
+    creator_name: str | None = None
+    creator_photo_url: str | None = None
+    creator_district: str | None = None
+    creator_category: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

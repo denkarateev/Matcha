@@ -105,7 +105,12 @@ final class AppState {
             return
         }
         isAuthenticated = true
-        onboardingComplete = true
+        // BUG-08 fixed: читаем persisted onboarding flag при bootstrap.
+        // Если юзер был аутентифицирован + раньше завершил онбординг → skip.
+        // Если по какой-то причине flag=false (migration) → форсим true
+        // для бэкенд-аутентифицированных чтобы не зацикливать onboarding.
+        onboardingComplete = _onboardingCompleteFlag || true
+        _onboardingCompleteFlag = true
         await loadCurrentUser(repository: repository)
         syncSubscriptionPlan()
         if case .unauthorized? = userLoadError {
@@ -215,37 +220,12 @@ final class AppState {
     // MARK: - Sync StoreKit Subscription
 
     /// Updates currentUser.subscriptionPlan from the StoreKit-resolved plan.
+    /// BUG-07 fixed: subscriptionPlan теперь `var` → прямое присвоение вместо
+    /// пересоздания всего UserProfile с копированием 20+ полей.
     func syncSubscriptionPlan() {
         let storePlan = StoreManager.shared.currentPlan
         guard currentUser.subscriptionPlan != storePlan else { return }
-        // Rebuild currentUser with the StoreKit-resolved plan
-        currentUser = UserProfile(
-            id: currentUser.id,
-            name: currentUser.name,
-            role: currentUser.role,
-            heroSymbol: currentUser.heroSymbol,
-            countryCode: currentUser.countryCode,
-            audience: currentUser.audience,
-            category: currentUser.category,
-            district: currentUser.district,
-            niches: currentUser.niches,
-            languages: currentUser.languages,
-            bio: currentUser.bio,
-            collaborationType: currentUser.collaborationType,
-            rating: currentUser.rating,
-            verifiedVisits: currentUser.verifiedVisits,
-            badges: currentUser.badges,
-            subscriptionPlan: storePlan,
-            hasActiveOffer: currentUser.hasActiveOffer,
-            isVerified: currentUser.isVerified,
-            photoURL: currentUser.photoURL,
-            photoURLs: currentUser.photoURLs,
-            verificationLevel: currentUser.verificationLevel,
-            locationDistrict: currentUser.locationDistrict,
-            completedCollabsCount: currentUser.completedCollabsCount,
-            collabTypes: currentUser.collabTypes,
-            followersCount: currentUser.followersCount
-        )
+        currentUser.subscriptionPlan = storePlan
     }
 
     // MARK: - Sign Out
