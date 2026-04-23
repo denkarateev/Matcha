@@ -732,12 +732,14 @@ def _seed_store(store: InMemoryStore) -> None:
     store.matches["match-ded-3"] = match_ded3
 
     # Fresh matches WITHOUT chats — show in New Matches stories with timer rings
+    # Bumble model: business пишет первым когда blogger×business матч.
+    # blogger×blogger → None (anyone может писать).
     _dev_fresh1_created = _ago(hours=3)
     store.matches["match-dev-fresh-1"] = Match(
         id="match-dev-fresh-1",
         user_ids=tuple(sorted(("dev-user-1", "business-4"))),
         source=MatchSource.SWIPE,
-        first_message_by="dev-user-1",
+        first_message_by="business-4",
         created_at=_dev_fresh1_created,
         expires_at=_match_expires(_dev_fresh1_created),
     )
@@ -746,7 +748,7 @@ def _seed_store(store: InMemoryStore) -> None:
         id="match-dev-fresh-2",
         user_ids=tuple(sorted(("dev-user-1", "business-5"))),
         source=MatchSource.SWIPE,
-        first_message_by="dev-user-1",
+        first_message_by="business-5",
         created_at=_dev_fresh2_created,
         expires_at=_match_expires(_dev_fresh2_created),
     )
@@ -755,7 +757,7 @@ def _seed_store(store: InMemoryStore) -> None:
         id="match-dev-fresh-3",
         user_ids=tuple(sorted(("dev-user-1", "blogger-3"))),
         source=MatchSource.SWIPE,
-        first_message_by="dev-user-1",
+        first_message_by=None,  # blogger×blogger — anyone
         created_at=_dev_fresh3_created,
         expires_at=_match_expires(_dev_fresh3_created),
     )
@@ -766,7 +768,7 @@ def _seed_store(store: InMemoryStore) -> None:
         id="match-ded-fresh-1",
         user_ids=tuple(sorted(("ded-user-1", "business-5"))),
         source=MatchSource.SWIPE,
-        first_message_by="ded-user-1",
+        first_message_by="business-5",
         created_at=_ded_fresh1,
         expires_at=_match_expires(_ded_fresh1),
     )
@@ -775,7 +777,7 @@ def _seed_store(store: InMemoryStore) -> None:
         id="match-ded-fresh-2",
         user_ids=tuple(sorted(("ded-user-1", "blogger-3"))),
         source=MatchSource.SWIPE,
-        first_message_by="ded-user-1",
+        first_message_by=None,  # blogger×blogger — anyone
         created_at=_ded_fresh2,
         expires_at=_match_expires(_ded_fresh2),
     )
