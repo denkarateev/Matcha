@@ -260,46 +260,51 @@ struct MatchFeedView: View {
         .animation(.spring(response: 0.3), value: store.currentIndex)
     }
 
-    // MARK: - Card Stack Area — v3 design (Bumble vertical scroll-snap)
+    // MARK: - Card Stack Area — гибрид: одна карточка + внутренний scroll + horizontal swipes
     //
-    // Mechanics per matcha v3:
-    //   • ScrollView .vertical с .paging — каждый профиль = одна страница
-    //     (full screen height), snap-to-start между профилями.
-    //   • Внутри ProfilePage — собственный scrollable content (photos, bio,
-    //     niches, ещё фото) — пользователь свайпает ВНИЗ чтобы изучить
-    //     текущий профиль, и снова вниз чтобы перейти к следующему.
-    //   • Sticky action buttons (Pass/Super/Like) внизу, работают на
-    //     currently-visible profile.
-    //   • После action профиль удаляется из store.profiles, scroll
-    //     автоматически снапит к началу — следующий профиль становится
-    //     текущим.
-    //   • НЕТ horizontal swipes (per design v3).
+    // Mechanics:
+    //   • Одна карточка видна (currentProfile). Никакого peek next, scroll back.
+    //   • Внутри карточки — ScrollView vertical для photos/bio/niches/more photos.
+    //   • Снаружи — DragGesture с horizontal-only detection: если abs(dx) > abs(dy)
+    //     активируется как Tinder swipe (rotate + LIKE/NOPE labels). Если
+    //     vertical — отдаётся внутреннему ScrollView.
+    //   • Action buttons → programmaticSwipe → animate fly off.
+    //   • После action профиль удаляется из массива → следующий становится currentProfile.
 
     @ViewBuilder
     private var cardStackArea: some View {
         GeometryReader { geo in
             let cardSize = CGSize(width: geo.size.width, height: geo.size.height)
 
-            ScrollView(.vertical, showsIndicators: false) {
-                LazyVStack(spacing: 0) {
-                    ForEach(store.filteredProfiles) { profile in
-                        BumbleProfileCard(profile: profile, cardSize: cardSize)
-                            .id(profile.id)
-                            .frame(width: cardSize.width, height: cardSize.height)
-                    }
+            ZStack {
+                if let current = store.currentProfile {
+                    SwipeProfileCard(
+                        profile: current,
+                        cardSize: cardSize,
+                        programmaticSwipe: Binding(
+                            get: { store.programmaticSwipe },
+                            set: { store.programmaticSwipe = $0 }
+                        ),
+                        onSwipeCompleted: { direction in
+                            store.clearProgrammaticSwipe()
+                            switch direction {
+                            case .left:
+                                store.skip()
+                                MatchaHaptic.light()
+                                triggerUndoWindow()
+                            case .right:
+                                store.interested()
+                                MatchaHaptic.medium()
+                            case .super:
+                                store.superSwipe()
+                                MatchaHaptic.heavy()
+                            }
+                        }
+                    )
+                    .id(current.id)
                 }
-                .scrollTargetLayout()
             }
-            .scrollTargetBehavior(.paging)
-            .scrollPosition(id: $scrollPositionID, anchor: .top)
-            .onChange(of: scrollPositionID) { _, newID in
-                guard let newID,
-                      let idx = store.filteredProfiles.firstIndex(where: { $0.id == newID })
-                else { return }
-                if store.currentIndex != idx {
-                    store.currentIndex = idx
-                }
-            }
+            .frame(width: cardSize.width, height: cardSize.height)
         }
     }
 
@@ -1128,6 +1133,186 @@ private struct SwipeCard: View {
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
             flyOff(direction: direction)
+        }
+    }
+}
+
+// MARK: - SwipeProfileCard
+//
+// Карточка одного профиля с гибридным жестом:
+//   • Внутри — ScrollView vertical с фотографиями, bio, niches, ещё фото.
+//   • Снаружи — DragGesture(minimumDistance: 12) с horizontal detection:
+//     если abs(dx) > abs(dy) + 8 → активируется как swipe (rotate + offset
+//     + LIKE/NOPE labels). Иначе — gesture cancelled, ScrollView получает
+//     управление.
+//   • Action buttons (наружные в MatchFeedView) → programmaticSwipe → fly off.
+//   • После swipe complete (>100pt) → onSwipeCompleted, store удаляет профиль.
+
+private struct SwipeProfileCard: View {
+    let profile: UserProfile
+    let cardSize: CGSize
+    @Binding var programmaticSwipe: SwipeDirection?
+    let onSwipeCompleted: (SwipeDirection) -> Void
+
+    @State private var dragOffset: CGSize = .zero
+    @State private var isHorizontalDrag: Bool = false
+    @State private var isDragging: Bool = false
+
+    private let swipeThreshold: CGFloat = 100
+    private let directionLockThreshold: CGFloat = 8
+
+    private var rotation: Angle {
+        guard isHorizontalDrag else { return .zero }
+        return .degrees(Double(dragOffset.width / 18))
+    }
+
+    private var likeOpacity: Double {
+        guard isHorizontalDrag else { return 0 }
+        return max(0, min(1, Double(dragOffset.width - 30) / 70))
+    }
+    private var nopeOpacity: Double {
+        guard isHorizontalDrag else { return 0 }
+        return max(0, min(1, Double(-dragOffset.width - 30) / 70))
+    }
+    private var superOpacity: Double {
+        guard isHorizontalDrag else { return 0 }
+        let upDrag = -dragOffset.height
+        return max(0, min(1, Double(upDrag - 50) / 100))
+    }
+
+    var body: some View {
+        ZStack {
+            BumbleProfileCard(profile: profile, cardSize: cardSize)
+                .allowsHitTesting(!isHorizontalDrag) // блокируем scroll во время swipe
+            swipeLabels
+                .allowsHitTesting(false)
+        }
+        .frame(width: cardSize.width, height: cardSize.height)
+        .rotationEffect(rotation, anchor: .bottom)
+        .offset(
+            x: isHorizontalDrag ? dragOffset.width : 0,
+            y: isHorizontalDrag && dragOffset.height < 0 ? dragOffset.height * 0.4 : 0
+        )
+        .gesture(swipeGesture)
+        .onChange(of: programmaticSwipe) { _, newValue in
+            guard let direction = newValue else { return }
+            triggerProgrammaticSwipe(direction)
+        }
+    }
+
+    // MARK: - Swipe gesture (horizontal-aware)
+
+    private var swipeGesture: some Gesture {
+        DragGesture(minimumDistance: 12)
+            .onChanged { value in
+                isDragging = true
+                let dx = value.translation.width
+                let dy = value.translation.height
+
+                // Direction lock: при первом значимом движении решаем — horizontal или vertical
+                if !isHorizontalDrag {
+                    if abs(dx) > abs(dy) + directionLockThreshold && abs(dx) > 12 {
+                        isHorizontalDrag = true
+                    } else {
+                        // Vertical motion — игнорируем drag (ScrollView обработает)
+                        return
+                    }
+                }
+                dragOffset = value.translation
+            }
+            .onEnded { value in
+                isDragging = false
+                guard isHorizontalDrag else {
+                    // Vertical drag — reset
+                    dragOffset = .zero
+                    return
+                }
+                let dx = value.translation.width
+                let dy = value.translation.height
+
+                // Super: strong upward
+                if dy < -120 && abs(dy) > abs(dx) {
+                    flyOff(direction: .super)
+                    return
+                }
+                if dx > swipeThreshold {
+                    flyOff(direction: .right)
+                    return
+                }
+                if dx < -swipeThreshold {
+                    flyOff(direction: .left)
+                    return
+                }
+                // Snap back
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                    dragOffset = .zero
+                }
+                isHorizontalDrag = false
+            }
+    }
+
+    private func flyOff(direction: SwipeDirection) {
+        let target: CGSize = {
+            switch direction {
+            case .left: return CGSize(width: -cardSize.width * 1.5, height: dragOffset.height)
+            case .right: return CGSize(width: cardSize.width * 1.5, height: dragOffset.height)
+            case .super: return CGSize(width: dragOffset.width, height: -cardSize.height * 1.2)
+            }
+        }()
+        withAnimation(.easeOut(duration: 0.32)) {
+            dragOffset = target
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            onSwipeCompleted(direction)
+            dragOffset = .zero
+            isHorizontalDrag = false
+        }
+    }
+
+    private func triggerProgrammaticSwipe(_ direction: SwipeDirection) {
+        isHorizontalDrag = true
+        let windUp: CGFloat = direction == .left ? 30 : (direction == .right ? -30 : 0)
+        withAnimation(.spring(response: 0.15, dampingFraction: 0.8)) {
+            dragOffset = CGSize(width: windUp, height: 0)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+            flyOff(direction: direction)
+        }
+    }
+
+    // MARK: - LIKE / NOPE / SUPER overlays
+
+    private var swipeLabels: some View {
+        ZStack {
+            Text("LIKE")
+                .font(.system(size: 36, weight: .black, design: .rounded))
+                .foregroundStyle(MatchaTokens.Colors.accent)
+                .padding(.horizontal, 14).padding(.vertical, 6)
+                .overlay(RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(MatchaTokens.Colors.accent, lineWidth: 4))
+                .rotationEffect(.degrees(-18))
+                .opacity(likeOpacity)
+                .position(x: 110, y: 100)
+
+            Text("NOPE")
+                .font(.system(size: 36, weight: .black, design: .rounded))
+                .foregroundStyle(MatchaTokens.Colors.danger)
+                .padding(.horizontal, 14).padding(.vertical, 6)
+                .overlay(RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(MatchaTokens.Colors.danger, lineWidth: 4))
+                .rotationEffect(.degrees(18))
+                .opacity(nopeOpacity)
+                .position(x: cardSize.width - 110, y: 100)
+
+            Text("SUPER")
+                .font(.system(size: 38, weight: .black, design: .rounded))
+                .foregroundStyle(MatchaTokens.Colors.warning)
+                .padding(.horizontal, 16).padding(.vertical, 8)
+                .overlay(RoundedRectangle(cornerRadius: 10)
+                    .strokeBorder(MatchaTokens.Colors.warning, lineWidth: 4))
+                .rotationEffect(.degrees(-6))
+                .opacity(superOpacity)
+                .position(x: cardSize.width / 2, y: cardSize.height * 0.4)
         }
     }
 }
