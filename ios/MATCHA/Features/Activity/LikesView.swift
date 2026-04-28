@@ -16,35 +16,73 @@ struct LikesView: View {
         currentUser.role == .business && currentUser.subscriptionPlan == .free
     }
 
+    /// Free план: первая карточка видна, остальные blurred (PRO).
+    /// Pro / Black: все видны, Like Back работает.
+    private var isPro: Bool {
+        currentUser.subscriptionPlan != .free
+    }
+
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: MatchaTokens.Spacing.large) {
-                // Title — unified style across all tabs
-                Text("Likes")
-                    .font(.system(size: 32, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 8)
+            VStack(alignment: .leading, spacing: 0) {
+                // Header: title + count pill
+                HStack {
+                    Text("Likes")
+                        .font(.system(size: 32, weight: .bold))
+                        .foregroundStyle(.white)
+                    Spacer()
+                    if !store.likes.isEmpty {
+                        Text("\(store.likes.count) new")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(MatchaTokens.Colors.accent)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(MatchaTokens.Colors.accent.opacity(0.12), in: Capsule())
+                            .overlay(Capsule().strokeBorder(MatchaTokens.Colors.accent.opacity(0.3), lineWidth: 0.5))
+                    }
+                }
+                .padding(.top, 8)
+                .padding(.horizontal, 24)
 
                 if let error = store.error, store.likes.isEmpty {
                     errorBanner(error)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 12)
                 }
-
-                introCard
 
                 if store.likes.isEmpty {
                     emptyState
-                } else if shouldBlurLikes {
-                    blurredLikesList
+                        .padding(.top, 60)
+                        .padding(.horizontal, 24)
                 } else {
-                    LazyVStack(spacing: MatchaTokens.Spacing.medium) {
-                        ForEach(store.likes) { profile in
-                            likeCard(profile)
+                    // Caption
+                    Text("People who already liked you. Like back to match instantly.")
+                        .font(.system(size: 13))
+                        .foregroundStyle(MatchaTokens.Colors.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 16)
+                        .padding(.bottom, 16)
+
+                    // 2-column grid — первая карточка видна, остальные blurred (для free)
+                    LazyVGrid(columns: [
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12),
+                    ], spacing: 12) {
+                        ForEach(Array(store.likes.enumerated()), id: \.element.id) { index, profile in
+                            likeGridCard(profile: profile, index: index)
                         }
+                    }
+                    .padding(.horizontal, 24)
+
+                    // Upgrade card (только для free пользователей)
+                    if !isPro && store.likes.count > 1 {
+                        upgradeCard
+                            .padding(.horizontal, 24)
+                            .padding(.top, 24)
                     }
                 }
             }
-            .padding(.horizontal, MatchaTokens.Spacing.large)
             .padding(.bottom, 100)
         }
         .refreshable { await store.load() }
@@ -64,6 +102,172 @@ struct LikesView: View {
             }
         }
         .task { await store.loadIfNeeded() }
+    }
+
+    // MARK: - Grid card (v3 design)
+
+    @ViewBuilder
+    private func likeGridCard(profile: UserProfile, index: Int) -> some View {
+        // Free + index > 0 → blurred. Pro → all visible.
+        let blurred = !isPro && index > 0
+
+        Button {
+            if blurred {
+                showLikesPaywall = true
+            } else {
+                selectedLikeProfile = profile
+            }
+        } label: {
+            ZStack(alignment: .bottomLeading) {
+                // Photo / placeholder
+                photoBackground(profile: profile)
+                    .blur(radius: blurred ? 18 : 0)
+
+                // Bottom gradient
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.5),
+                        .init(color: .black.opacity(0.85), location: 1.0),
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+
+                // Lock icon for blurred
+                if blurred {
+                    VStack(spacing: 6) {
+                        ZStack {
+                            Circle()
+                                .fill(.black.opacity(0.6))
+                                .frame(width: 38, height: 38)
+                                .overlay(Circle().strokeBorder(.white.opacity(0.18), lineWidth: 1))
+                                .background(.ultraThinMaterial, in: Circle())
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 14))
+                                .foregroundStyle(MatchaTokens.Colors.accent)
+                        }
+                        Text("PRO")
+                            .font(.system(size: 10, weight: .bold))
+                            .tracking(0.6)
+                            .foregroundStyle(MatchaTokens.Colors.accent)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+
+                // Bottom info
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 4) {
+                        Text(blurred ? "••••" : profile.name)
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                        if !blurred && profile.verificationLevel == .blueCheck {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 10))
+                                .foregroundStyle(MatchaTokens.Colors.baliBlue)
+                        }
+                    }
+                    Text(blurred ? "••• ago" : (profile.district ?? "Bali"))
+                        .font(.system(size: 10))
+                        .foregroundStyle(.white.opacity(0.7))
+                        .lineLimit(1)
+                }
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .aspectRatio(3.0/4.0, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(MatchaTokens.Colors.outline, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private func photoBackground(profile: UserProfile) -> some View {
+        if let url = profile.photoURLs.first ?? profile.photoURL {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let img):
+                    img.resizable().scaledToFill()
+                default:
+                    photoPlaceholder(profile: profile)
+                }
+            }
+        } else {
+            photoPlaceholder(profile: profile)
+        }
+    }
+
+    private func photoPlaceholder(profile: UserProfile) -> some View {
+        // Цветной gradient placeholder с инициалом, как в v3 design
+        let hue = Double(abs(profile.name.hashValue) % 360) / 360.0
+        return ZStack {
+            LinearGradient(
+                colors: [
+                    Color(hue: hue, saturation: 0.5, brightness: 0.35),
+                    Color(hue: (hue + 0.1).truncatingRemainder(dividingBy: 1), saturation: 0.4, brightness: 0.18),
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            // Soft radial highlight (как в дизайне v3)
+            RadialGradient(
+                colors: [.white.opacity(0.18), .clear],
+                center: UnitPoint(x: 0.3, y: 0.3),
+                startRadius: 0,
+                endRadius: 120
+            )
+        }
+    }
+
+    // MARK: - Upgrade card
+
+    private var upgradeCard: some View {
+        Button { showLikesPaywall = true } label: {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 18))
+                        .foregroundStyle(MatchaTokens.Colors.accent)
+                    Text("See everyone who liked you")
+                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+                Text("Upgrade to MATCHA Pro to skip the queue and match with the people already in your corner.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(MatchaTokens.Colors.textSecondary)
+                    .lineSpacing(2)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                Text("Try MATCHA Pro")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(MatchaTokens.Colors.accent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .padding(.top, 8)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                LinearGradient(
+                    colors: [MatchaTokens.Colors.surface, MatchaTokens.Colors.elevated],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ),
+                in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(MatchaTokens.Colors.accent.opacity(0.25), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.4), radius: 8, y: 4)
+        }
+        .buttonStyle(.plain)
     }
 
     private func errorBanner(_ error: NetworkError) -> some View {
