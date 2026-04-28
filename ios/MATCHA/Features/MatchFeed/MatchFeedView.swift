@@ -1183,7 +1183,8 @@ private struct SwipeProfileCard: View {
     var body: some View {
         ZStack {
             BumbleProfileCard(profile: profile, cardSize: cardSize)
-                .allowsHitTesting(!isHorizontalDrag) // блокируем scroll во время swipe
+                // Когда swipe активен — отключаем scroll внутри карточки.
+                .scrollDisabled(isHorizontalDrag)
             swipeLabels
                 .allowsHitTesting(false)
         }
@@ -1193,7 +1194,9 @@ private struct SwipeProfileCard: View {
             x: isHorizontalDrag ? dragOffset.width : 0,
             y: isHorizontalDrag && dragOffset.height < 0 ? dragOffset.height * 0.4 : 0
         )
-        .gesture(swipeGesture)
+        // simultaneousGesture даёт жесту работать ВМЕСТЕ с внутренним
+        // ScrollView. Direction lock внутри решает кто получает движение.
+        .simultaneousGesture(swipeGesture)
         .onChange(of: programmaticSwipe) { _, newValue in
             guard let direction = newValue else { return }
             triggerProgrammaticSwipe(direction)
@@ -1203,18 +1206,25 @@ private struct SwipeProfileCard: View {
     // MARK: - Swipe gesture (horizontal-aware)
 
     private var swipeGesture: some Gesture {
-        DragGesture(minimumDistance: 12)
+        // minimumDistance: 0 — gesture начинается с самого первого касания
+        // и параллельно ScrollView. Решение horizontal vs vertical берём
+        // по первым 10pt движения.
+        DragGesture(minimumDistance: 0)
             .onChanged { value in
                 isDragging = true
                 let dx = value.translation.width
                 let dy = value.translation.height
 
-                // Direction lock: при первом значимом движении решаем — horizontal или vertical
+                // Direction lock — определяется один раз за жест на ранней
+                // дистанции. Затем remember.
                 if !isHorizontalDrag {
-                    if abs(dx) > abs(dy) + directionLockThreshold && abs(dx) > 12 {
+                    let total = max(abs(dx), abs(dy))
+                    // Ждём пока движение наберёт ≥10pt чтобы не путать с tap
+                    if total < 10 { return }
+                    if abs(dx) > abs(dy) + directionLockThreshold {
                         isHorizontalDrag = true
                     } else {
-                        // Vertical motion — игнорируем drag (ScrollView обработает)
+                        // Vertical — отдаём ScrollView, наш drag не active
                         return
                     }
                 }
@@ -1223,14 +1233,13 @@ private struct SwipeProfileCard: View {
             .onEnded { value in
                 isDragging = false
                 guard isHorizontalDrag else {
-                    // Vertical drag — reset
                     dragOffset = .zero
                     return
                 }
                 let dx = value.translation.width
                 let dy = value.translation.height
 
-                // Super: strong upward
+                // Super: сильное движение вверх
                 if dy < -120 && abs(dy) > abs(dx) {
                     flyOff(direction: .super)
                     return
