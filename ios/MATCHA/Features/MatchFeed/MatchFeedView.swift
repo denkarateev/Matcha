@@ -260,46 +260,46 @@ struct MatchFeedView: View {
         .animation(.spring(response: 0.3), value: store.currentIndex)
     }
 
-    // MARK: - Card Stack Area — Bumble-style vertical paging scroll
+    // MARK: - Card Stack Area — Bumble-style swipe stack
+    // Одна карточка видна (full screen). Drag horizontal → rotate + offset +
+    // LIKE/NOPE labels. Threshold 100pt → fly off + remove from store.
+    // Никакого scroll, никакого peek next, никакого back.
 
     @ViewBuilder
     private var cardStackArea: some View {
         GeometryReader { geo in
-            let cardWidth = geo.size.width
-            let cardHeight = geo.size.height
+            let cardSize = CGSize(width: geo.size.width, height: geo.size.height)
 
-            ScrollView(.vertical, showsIndicators: false) {
-                LazyVStack(spacing: 0) {
-                    ForEach(store.filteredProfiles) { profile in
-                        BumbleProfileCard(
-                            profile: profile,
-                            cardSize: CGSize(width: cardWidth, height: cardHeight)
-                        )
-                        .id(profile.id)
-                        .frame(width: cardWidth, height: cardHeight)
-                    }
-                }
-                .scrollTargetLayout()
-            }
-            .scrollTargetBehavior(.paging)
-            .scrollPosition(id: $scrollPositionID, anchor: .top)
-            .onChange(of: scrollPositionID) { _, newID in
-                guard let newID,
-                      let idx = store.filteredProfiles.firstIndex(where: { $0.id == newID }) else { return }
-                if store.currentIndex != idx {
-                    store.currentIndex = idx
-                }
-            }
-            .onChange(of: store.currentIndex) { _, newIdx in
-                let list = store.filteredProfiles
-                guard newIdx >= 0, newIdx < list.count else { return }
-                let targetID = list[newIdx].id
-                if scrollPositionID != targetID {
-                    withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
-                        scrollPositionID = targetID
-                    }
+            ZStack {
+                // Top card — single visible profile с drag gesture
+                if let current = store.currentProfile {
+                    SwipeCard(
+                        profile: current,
+                        cardSize: cardSize,
+                        programmaticSwipe: Binding(
+                            get: { store.programmaticSwipe },
+                            set: { store.programmaticSwipe = $0 }
+                        ),
+                        onSwipeCompleted: { direction in
+                            store.clearProgrammaticSwipe()
+                            switch direction {
+                            case .left:
+                                store.skip()
+                                MatchaHaptic.light()
+                                triggerUndoWindow()
+                            case .right:
+                                store.interested()
+                                MatchaHaptic.medium()
+                            case .super:
+                                store.superSwipe()
+                                MatchaHaptic.heavy()
+                            }
+                        }
+                    )
+                    .id(current.id)
                 }
             }
+            .frame(width: cardSize.width, height: cardSize.height)
         }
     }
 
@@ -814,6 +814,323 @@ private struct ScrollViewOffsetPreferenceKey: PreferenceKey {
 // Users vertical-scroll через фото/био/ниши/ещё фото, а outer ScrollView
 // (в MatchFeedView.cardStackArea) снапит между профилями по страницам.
 // Никаких horizontal swipe gestures — Pass/Like делают кнопки в actionButtonsRow.
+
+// MARK: - SwipeCard — классический Bumble-style свайп-стек
+//
+// Одна карточка на экране. Drag horizontal → rotate (max ±20°) + horizontal
+// offset + LIKE / NOPE / SUPER метки с opacity по дистанции свайпа.
+// Threshold 100pt → fly off-screen, store удаляет профиль.
+// Tap по половинам hero — pagination фотографий внутри карточки.
+
+private struct SwipeCard: View {
+    let profile: UserProfile
+    let cardSize: CGSize
+    @Binding var programmaticSwipe: SwipeDirection?
+    let onSwipeCompleted: (SwipeDirection) -> Void
+
+    @State private var dragOffset: CGSize = .zero
+    @State private var isDragging: Bool = false
+    @State private var currentPhotoIndex: Int = 0
+
+    private let swipeThreshold: CGFloat = 100
+    private let rotationFactor: CGFloat = 20
+
+    private var photoURLList: [URL] {
+        if !profile.photoURLs.isEmpty { return profile.photoURLs }
+        if let url = profile.photoURL { return [url] }
+        return []
+    }
+
+    private var rotation: Angle {
+        .degrees(Double(dragOffset.width / rotationFactor))
+    }
+
+    private var likeOpacity: Double {
+        max(0, min(1, Double(dragOffset.width - 30) / 70))
+    }
+    private var nopeOpacity: Double {
+        max(0, min(1, Double(-dragOffset.width - 30) / 70))
+    }
+    private var superOpacity: Double {
+        max(0, min(1, Double(-dragOffset.height - 50) / 100))
+    }
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            cardContent
+            swipeLabels
+        }
+        .frame(width: cardSize.width, height: cardSize.height)
+        .rotationEffect(rotation, anchor: .bottom)
+        .offset(x: dragOffset.width, y: dragOffset.height < 0 ? dragOffset.height * 0.4 : 0)
+        .gesture(dragGesture)
+        .onChange(of: programmaticSwipe) { _, newValue in
+            guard let direction = newValue else { return }
+            triggerProgrammaticSwipe(direction)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(profile.name)")
+        .accessibilityAction(named: "Like") { onSwipeCompleted(.right) }
+        .accessibilityAction(named: "Skip") { onSwipeCompleted(.left) }
+    }
+
+    // MARK: Hero card content
+
+    private var cardContent: some View {
+        ZStack(alignment: .bottom) {
+            heroPhoto
+                .frame(width: cardSize.width, height: cardSize.height)
+                .clipped()
+
+            // Tap halves для photo pagination
+            if photoURLList.count > 1 {
+                HStack(spacing: 0) {
+                    Color.clear.contentShape(Rectangle()).onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            currentPhotoIndex = max(0, currentPhotoIndex - 1)
+                        }
+                    }
+                    Color.clear.contentShape(Rectangle()).onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            currentPhotoIndex = min(photoURLList.count - 1, currentPhotoIndex + 1)
+                        }
+                    }
+                }
+            }
+
+            // Photo indicator bars
+            if photoURLList.count > 1 {
+                VStack {
+                    HStack(spacing: 4) {
+                        ForEach(0..<photoURLList.count, id: \.self) { idx in
+                            Capsule()
+                                .fill(idx == currentPhotoIndex ? Color.white : Color.white.opacity(0.35))
+                                .frame(height: 3)
+                                .shadow(color: .black.opacity(0.25), radius: 1, y: 1)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 14)
+                    Spacer()
+                }
+            }
+
+            // Bottom gradient
+            LinearGradient(
+                colors: [.clear, .black.opacity(0.6), .black.opacity(0.92)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 280)
+            .frame(maxWidth: .infinity)
+            .allowsHitTesting(false)
+
+            // Info overlay
+            VStack(alignment: .leading, spacing: 8) {
+                verificationBadgePill
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(profile.name)
+                        .font(.system(size: 32, weight: .bold))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                    if profile.verificationLevel.isVerified {
+                        Image(systemName: "checkmark.seal.fill")
+                            .foregroundStyle(MatchaTokens.Colors.accent)
+                            .font(.system(size: 20))
+                    }
+                }
+                Text(profile.secondaryLine)
+                    .font(.system(size: 15))
+                    .foregroundStyle(.white.opacity(0.85))
+                HStack(spacing: 12) {
+                    if let district = profile.district {
+                        HStack(spacing: 4) {
+                            Image(systemName: "mappin.circle.fill")
+                                .font(.system(size: 11))
+                            Text(district).font(.system(size: 13, weight: .medium))
+                        }
+                        .foregroundStyle(.white.opacity(0.7))
+                    }
+                    if let rating = profile.rating, rating > 0 {
+                        HStack(spacing: 3) {
+                            Image(systemName: "star.fill")
+                                .font(.system(size: 11))
+                                .foregroundStyle(MatchaTokens.Colors.warning)
+                            Text(String(format: "%.1f", rating))
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(.white)
+                        }
+                    }
+                    if profile.completedCollabsCount > 0 {
+                        HStack(spacing: 3) {
+                            Image(systemName: "handshake.fill")
+                                .font(.system(size: 11))
+                            Text("\(profile.completedCollabsCount) collabs")
+                                .font(.system(size: 13, weight: .medium))
+                        }
+                        .foregroundStyle(.white.opacity(0.7))
+                    }
+                }
+                if !profile.niches.isEmpty {
+                    WrappingNicheTags(niches: Array(profile.niches.prefix(4)))
+                        .padding(.top, 4)
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 32)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private var heroPhoto: some View {
+        if let url = photoURLList[safe: currentPhotoIndex] {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let img):
+                    img.resizable().scaledToFill()
+                default:
+                    Color(white: 0.08)
+                }
+            }
+        } else {
+            ZStack {
+                LinearGradient(
+                    colors: [Color(hex: 0x1A2E13), Color(hex: 0x101314)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                Text(String(profile.name.prefix(1)).uppercased())
+                    .font(.system(size: 80, weight: .bold, design: .rounded))
+                    .foregroundStyle(MatchaTokens.Colors.accent.opacity(0.3))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var verificationBadgePill: some View {
+        HStack(spacing: 6) {
+            if profile.verificationLevel == .verified || profile.verificationLevel == .blueCheck {
+                HStack(spacing: 3) {
+                    Image(systemName: "checkmark.shield.fill").font(.system(size: 9, weight: .bold))
+                    Text("VERIFIED").font(.system(size: 10, weight: .bold)).tracking(0.5)
+                }
+                .foregroundStyle(MatchaTokens.Colors.baliBlue)
+                .padding(.horizontal, 8).padding(.vertical, 3)
+                .background(MatchaTokens.Colors.baliBlue.opacity(0.2), in: Capsule())
+            }
+            if profile.verificationLevel == .blueCheck {
+                HStack(spacing: 3) {
+                    Image(systemName: "checkmark.seal.fill").font(.system(size: 9, weight: .bold))
+                    Text("APPROVED").font(.system(size: 10, weight: .bold)).tracking(0.5)
+                }
+                .foregroundStyle(.black)
+                .padding(.horizontal, 8).padding(.vertical, 3)
+                .background(MatchaTokens.Colors.accent, in: Capsule())
+            }
+        }
+    }
+
+    // MARK: Swipe overlays
+
+    private var swipeLabels: some View {
+        ZStack {
+            // LIKE — top-left, accent green, rotated
+            Text("LIKE")
+                .font(.system(size: 36, weight: .black, design: .rounded))
+                .foregroundStyle(MatchaTokens.Colors.accent)
+                .padding(.horizontal, 14).padding(.vertical, 6)
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(MatchaTokens.Colors.accent, lineWidth: 4))
+                .rotationEffect(.degrees(-18))
+                .opacity(likeOpacity)
+                .position(x: 110, y: 80)
+
+            // NOPE — top-right, danger red, rotated
+            Text("NOPE")
+                .font(.system(size: 36, weight: .black, design: .rounded))
+                .foregroundStyle(MatchaTokens.Colors.danger)
+                .padding(.horizontal, 14).padding(.vertical, 6)
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(MatchaTokens.Colors.danger, lineWidth: 4))
+                .rotationEffect(.degrees(18))
+                .opacity(nopeOpacity)
+                .position(x: cardSize.width - 110, y: 80)
+
+            // SUPER — center
+            Text("SUPER")
+                .font(.system(size: 38, weight: .black, design: .rounded))
+                .foregroundStyle(MatchaTokens.Colors.warning)
+                .padding(.horizontal, 16).padding(.vertical, 8)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(MatchaTokens.Colors.warning, lineWidth: 4))
+                .rotationEffect(.degrees(-6))
+                .opacity(superOpacity)
+                .position(x: cardSize.width / 2, y: cardSize.height * 0.4)
+        }
+        .allowsHitTesting(false)
+    }
+
+    // MARK: Drag gesture
+
+    private var dragGesture: some Gesture {
+        DragGesture()
+            .onChanged { value in
+                isDragging = true
+                dragOffset = value.translation
+            }
+            .onEnded { value in
+                isDragging = false
+                let dx = value.translation.width
+                let dy = value.translation.height
+
+                // Super swipe — strong upward
+                if dy < -120 && abs(dy) > abs(dx) {
+                    flyOff(direction: .super)
+                    return
+                }
+                // Right swipe — like
+                if dx > swipeThreshold {
+                    flyOff(direction: .right)
+                    return
+                }
+                // Left swipe — pass
+                if dx < -swipeThreshold {
+                    flyOff(direction: .left)
+                    return
+                }
+                // Snap back
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                    dragOffset = .zero
+                }
+            }
+    }
+
+    private func flyOff(direction: SwipeDirection) {
+        let target: CGSize = {
+            switch direction {
+            case .left: return CGSize(width: -cardSize.width * 1.5, height: dragOffset.height)
+            case .right: return CGSize(width: cardSize.width * 1.5, height: dragOffset.height)
+            case .super: return CGSize(width: dragOffset.width, height: -cardSize.height * 1.2)
+            }
+        }()
+        withAnimation(.easeOut(duration: 0.32)) {
+            dragOffset = target
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            onSwipeCompleted(direction)
+            dragOffset = .zero
+        }
+    }
+
+    private func triggerProgrammaticSwipe(_ direction: SwipeDirection) {
+        // Slight wind-up before fly-off для natural feel
+        let windUp: CGFloat = direction == .left ? 30 : (direction == .right ? -30 : 0)
+        withAnimation(.spring(response: 0.15, dampingFraction: 0.8)) {
+            dragOffset = CGSize(width: windUp, height: 0)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+            flyOff(direction: direction)
+        }
+    }
+}
 
 private struct BumbleProfileCard: View {
     let profile: UserProfile

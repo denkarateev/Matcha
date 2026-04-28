@@ -232,15 +232,21 @@ final class APIMatchaRepository: MatchaRepository {
                 )
             }
 
-        // Deduplicate: skip if already in conversations OR already seen in this list
-        let conversationPartnerIDs = Set(conversations.map { $0.partner.id.uuidString.lowercased() })
+        // Bumble model: пока чат awaiting-first-message — match показывается
+        // в newMatches strip (круг с timer). Когда business написал первым —
+        // chat updatedAt > createdAt → isAwaitingFirstMessage=false →
+        // переходит в conversations list (обычная строка чата).
+        let activeConversations = conversations.filter { !$0.isAwaitingFirstMessage }
+        let activePartnerIDs = Set(activeConversations.map { $0.partner.id.uuidString.lowercased() })
+
         var seenMatchPartnerIDs = Set<String>()
         let newMatches = matches.compactMap { match -> NewMatch? in
             guard let partnerID = counterpartID(for: match.userIds, currentUserID: session.userID) else {
                 return nil
             }
             let lowered = partnerID.lowercased()
-            guard !conversationPartnerIDs.contains(lowered) else { return nil }
+            // Exclude only matches whose chat already has messages (active conversation)
+            guard !activePartnerIDs.contains(lowered) else { return nil }
             guard seenMatchPartnerIDs.insert(lowered).inserted else { return nil }
             guard let profile = profilesByID[partnerID] else { return nil }
             return NewMatch(
@@ -251,7 +257,7 @@ final class APIMatchaRepository: MatchaRepository {
             )
         }
 
-        return ChatHome(newMatches: newMatches, conversations: conversations)
+        return ChatHome(newMatches: newMatches, conversations: activeConversations)
     }
 
     func fetchChatThread(chatId: String) async throws -> ChatThread {
