@@ -260,46 +260,46 @@ struct MatchFeedView: View {
         .animation(.spring(response: 0.3), value: store.currentIndex)
     }
 
-    // MARK: - Card Stack Area — Bumble-style swipe stack
-    // Одна карточка видна (full screen). Drag horizontal → rotate + offset +
-    // LIKE/NOPE labels. Threshold 100pt → fly off + remove from store.
-    // Никакого scroll, никакого peek next, никакого back.
+    // MARK: - Card Stack Area — v3 design (Bumble vertical scroll-snap)
+    //
+    // Mechanics per matcha v3:
+    //   • ScrollView .vertical с .paging — каждый профиль = одна страница
+    //     (full screen height), snap-to-start между профилями.
+    //   • Внутри ProfilePage — собственный scrollable content (photos, bio,
+    //     niches, ещё фото) — пользователь свайпает ВНИЗ чтобы изучить
+    //     текущий профиль, и снова вниз чтобы перейти к следующему.
+    //   • Sticky action buttons (Pass/Super/Like) внизу, работают на
+    //     currently-visible profile.
+    //   • После action профиль удаляется из store.profiles, scroll
+    //     автоматически снапит к началу — следующий профиль становится
+    //     текущим.
+    //   • НЕТ horizontal swipes (per design v3).
 
     @ViewBuilder
     private var cardStackArea: some View {
         GeometryReader { geo in
             let cardSize = CGSize(width: geo.size.width, height: geo.size.height)
 
-            ZStack {
-                // Top card — single visible profile с drag gesture
-                if let current = store.currentProfile {
-                    SwipeCard(
-                        profile: current,
-                        cardSize: cardSize,
-                        programmaticSwipe: Binding(
-                            get: { store.programmaticSwipe },
-                            set: { store.programmaticSwipe = $0 }
-                        ),
-                        onSwipeCompleted: { direction in
-                            store.clearProgrammaticSwipe()
-                            switch direction {
-                            case .left:
-                                store.skip()
-                                MatchaHaptic.light()
-                                triggerUndoWindow()
-                            case .right:
-                                store.interested()
-                                MatchaHaptic.medium()
-                            case .super:
-                                store.superSwipe()
-                                MatchaHaptic.heavy()
-                            }
-                        }
-                    )
-                    .id(current.id)
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVStack(spacing: 0) {
+                    ForEach(store.filteredProfiles) { profile in
+                        BumbleProfileCard(profile: profile, cardSize: cardSize)
+                            .id(profile.id)
+                            .frame(width: cardSize.width, height: cardSize.height)
+                    }
+                }
+                .scrollTargetLayout()
+            }
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: $scrollPositionID, anchor: .top)
+            .onChange(of: scrollPositionID) { _, newID in
+                guard let newID,
+                      let idx = store.filteredProfiles.firstIndex(where: { $0.id == newID })
+                else { return }
+                if store.currentIndex != idx {
+                    store.currentIndex = idx
                 }
             }
-            .frame(width: cardSize.width, height: cardSize.height)
         }
     }
 
@@ -1136,20 +1136,190 @@ private struct BumbleProfileCard: View {
     let profile: UserProfile
     let cardSize: CGSize
 
-    @State private var currentPhotoIndex: Int = 0
-
     private var photoURLList: [URL] {
         if !profile.photoURLs.isEmpty { return profile.photoURLs }
         if let url = profile.photoURL { return [url] }
         return []
     }
 
+    private var subLine: String {
+        if profile.role == .business {
+            let cat = profile.category?.title ?? "Venue"
+            if let f = profile.followersCount, f > 0 {
+                return "\(cat) · \(formatFollowers(f)) followers"
+            }
+            return cat
+        } else {
+            let handle = profile.instagramHandle.map { "@" + $0 } ?? profile.name
+            if let f = profile.followersCount, f > 0 {
+                return "\(handle) · \(formatFollowers(f)) followers"
+            }
+            return handle
+        }
+    }
+
+    var body: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 0) {
+                // Hero photo — 60% screen height
+                heroPhoto(at: 0)
+                    .frame(width: cardSize.width, height: cardSize.height * 0.6)
+                    .clipped()
+                    .overlay(alignment: .bottomLeading) {
+                        verificationOverlay
+                            .padding(.leading, 16)
+                            .padding(.bottom, 14)
+                    }
+                    .overlay(
+                        // Top + bottom gradients
+                        LinearGradient(
+                            stops: [
+                                .init(color: .black.opacity(0.35), location: 0.0),
+                                .init(color: .clear, location: 0.18),
+                                .init(color: .clear, location: 0.55),
+                                .init(color: .black.opacity(0.55), location: 1.0),
+                            ],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                        .allowsHitTesting(false)
+                    )
+
+                // Name + meta block
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(profile.name)
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundStyle(MatchaTokens.Colors.textPrimary)
+                            .lineLimit(1)
+                    }
+                    Text(subLine)
+                        .font(.system(size: 15))
+                        .foregroundStyle(MatchaTokens.Colors.textSecondary)
+                        .padding(.top, 4)
+
+                    HStack(spacing: 14) {
+                        if let district = profile.district {
+                            Label {
+                                Text(district)
+                            } icon: {
+                                Image(systemName: "mappin")
+                                    .font(.system(size: 12))
+                            }
+                            .labelStyle(.titleAndIcon)
+                        }
+                        if let rating = profile.rating, rating > 0 {
+                            HStack(spacing: 4) {
+                                Image(systemName: "star.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(MatchaTokens.Colors.warning)
+                                Text(String(format: "%.1f", rating))
+                                    .foregroundStyle(MatchaTokens.Colors.textPrimary)
+                                    .fontWeight(.semibold)
+                            }
+                        }
+                        if profile.completedCollabsCount > 0 {
+                            HStack(spacing: 4) {
+                                Image(systemName: "link")
+                                    .font(.system(size: 12))
+                                Text("\(profile.completedCollabsCount) collabs")
+                            }
+                        }
+                    }
+                    .font(.system(size: 13))
+                    .foregroundStyle(MatchaTokens.Colors.textSecondary)
+                    .padding(.top, 10)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 24)
+                .padding(.top, 20)
+
+                // About
+                if !profile.bio.isEmpty {
+                    sectionBlock(title: "About") {
+                        Text(profile.bio)
+                            .font(.system(size: 15))
+                            .foregroundStyle(MatchaTokens.Colors.textPrimary)
+                            .lineSpacing(4)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+
+                // Niches
+                if !profile.niches.isEmpty {
+                    sectionBlock(title: "Niches") {
+                        WrappingNicheTags(niches: profile.niches)
+                    }
+                }
+
+                // Second photo — 55% screen height
+                if photoURLList.count >= 2 {
+                    heroPhoto(at: 1)
+                        .frame(width: cardSize.width, height: cardSize.height * 0.55)
+                        .clipped()
+                        .overlay(
+                            LinearGradient(
+                                colors: [.clear, .black.opacity(0.4)],
+                                startPoint: .top, endPoint: .bottom
+                            ).allowsHitTesting(false)
+                        )
+                        .padding(.top, 24)
+                }
+
+                // Open to barter card
+                openToBarterCard
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
+
+                // Third photo — 50% screen height
+                if photoURLList.count >= 3 {
+                    heroPhoto(at: 2)
+                        .frame(width: cardSize.width, height: cardSize.height * 0.5)
+                        .clipped()
+                        .overlay(
+                            LinearGradient(
+                                colors: [.clear, .black.opacity(0.4)],
+                                startPoint: .top, endPoint: .bottom
+                            ).allowsHitTesting(false)
+                        )
+                        .padding(.top, 24)
+                }
+
+                // Bottom spacer для action buttons
+                Color.clear.frame(height: 130)
+            }
+        }
+        .background(MatchaTokens.Colors.background)
+        .frame(width: cardSize.width, height: cardSize.height)
+    }
+
     @ViewBuilder
-    private var verificationBadgePill: some View {
-        // Иерархия: verified → 1 pill, blueCheck → 2 pills (VERIFIED + APPROVED).
+    private func heroPhoto(at index: Int) -> some View {
+        if let url = photoURLList[safe: index] {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let img):
+                    img.resizable().scaledToFill()
+                default:
+                    Color(white: 0.08)
+                }
+            }
+        } else {
+            ZStack {
+                LinearGradient(
+                    colors: [Color(hex: 0x1A2E13), Color(hex: 0x101314)],
+                    startPoint: .topLeading, endPoint: .bottomTrailing
+                )
+                Text(String(profile.name.prefix(1)).uppercased())
+                    .font(.system(size: 80, weight: .bold, design: .rounded))
+                    .foregroundStyle(MatchaTokens.Colors.accent.opacity(0.3))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var verificationOverlay: some View {
         HStack(spacing: 6) {
-            if profile.verificationLevel == .verified
-                || profile.verificationLevel == .blueCheck {
+            if profile.verificationLevel == .verified || profile.verificationLevel == .blueCheck {
                 HStack(spacing: 3) {
                     Image(systemName: "checkmark.shield.fill").font(.system(size: 9, weight: .bold))
                     Text("VERIFIED").font(.system(size: 10, weight: .bold)).tracking(0.5)
@@ -1160,7 +1330,7 @@ private struct BumbleProfileCard: View {
             }
             if profile.verificationLevel == .blueCheck {
                 HStack(spacing: 3) {
-                    Image(systemName: "checkmark.seal.fill").font(.system(size: 9, weight: .bold))
+                    Image(systemName: "sparkles").font(.system(size: 9, weight: .bold))
                     Text("APPROVED").font(.system(size: 10, weight: .bold)).tracking(0.5)
                 }
                 .foregroundStyle(.black)
@@ -1170,171 +1340,55 @@ private struct BumbleProfileCard: View {
         }
     }
 
-    var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 0) {
-                // Hero photo — takes ~60% of screen
-                ZStack(alignment: .bottom) {
-                    heroPhoto
-                        .frame(width: cardSize.width, height: cardSize.height * 0.6)
-                        .clipped()
-
-                    if photoURLList.count > 1 {
-                        HStack(spacing: 0) {
-                            Color.clear
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    withAnimation(.easeInOut(duration: 0.2)) {
-                                        currentPhotoIndex = max(0, currentPhotoIndex - 1)
-                                    }
-                                }
-                            Color.clear
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    withAnimation(.easeInOut(duration: 0.2)) {
-                                        currentPhotoIndex = min(photoURLList.count - 1, currentPhotoIndex + 1)
-                                    }
-                                }
-                        }
-                    }
-
-                    // Gradient for readability
-                    LinearGradient(
-                        stops: [
-                            .init(color: .clear, location: 0.0),
-                            .init(color: .black.opacity(0.7), location: 1.0),
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .allowsHitTesting(false)
-
-                    // Name + info overlay (спека §3.4: имя, роль, район, рейтинг, бейджи)
-                    VStack(alignment: .leading, spacing: 6) {
-                        // Верификационная плашка (VERIFIED / BLUE CHECK)
-                        verificationBadgePill
-                        // Имя + чекмарк
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text(profile.name)
-                                .font(.system(size: 28, weight: .bold))
-                                .foregroundStyle(.white)
-                            if profile.verificationLevel.isVerified {
-                                Image(systemName: "checkmark.seal.fill")
-                                    .foregroundStyle(MatchaTokens.Colors.accent)
-                                    .font(.system(size: 18))
-                            }
-                        }
-                        Text(profile.secondaryLine)
-                            .font(.system(size: 15))
-                            .foregroundStyle(.white.opacity(0.85))
-                        // Район + рейтинг + collabs одной строкой
-                        HStack(spacing: 12) {
-                            if let district = profile.district {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "mappin.circle.fill")
-                                        .font(.system(size: 11))
-                                    Text(district)
-                                        .font(.system(size: 13, weight: .medium))
-                                }
-                                .foregroundStyle(.white.opacity(0.7))
-                            }
-                            if let rating = profile.rating, rating > 0 {
-                                HStack(spacing: 3) {
-                                    Image(systemName: "star.fill")
-                                        .font(.system(size: 11))
-                                        .foregroundStyle(MatchaTokens.Colors.warning)
-                                    Text(String(format: "%.1f", rating))
-                                        .font(.system(size: 13, weight: .semibold))
-                                        .foregroundStyle(.white)
-                                }
-                            }
-                            if profile.completedCollabsCount > 0 {
-                                HStack(spacing: 3) {
-                                    Image(systemName: "handshake.fill")
-                                        .font(.system(size: 11))
-                                    Text("\(profile.completedCollabsCount) collabs")
-                                        .font(.system(size: 13, weight: .medium))
-                                }
-                                .foregroundStyle(.white.opacity(0.7))
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 24)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                // Bio
-                if !profile.bio.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("About")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.5))
-                        Text(profile.bio)
-                            .font(.system(size: 15))
-                            .foregroundStyle(.white)
-                            .lineSpacing(4)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 24)
-                    .padding(.top, 24)
-                    .padding(.bottom, 16)
-                }
-
-                // Niches
-                if !profile.niches.isEmpty {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Niches")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.5))
-                        WrappingNicheTags(niches: profile.niches)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 16)
-                }
-
-                // Additional photos interleaved with info
-                ForEach(Array(photoURLList.enumerated().dropFirst()), id: \.offset) { _, url in
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let img):
-                            img.resizable().scaledToFill()
-                        default:
-                            Color.black
-                        }
-                    }
-                    .frame(width: cardSize.width, height: cardSize.height * 0.55)
-                    .clipped()
-                    .padding(.top, 16)
-                }
-
-                // Bottom padding so last content isn't flush with action bar
-                Color.clear.frame(height: 120)
-            }
+    @ViewBuilder
+    private func sectionBlock<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title.uppercased())
+                .font(.system(size: 11, weight: .bold))
+                .tracking(0.8)
+                .foregroundStyle(MatchaTokens.Colors.textSecondary.opacity(0.7))
+            content()
         }
-        .background(Color.black)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 24)
+        .padding(.top, 24)
     }
 
-    @ViewBuilder
-    private var heroPhoto: some View {
-        if let url = photoURLList[safe: currentPhotoIndex] {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .success(let img):
-                    img.resizable().scaledToFill()
-                default:
-                    Color.black
-                }
+    private var openToBarterCard: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(MatchaTokens.Colors.accent.opacity(0.12))
+                    .frame(width: 38, height: 38)
+                    .overlay(Circle().strokeBorder(MatchaTokens.Colors.accent.opacity(0.25), lineWidth: 1))
+                Image(systemName: "sparkles")
+                    .font(.system(size: 14))
+                    .foregroundStyle(MatchaTokens.Colors.accent)
             }
-        } else {
-            Color(white: 0.08)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Open to barter")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(MatchaTokens.Colors.textSecondary)
+                Text(profile.role == .business ? "Sunset table & content swaps" : "Stays · dinners · experiences")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(MatchaTokens.Colors.textPrimary)
+            }
+            Spacer()
         }
+        .padding(14)
+        .background(MatchaTokens.Colors.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(MatchaTokens.Colors.outline, lineWidth: 1)
+        )
+    }
+
+    private func formatFollowers(_ count: Int) -> String {
+        if count >= 1_000_000 { return String(format: "%.1fM", Double(count) / 1_000_000) }
+        if count >= 1_000 { return String(format: "%.0fK", Double(count) / 1_000) }
+        return "\(count)"
     }
 }
-
-
-// MARK: - Array safe subscript
 
 private extension Array {
     subscript(safe index: Int) -> Element? {
