@@ -587,7 +587,7 @@ struct MatchFeedView: View {
                     .foregroundStyle(.white)
                 Text(
                     shadowAccount.isVerified
-                        ? "You're verified now. MATCHA is delivering your saved likes."
+                        ? "You're verified now. tuju is delivering your saved likes."
                         : "Complete your profile to activate them.\nThey'll be delivered once you're verified."
                 )
                     .font(.subheadline)
@@ -738,8 +738,8 @@ struct MatchFeedView: View {
 
                     // Share your match
                     Button {
-                        let referralCode = NetworkService.shared.currentUserID ?? "matcha"
-                        matchShareText = "Just matched with \(profile.name) on MATCHA! \u{1F375} Join me: https://matcha.app/invite/\(referralCode)"
+                        let referralCode = NetworkService.shared.currentUserID ?? "tuju"
+                        matchShareText = "Just matched with \(profile.name) on tuju! \u{1F375} Join me: https://tuju.app/invite/\(referralCode)"
                         showMatchShareSheet = true
                     } label: {
                         HStack(spacing: 6) {

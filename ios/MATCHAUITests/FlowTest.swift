@@ -347,14 +347,14 @@ final class FlowTest: XCTestCase {
         snap("03_credentials_entered")
 
         // Tap somewhere neutral to dismiss keyboard, then scroll to find login button
-        let headerText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'MATCHA Access'")).firstMatch
+        let headerText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'tuju Access'")).firstMatch
         if headerText.exists {
             headerText.tap()
             sleep(1)
         }
 
-        // Tap the "Log in to MATCHA" submit button
-        let submitBtn = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Log in to MATCHA'")).firstMatch
+        // Tap the "Log in to tuju" submit button
+        let submitBtn = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Log in to tuju'")).firstMatch
         if !submitBtn.waitForExistence(timeout: 3) {
             // Scroll to find it
             app.swipeUp()
@@ -362,7 +362,7 @@ final class FlowTest: XCTestCase {
         }
         guard submitBtn.waitForExistence(timeout: 5) else {
             snap("03_NO_SUBMIT_BUTTON")
-            XCTFail("Login submit button ('Log in to MATCHA') not found")
+            XCTFail("Login submit button ('Log in to tuju') not found")
             return
         }
         snap("03_before_submit")
@@ -439,8 +439,8 @@ final class FlowTest: XCTestCase {
         snap("04_signed_out")
 
         // Verify welcome screen content
-        let matchaLogo = app.staticTexts.matching(NSPredicate(format: "label == 'MATCHA'")).firstMatch
-        XCTAssertTrue(matchaLogo.waitForExistence(timeout: 8), "MATCHA logo text not found on welcome screen")
+        let appLogo = app.staticTexts.matching(NSPredicate(format: "label == 'tuju'")).firstMatch
+        XCTAssertTrue(appLogo.waitForExistence(timeout: 8), "tuju logo text not found on welcome screen")
 
         let tagline = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Brew connections'")).firstMatch
         XCTAssertTrue(tagline.waitForExistence(timeout: 3), "Tagline 'Brew connections. Blend success.' not found")

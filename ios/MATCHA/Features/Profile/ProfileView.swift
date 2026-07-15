@@ -33,6 +33,8 @@ struct ProfileView: View {
 
                 aboutSection
 
+                businessDetailsSection
+
                 nichesSection
 
                 personalInfoSection
@@ -467,6 +469,41 @@ struct ProfileView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 20)
         .padding(.vertical, 18)
+    }
+
+    @ViewBuilder
+    private var businessDetailsSection: some View {
+        let hours = store.currentUser.workingHours?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        if store.currentUser.role == .business, !hours.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Venue details")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(.white)
+
+                HStack(spacing: 10) {
+                    Image(systemName: "clock.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(MatchaTokens.Colors.accent)
+                        .frame(width: 28, height: 28)
+                        .background(MatchaTokens.Colors.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Working hours")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.white.opacity(0.55))
+                        Text(hours)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(.white)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Working hours, \(hours)")
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 18)
+        }
     }
 
     // MARK: - Personal Info

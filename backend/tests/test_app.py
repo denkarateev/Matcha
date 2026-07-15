@@ -420,6 +420,31 @@ def test_blogger_feed_only_returns_business_profiles(client: TestClient) -> None
     assert all(profile["role"] == "business" for profile in profiles)
 
 
+def test_business_working_hours_are_saved_and_returned_in_profile(client: TestClient) -> None:
+    token, user_id = _register_and_verify_user(
+        client,
+        email="hours-venue@example.com",
+        role="business",
+        full_name="Hours Venue",
+        primary_photo_url="https://example.com/hours-venue.jpg",
+        instagram_handle="@hoursvenue",
+        audience_size=15_000,
+        category="Hospitality",
+    )
+
+    update = client.put(
+        "/api/v1/profiles/me",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"working_hours": "Daily 12:00–02:00"},
+    )
+    assert update.status_code == 200
+    assert update.json()["working_hours"] == "Daily 12:00–02:00"
+
+    public_profile = client.get(f"/api/v1/profiles/{user_id}")
+    assert public_profile.status_code == 200
+    assert public_profile.json()["working_hours"] == "Daily 12:00–02:00"
+
+
 def test_admin_users_reflect_new_registrations_without_restart(
     tmp_path,
     monkeypatch: pytest.MonkeyPatch,

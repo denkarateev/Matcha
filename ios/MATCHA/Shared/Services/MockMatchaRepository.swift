@@ -105,6 +105,26 @@ final class MockMatchaRepository: MatchaRepository {
         return MockSeedData.offers.first { $0.id == offerId } ?? MockSeedData.offers[0]
     }
 
+    func respondToOffer(offerId: String, message: String?) async throws -> OfferRespondResult {
+        try await Task.sleep(for: .milliseconds(150))
+        let offer = MockSeedData.offers.first { $0.id == offerId }
+        let creatorId = offer?.creator.serverUserId ?? ""
+        let now = Date()
+        return OfferRespondResult(
+            response: OfferResponse(
+                id: UUID().uuidString,
+                offerId: offerId,
+                businessId: creatorId.isEmpty ? "mock-business" : creatorId,
+                bloggerId: "mock-blogger",
+                status: .pending,
+                message: message,
+                createdAt: now,
+                updatedAt: now
+            ),
+            remainingResponses: 2
+        )
+    }
+
     // MARK: - Activity
 
     func fetchActivitySummary() async throws -> ActivitySummary {
@@ -278,12 +298,14 @@ final class MockMatchaRepository: MatchaRepository {
             audienceSize: nil,
             category: profile.category?.rawValue,
             district: profile.district,
+            districts: profile.districts ?? [],
             website: nil,
             niches: profile.niches,
             languages: profile.languages,
             bio: profile.bio,
             description: nil,
             whatWeOffer: nil,
+            workingHours: profile.workingHours,
             nationality: nil,
             residence: nil,
             gender: nil,

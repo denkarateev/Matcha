@@ -26,7 +26,7 @@ enum PaywallTrigger {
         case .blurredLikes:    "3 businesses liked you"
         case .offerCredits:    "Create offers to attract top influencers"
         case .superSwipe:      "Stand out with SuperSwipe"
-        case .general:         "Unlock the full MATCHA experience"
+        case .general:         "Unlock the full tuju experience"
         }
     }
 
@@ -117,7 +117,7 @@ struct PaywallView: View {
         .alert("Purchase Successful", isPresented: $showSuccess) {
             Button("Done") { dismiss() }
         } message: {
-            Text("Welcome to MATCHA \(selectedPlan.title)! Enjoy your new features.")
+            Text("Welcome to tuju \(selectedPlan.title)! Enjoy your new features.")
         }
         .alert("Purchase Error", isPresented: .init(
             get: { purchaseError != nil },

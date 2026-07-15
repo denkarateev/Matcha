@@ -64,7 +64,7 @@ struct SubscriptionView: View {
 
             VStack(spacing: 6) {
                 HStack(spacing: 8) {
-                    Text("MATCHA \(currentPlan.title)")
+                    Text("tuju \(currentPlan.title)")
                         .font(MatchaTokens.Typography.title1)
                         .foregroundStyle(MatchaTokens.Colors.textPrimary)
 
@@ -245,7 +245,7 @@ struct SubscriptionView: View {
                 .tracking(1.2)
 
             VStack(spacing: 0) {
-                billingRow(label: "Plan", value: "MATCHA \(currentPlan.title)")
+                billingRow(label: "Plan", value: "tuju \(currentPlan.title)")
                 Divider().background(MatchaTokens.Colors.outline).padding(.leading, 16)
                 billingRow(label: "Price", value: billingPrice)
                 Divider().background(MatchaTokens.Colors.outline).padding(.leading, 16)
@@ -333,9 +333,9 @@ struct SubscriptionView: View {
 
     private var planDescription: String {
         switch currentPlan {
-        case .free: "Basic access to MATCHA"
+        case .free: "Basic access to tuju"
         case .pro: "Unlimited swipes and premium features"
-        case .black: "The ultimate MATCHA experience"
+        case .black: "The ultimate tuju experience"
         }
     }
 

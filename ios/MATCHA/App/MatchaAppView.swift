@@ -14,7 +14,7 @@ struct MatchaAppView: View {
                     Image(systemName: "leaf.fill")
                         .font(.system(size: 48))
                         .foregroundStyle(MatchaTokens.Colors.accent)
-                    Text("MATCHA")
+                    Text("tuju")
                         .font(.title.bold())
                         .foregroundStyle(.white)
                     ProgressView()

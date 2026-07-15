@@ -278,7 +278,7 @@ struct VerificationFlowView: View {
                             .foregroundStyle(MatchaTokens.Colors.accent)
                             .frame(width: 24)
 
-                        Text("Send this code to **@matchabali** on Instagram DM")
+                        Text("Send this code to **@tuju** on Instagram DM")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(.white.opacity(0.7))
                     }

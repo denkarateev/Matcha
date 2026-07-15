@@ -28,6 +28,7 @@ def _orm_to_domain(row: ProfileORM) -> Profile:
         bio=row.bio,
         description=row.description,
         what_we_offer=row.what_we_offer,
+        working_hours=row.working_hours,
         niches=list(row.niches or []),
         audience_size=row.audience_size,
         district=row.location_district,
@@ -69,6 +70,7 @@ class ProfileRepository:
         row.bio = profile.bio
         row.description = profile.description
         row.what_we_offer = profile.what_we_offer
+        row.working_hours = profile.working_hours
         row.niches = profile.niches
         row.audience_size = profile.audience_size
         row.location_district = profile.district
@@ -202,6 +204,7 @@ class SyncDBProfileRepository:
             row.bio = profile.bio
             row.description = profile.description
             row.what_we_offer = profile.what_we_offer
+            row.working_hours = profile.working_hours
             row.niches = profile.niches
             row.audience_size = profile.audience_size
             row.location_district = profile.district

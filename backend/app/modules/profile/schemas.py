@@ -31,6 +31,7 @@ class ProfileUpdateRequest(BaseModel):
     bio: str | None = Field(default=None, max_length=150)
     description: str | None = Field(default=None, max_length=200)
     what_we_offer: str | None = Field(default=None, max_length=200)
+    working_hours: str | None = Field(default=None, max_length=120)
     nationality: str | None = None
     residence: str | None = None
     gender: str | None = None
@@ -77,6 +78,7 @@ class ProfileRead(BaseModel):
     bio: str | None = None
     description: str | None = None
     what_we_offer: str | None = None
+    working_hours: str | None = None
     nationality: str | None = None
     residence: str | None = None
     gender: str | None = None

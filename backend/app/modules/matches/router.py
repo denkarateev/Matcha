@@ -127,6 +127,7 @@ def get_discovery_feed(
             bio=profile.bio,
             description=profile.description,
             what_we_offer=profile.what_we_offer,
+            working_hours=getattr(profile, "working_hours", None),
             nationality=getattr(profile, "nationality", None),
             residence=getattr(profile, "residence", None),
             gender=getattr(profile, "gender", None),

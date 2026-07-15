@@ -26,3 +26,8 @@ data/
 .idea/
 *.swp
 .deriveddata-ios/
+
+# Loop artifacts (not committed per user git rules)
+feature_list.json
+claude-progress.txt
+test_matrix.json

@@ -13,6 +13,7 @@ enum OfferResponseState {
 
 struct OfferDetailView: View {
     let offer: Offer
+    let repository: any MatchaRepository
     var isBusiness: Bool = false
     var userFollowersCount: Int? = nil
 
@@ -21,6 +22,8 @@ struct OfferDetailView: View {
     @State private var dailyResponseLimit: Int = 3
     @State private var optionalMessage: String = ""
     @State private var showResponseSheet = false
+    @State private var isSendingResponse = false
+    @State private var responseError: String?
     @Environment(\.dismiss) private var dismiss
 
     private var typeColor: Color {
@@ -37,6 +40,30 @@ struct OfferDetailView: View {
 
     private var responsesLeft: Int {
         max(0, dailyResponseLimit - responsesUsedToday)
+    }
+
+    /// Sends the blogger's response to the backend. The server is the source of
+    /// truth for the remaining daily quota, so we reconcile against its answer
+    /// rather than incrementing a local counter.
+    private func submitResponse() async {
+        guard !isSendingResponse else { return }
+        isSendingResponse = true
+        responseError = nil
+        defer { isSendingResponse = false }
+
+        do {
+            let result = try await repository.respondToOffer(
+                offerId: offer.id,
+                message: optionalMessage
+            )
+            responsesUsedToday = max(0, dailyResponseLimit - result.remainingResponses)
+            showResponseSheet = false
+            withAnimation(MatchaTokens.Animations.cardAppear) {
+                responseState = result.remainingResponses <= 0 ? .limitReached : .sent
+            }
+        } catch {
+            responseError = error.localizedDescription
+        }
     }
 
     private var isAtDailyLimit: Bool {
@@ -76,17 +103,25 @@ struct OfferDetailView: View {
             ResponseSheet(
                 offer: offer,
                 message: $optionalMessage,
-                onSend: {
-                    withAnimation(MatchaTokens.Animations.cardAppear) {
-                        responsesUsedToday += 1
-                        responseState = .sent
-                    }
-                    showResponseSheet = false
-                }
+                isSending: isSendingResponse,
+                onSend: { Task { await submitResponse() } }
             )
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
             .presentationBackground(MatchaTokens.Colors.background)
+            // Attached to the sheet, not the parent: an alert on the covered
+            // parent would never surface while the sheet is up.
+            .alert(
+                "Couldn't send response",
+                isPresented: Binding(
+                    get: { responseError != nil },
+                    set: { if !$0 { responseError = nil } }
+                )
+            ) {
+                Button("OK", role: .cancel) { responseError = nil }
+            } message: {
+                Text(responseError ?? "")
+            }
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {
@@ -751,6 +786,7 @@ struct OfferDetailView: View {
 private struct ResponseSheet: View {
     let offer: Offer
     @Binding var message: String
+    var isSending: Bool = false
     let onSend: () -> Void
     @Environment(\.dismiss) private var dismiss
 
@@ -842,9 +878,14 @@ private struct ResponseSheet: View {
 
                     Button(action: onSend) {
                         HStack(spacing: 8) {
-                            Image(systemName: "paperplane.fill")
-                                .font(.body.weight(.medium))
-                            Text("Send Response")
+                            if isSending {
+                                ProgressView()
+                                    .tint(MatchaTokens.Colors.background)
+                            } else {
+                                Image(systemName: "paperplane.fill")
+                                    .font(.body.weight(.medium))
+                            }
+                            Text(isSending ? "Sending…" : "Send Response")
                                 .font(.headline)
                         }
                         .foregroundStyle(MatchaTokens.Colors.background)
@@ -852,6 +893,7 @@ private struct ResponseSheet: View {
                         .padding(.vertical, 18)
                         .background(MatchaTokens.Colors.accent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
+                    .disabled(isSending)
                 }
                 .padding(.horizontal, MatchaTokens.Spacing.large)
                 .padding(.vertical, MatchaTokens.Spacing.medium)

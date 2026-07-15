@@ -1,5 +1,5 @@
 import Testing
-@testable import MATCHA
+@testable import tuju
 
 @Test
 func feedProfilesAreSeeded() {

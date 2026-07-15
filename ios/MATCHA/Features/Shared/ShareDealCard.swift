@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - ShareDealCard
 
 /// Generates a shareable card image after a finished deal.
-/// Dark background with MATCHA branding, both partner photos, and deal type badge.
+/// Dark background with tuju branding, both partner photos, and deal type badge.
 struct ShareDealCard: View {
     let deal: Deal
     let partnerPhotoURL: URL?
@@ -13,7 +13,7 @@ struct ShareDealCard: View {
         VStack(spacing: 0) {
             // Top branding
             HStack {
-                Text("MATCHA")
+                Text("tuju")
                     .font(.system(size: 14, weight: .black, design: .rounded))
                     .foregroundStyle(MatchaTokens.Colors.accent)
                     .tracking(2)
@@ -34,7 +34,7 @@ struct ShareDealCard: View {
             .padding(.bottom, 20)
 
             // Headline
-            Text("Brewed with MATCHA \u{2615}")
+            Text("Brewed with tuju \u{2615}")
                 .font(.system(size: 22, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
                 .padding(.bottom, 6)
@@ -63,7 +63,7 @@ struct ShareDealCard: View {
             // Bottom link
             HStack {
                 Spacer()
-                Text("matcha.app/join")
+                Text("tuju.app/join")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(MatchaTokens.Colors.accent.opacity(0.8))
                 Spacer()
@@ -188,7 +188,7 @@ struct ShareDealCardSheet: View {
                     myPhotoURL: myPhotoURL
                 )
                 let image = card.renderToImage()
-                let shareText = "Just brewed a collab on MATCHA \u{2615}\nJoin: matcha.app/join"
+                let shareText = "Just brewed a collab on tuju \u{2615}\nJoin: tuju.app/join"
                 let activityVC = UIActivityViewController(
                     activityItems: [image, shareText],
                     applicationActivities: nil

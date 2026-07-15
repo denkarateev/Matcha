@@ -84,6 +84,15 @@ final class APIMatchaRepository: MatchaRepository {
         return dto.toDomain()
     }
 
+    func respondToOffer(offerId: String, message: String?) async throws -> OfferRespondResult {
+        let trimmed = message?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let body = OfferRespondBody(message: (trimmed?.isEmpty ?? true) ? nil : trimmed)
+        let dto: OfferRespondResultDTO = try await network.request(
+            .POST, path: "/offers/\(offerId)/respond", body: body
+        )
+        return dto.toDomain()
+    }
+
     // MARK: - Activity
 
     func fetchActivitySummary() async throws -> ActivitySummary {
@@ -195,7 +204,7 @@ final class APIMatchaRepository: MatchaRepository {
                 let partner = profilesByID[partnerID] ?? makePlaceholderProfile(
                     id: partnerID,
                     role: counterpartRole(for: session.role),
-                    name: "Matcha User"
+                    name: "tuju User"
                 )
                 let match = chat.matchId.flatMap { matchesByID[$0] }
                 let deal = preferredDeal(
@@ -451,7 +460,7 @@ final class APIMatchaRepository: MatchaRepository {
         // Pre-build placeholders on MainActor, then fetch in parallel
         var placeholders: [String: UserProfile] = [:]
         for userID in userIDs {
-            placeholders[userID] = makePlaceholderProfile(id: userID, role: assumedRole, name: "Matcha User")
+            placeholders[userID] = makePlaceholderProfile(id: userID, role: assumedRole, name: "tuju User")
         }
 
         return await withTaskGroup(of: (String, UserProfile).self) { group in
@@ -709,7 +718,7 @@ final class APIMatchaRepository: MatchaRepository {
         let applicant = profilesByID[applicantID] ?? makePlaceholderProfile(
             id: applicantID,
             role: fallbackRole,
-            name: "Matcha User"
+            name: "tuju User"
         )
 
         return OfferApplication(
@@ -809,6 +818,37 @@ private struct OfferResponseReadDTO: Decodable, Sendable {
     let message: String?
     let createdAt: Date
     let updatedAt: Date
+
+    func toDomain() -> OfferResponse {
+        OfferResponse(
+            id: id,
+            offerId: offerId,
+            businessId: businessId,
+            bloggerId: bloggerId,
+            status: OfferResponseStatus(rawValue: status) ?? .pending,
+            message: message,
+            createdAt: createdAt,
+            updatedAt: updatedAt
+        )
+    }
+}
+
+private struct OfferRespondBody: Encodable, Sendable {
+    let message: String?
+}
+
+/// Response of `POST /offers/{id}/respond` — the created response plus the
+/// blogger's remaining daily quota.
+private struct OfferRespondResultDTO: Decodable, Sendable {
+    let response: OfferResponseReadDTO
+    let remainingResponses: Int
+
+    func toDomain() -> OfferRespondResult {
+        OfferRespondResult(
+            response: response.toDomain(),
+            remainingResponses: remainingResponses
+        )
+    }
 }
 
 private struct ActivitySummaryDTO: Decodable, Sendable {

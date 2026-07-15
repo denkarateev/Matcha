@@ -64,6 +64,7 @@
 		7D4C417BF810088F2125567C /* MatchaBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6108026B226E54FE975CF29 /* MatchaBadge.swift */; };
 		82947C1E5092760902F7CF04 /* ProfileCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D29358E1BFEB283509744C9 /* ProfileCard.swift */; };
 		83EE08E70DC123BA9582260B /* ValidationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBCB0BDAC57BADAC103C32D /* ValidationService.swift */; };
+		84DC497EF05B26B4602F06D9 /* OfferResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51FD13BB6079B8C62C6E6A1D /* OfferResponse.swift */; };
 		8A9B9FFAE48480FA5AEA163E /* Offer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E439ED376AD23E0E3D6063A /* Offer.swift */; };
 		8B9E431AD252FD40DFC7D85B /* DealDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6710CC582A0C15193DDC5D5 /* DealDetailView.swift */; };
 		8C14486C530C6792DCC05F96 /* MatchaTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ED7E085E15B42FA1D4155A4 /* MatchaTokens.swift */; };
@@ -156,6 +157,7 @@
 		502329F43F638D8690194A23 /* StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreManager.swift; sourceTree = "<group>"; };
 		50C4BEBFA6C449F31920FAE6 /* SprintSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SprintSmokeTests.swift; sourceTree = "<group>"; };
 		51A17AB22D9D1284ABD04057 /* OnboardingFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlowView.swift; sourceTree = "<group>"; };
+		51FD13BB6079B8C62C6E6A1D /* OfferResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfferResponse.swift; sourceTree = "<group>"; };
 		520DAC4A4384EC0F9BDAF582 /* DealsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DealsView.swift; sourceTree = "<group>"; };
 		526EB2E4CDA01E9A5AB2FC4D /* ChatConversationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatConversationStore.swift; sourceTree = "<group>"; };
 		529C3E1A342A0AA20E71A615 /* MatchaTabShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchaTabShellView.swift; sourceTree = "<group>"; };
@@ -475,6 +477,7 @@
 				2D2B39C011E2A6D325292238 /* DealStatus.swift */,
 				8E439ED376AD23E0E3D6063A /* Offer.swift */,
 				6AAA822807C7B19D8917AF9D /* OfferApplication.swift */,
+				51FD13BB6079B8C62C6E6A1D /* OfferResponse.swift */,
 				8B210C2507896166E3777456 /* ProfileBadge.swift */,
 				77EB4FD0A152CE4C113FF2BE /* Role.swift */,
 				E01B71E772B8203D93763C70 /* SubscriptionPlan.swift */,
@@ -643,7 +646,7 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					1D5B1331A9F277F74673502A = {
-						DevelopmentTeam = 2WU7C7C87E;
+						DevelopmentTeam = 2668H85U57;
 						ProvisioningStyle = Automatic;
 					};
 					50A7DF70637614A1566ECB24 = {
@@ -749,6 +752,7 @@
 				2DC0C2C47F1569A31C47A9A6 /* OfferCard.swift in Sources */,
 				272FEC2270433FB330FC3B00 /* OfferDetailView.swift in Sources */,
 				B6B044F1519952B9A4F45163 /* OfferFilterView.swift in Sources */,
+				84DC497EF05B26B4602F06D9 /* OfferResponse.swift in Sources */,
 				07ACB1DE07E3FD2161204EDF /* OffersAndDealsView.swift in Sources */,
 				7D0C362E3670D75B921ED451 /* OffersView.swift in Sources */,
 				EF5B847FED6DB94092135122 /* OfflineBanner.swift in Sources */,
@@ -830,7 +834,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.matcha.ios.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dorffoto.tuju.uitests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = MATCHA;
@@ -905,10 +909,10 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.matcha.ios.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dorffoto.tuju.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MATCHA.app/MATCHA";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/tuju.app/tuju";
 			};
 			name = Release;
 		};
@@ -922,10 +926,10 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.matcha.ios.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dorffoto.tuju.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MATCHA.app/MATCHA";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/tuju.app/tuju";
 			};
 			name = Debug;
 		};
@@ -1004,7 +1008,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.matcha.ios.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dorffoto.tuju.uitests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = MATCHA;
@@ -1019,15 +1023,15 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"MATCHA/Preview Content\"";
-				DEVELOPMENT_TEAM = 2WU7C7C87E;
+				DEVELOPMENT_TEAM = 2668H85U57;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MATCHA/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.matcha.ios;
-				PRODUCT_NAME = MATCHA;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dorffoto.tuju;
+				PRODUCT_NAME = tuju;
 				SDKROOT = iphoneos;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -1042,15 +1046,15 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"MATCHA/Preview Content\"";
-				DEVELOPMENT_TEAM = 2WU7C7C87E;
+				DEVELOPMENT_TEAM = 2668H85U57;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MATCHA/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.matcha.ios;
-				PRODUCT_NAME = MATCHA;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dorffoto.tuju;
+				PRODUCT_NAME = tuju;
 				SDKROOT = iphoneos;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				TARGETED_DEVICE_FAMILY = 1;

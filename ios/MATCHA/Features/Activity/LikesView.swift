@@ -236,14 +236,14 @@ struct LikesView: View {
                         .font(.system(size: 17, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                 }
-                Text("Upgrade to MATCHA Pro to skip the queue and match with the people already in your corner.")
+                Text("Upgrade to tuju Pro to skip the queue and match with the people already in your corner.")
                     .font(.system(size: 13))
                     .foregroundStyle(MatchaTokens.Colors.textSecondary)
                     .lineSpacing(2)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                Text("Try MATCHA Pro")
+                Text("Try tuju Pro")
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(.black)
                     .frame(maxWidth: .infinity)

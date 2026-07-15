@@ -24,6 +24,7 @@ class Profile:
     bio: str | None = None
     description: str | None = None
     what_we_offer: str | None = None
+    working_hours: str | None = None
     nationality: str | None = None
     residence: str | None = None
     gender: str | None = None

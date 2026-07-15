@@ -192,7 +192,7 @@ enum MockSeedData {
         district: "Ubud",
         niches: ["Wellness", "Beauty & Fashion", "Lifestyle", "Art & Design", "Photography"],
         languages: ["EN", "FR"],
-        bio: "French beauty and skincare creator living in Ubud's rice-field hills. I specialise in spa reviews, clean-beauty flat-lays and high-intent short-form tutorials. New to MATCHA but growing fast with 6% engagement.",
+        bio: "French beauty and skincare creator living in Ubud's rice-field hills. I specialise in spa reviews, clean-beauty flat-lays and high-intent short-form tutorials. New to tuju but growing fast with 6% engagement.",
         collaborationType: .paid,
         rating: nil,
         verifiedVisits: 0,

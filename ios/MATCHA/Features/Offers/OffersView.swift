@@ -10,6 +10,8 @@ struct OffersView: View {
 
     var isBusiness: Bool
 
+    private let repository: any MatchaRepository
+
     init(
         repository: any MatchaRepository,
         isBusiness: Bool = false,
@@ -17,6 +19,7 @@ struct OffersView: View {
         filterState: Binding<OfferFilterState> = .constant(OfferFilterState()),
         allOffers: Binding<[Offer]> = .constant([])
     ) {
+        self.repository = repository
         _store = State(initialValue: OffersStore(repository: repository))
         _searchText = searchText
         _filterState = filterState
@@ -142,7 +145,7 @@ struct OffersView: View {
         .refreshable { await store.load() }
         .background(MatchaTokens.Colors.background.ignoresSafeArea())
         .navigationDestination(for: Offer.self) { offer in
-            OfferDetailView(offer: offer, isBusiness: isBusiness)
+            OfferDetailView(offer: offer, repository: repository, isBusiness: isBusiness)
         }
         .onChange(of: store.offers) { _, newOffers in
             allOffers = newOffers

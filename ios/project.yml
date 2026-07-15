@@ -1,6 +1,6 @@
 name: MATCHA
 options:
-  bundleIdPrefix: com.matcha
+  bundleIdPrefix: com.dorffoto
   deploymentTarget:
     iOS: 18.0
 settings:
@@ -23,14 +23,14 @@ targets:
       base:
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: MATCHA/App/Info.plist
-        PRODUCT_BUNDLE_IDENTIFIER: com.matcha.ios
-        PRODUCT_NAME: MATCHA
+        PRODUCT_BUNDLE_IDENTIFIER: com.dorffoto.tuju
+        PRODUCT_NAME: tuju
         TARGETED_DEVICE_FAMILY: 1
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
         DEVELOPMENT_ASSET_PATHS: "\"MATCHA/Preview Content\""
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_IDENTITY: "Apple Development"
-        DEVELOPMENT_TEAM: 2WU7C7C87E
+        DEVELOPMENT_TEAM: 2668H85U57
         CODE_SIGNING_ALLOWED: YES
   MATCHATests:
     type: bundle.unit-test
@@ -41,8 +41,10 @@ targets:
       - target: MATCHA
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.matcha.ios.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.dorffoto.tuju.tests
         GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/tuju.app/tuju"
+        BUNDLE_LOADER: "$(TEST_HOST)"
   MATCHAUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -52,5 +54,5 @@ targets:
       - target: MATCHA
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.matcha.ios.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: com.dorffoto.tuju.uitests
         CODE_SIGNING_ALLOWED: NO

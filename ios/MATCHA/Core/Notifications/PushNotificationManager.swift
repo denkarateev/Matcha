@@ -72,7 +72,7 @@ final class PushNotificationManager: NSObject {
     func notifyDealConfirmed(partnerName: String, date: String?) {
         let body = date != nil
             ? "Deal confirmed! See you on \(date!)!"
-            : "Your matcha is brewing ☕"
+            : "Your tuju collab is brewing ☕"
         scheduleLocal(title: "Deal Confirmed", body: body, categoryID: "deal")
     }
 
@@ -112,7 +112,7 @@ final class PushNotificationManager: NSObject {
         )
         // 72h (last)
         scheduleLocal(
-            title: "Your matcha is getting cold!",
+            title: "Your tuju collabs are waiting!",
             body: "You missed 12 potential collabs!",
             categoryID: "return",
             delay: 72 * 3600
@@ -123,7 +123,7 @@ final class PushNotificationManager: NSObject {
     func scheduleInactivePush() {
         // 3 days
         scheduleLocal(
-            title: "Your matcha is getting cold!",
+            title: "Your tuju collabs are waiting!",
             body: "4 new businesses appeared",
             categoryID: "inactive",
             delay: 3 * 24 * 3600

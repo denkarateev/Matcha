@@ -41,6 +41,7 @@ struct UserProfile: Identifiable, Hashable {
     let niches: [String]
     let languages: [String]
     let bio: String
+    var workingHours: String?
     let collaborationType: CollaborationType
     let rating: Double?
     let verifiedVisits: Int
@@ -97,6 +98,7 @@ struct UserProfile: Identifiable, Hashable {
         niches: [String],
         languages: [String],
         bio: String,
+        workingHours: String? = nil,
         collaborationType: CollaborationType,
         rating: Double?,
         verifiedVisits: Int,
@@ -142,6 +144,7 @@ struct UserProfile: Identifiable, Hashable {
         self.niches = niches
         self.languages = languages
         self.bio = bio
+        self.workingHours = workingHours
         self.collaborationType = collaborationType
         self.rating = rating
         self.verifiedVisits = verifiedVisits
@@ -192,9 +195,11 @@ extension UserProfile {
             audience: audienceString,
             category: derivedCategory,
             district: profile.district,
+            districts: profile.districts,
             niches: profile.niches,
             languages: profile.languages,
             bio: profile.bio ?? "",
+            workingHours: profile.workingHours,
             collaborationType: derivedCollabType,
             rating: profile.rating,
             verifiedVisits: profile.verifiedVisits,
@@ -248,9 +253,11 @@ extension UserProfile {
             audience: audienceString,
             category: derivedCategory,
             district: profile.district,
+            districts: profile.districts,
             niches: profile.niches,
             languages: profile.languages,
             bio: profile.bio ?? "",
+            workingHours: profile.workingHours,
             collaborationType: derivedCollabType,
             rating: profile.rating,
             verifiedVisits: profile.verifiedVisits,
@@ -293,12 +300,14 @@ struct ProfileRead: Decodable, Sendable {
     let audienceSize: Int?
     let category: String?
     let district: String?
+    let districts: [String]
     let website: String?
     let niches: [String]
     let languages: [String]
     let bio: String?
     let description: String?
     let whatWeOffer: String?
+    let workingHours: String?
     let nationality: String?
     let residence: String?
     let gender: String?
@@ -335,5 +344,6 @@ struct ProfileUpdateRequest: Encodable {
     var bio: String?
     var description: String?
     var whatWeOffer: String?
+    var workingHours: String?
     var collabType: String?
 }

@@ -746,7 +746,7 @@ struct SupportView: View {
                             icon: "video.fill",
                             iconColor: MatchaTokens.Colors.warning,
                             title: "Video Tutorials",
-                            subtitle: "Get the most out of MATCHA",
+                            subtitle: "Get the most out of tuju",
                             action: {}
                         )
                     }
@@ -761,7 +761,7 @@ struct SupportView: View {
                             icon: "envelope.fill",
                             iconColor: MatchaTokens.Colors.success,
                             title: "Email Support",
-                            subtitle: "hello@matcha.app",
+                            subtitle: "hello@tuju.app",
                             action: { openMail() }
                         )
 
@@ -814,7 +814,7 @@ struct SupportView: View {
 
                 // App Info
                 VStack(spacing: 8) {
-                    Text("MATCHA")
+                    Text("tuju")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(MatchaTokens.Colors.accent)
                         .tracking(2)
@@ -882,7 +882,7 @@ struct SupportView: View {
     }
 
     private func openMail() {
-        if let url = URL(string: "mailto:hello@matcha.app") {
+        if let url = URL(string: "mailto:hello@tuju.app") {
             UIApplication.shared.open(url)
         }
     }
@@ -961,7 +961,7 @@ struct ProfileSettingsListView: View {
                     )
                 }
                 .accessibilityLabel("Sign out")
-                .accessibilityHint("Sign out of your MATCHA account")
+                .accessibilityHint("Sign out of your tuju account")
             }
             .padding(.horizontal, MatchaTokens.Spacing.large)
             .padding(.vertical, MatchaTokens.Spacing.large)

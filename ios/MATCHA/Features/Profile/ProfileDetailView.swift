@@ -185,6 +185,7 @@ struct ProfileDetailView: View {
             // Stats bar — Rating | Collabs | Followers
             statsRow
             if !profile.bio.isEmpty { bioSection }
+            if profile.role == .business, hasWorkingHours { workingHoursSection }
             collabSection
             if profile.role == .business && !ugcPosts.isEmpty {
                 UGCGalleryView(posts: ugcPosts, isOwner: false)
@@ -270,6 +271,44 @@ struct ProfileDetailView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .liquidGlass()
                 .padding(.horizontal, MatchaTokens.Spacing.large)
+        }
+    }
+
+    private var hasWorkingHours: Bool {
+        !(profile.workingHours?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "").isEmpty
+    }
+
+    private var workingHoursSection: some View {
+        let hours = profile.workingHours?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        return VStack(alignment: .leading, spacing: MatchaTokens.Spacing.small) {
+            sectionHeader("Venue details")
+
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(MatchaTokens.Colors.accent.opacity(0.12))
+                        .frame(width: 34, height: 34)
+                    Image(systemName: "clock.fill")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(MatchaTokens.Colors.accent)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Working hours")
+                        .font(.caption)
+                        .foregroundStyle(MatchaTokens.Colors.textSecondary)
+                    Text(hours)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(MatchaTokens.Colors.textPrimary)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, MatchaTokens.Spacing.medium)
+            .padding(.vertical, 14)
+            .liquidGlass()
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Working hours, \(hours)")
+            .padding(.horizontal, MatchaTokens.Spacing.large)
         }
     }
 

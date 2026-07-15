@@ -11,6 +11,7 @@ struct EditProfileView: View {
     // Form state
     @State private var name: String
     @State private var bio: String
+    @State private var workingHours: String
     @State private var district: String
     @State private var instagramHandle: String
     @State private var tiktokHandle: String
@@ -32,6 +33,7 @@ struct EditProfileView: View {
     // Change detection
     @State private var initialName: String = ""
     @State private var initialBio: String = ""
+    @State private var initialWorkingHours: String = ""
     @State private var initialDistrict: String = ""
     @State private var initialDistricts: Set<String> = []
     @State private var initialNiches: Set<String> = []
@@ -43,6 +45,7 @@ struct EditProfileView: View {
     private var hasChanges: Bool {
         name != initialName ||
         bio != initialBio ||
+        workingHours != initialWorkingHours ||
         district != initialDistrict ||
         selectedDistricts != initialDistricts ||
         instagramHandle != initialInstagramHandle ||
@@ -58,7 +61,7 @@ struct EditProfileView: View {
     }
 
     private enum EditField: Hashable {
-        case name, bio, district, language, instagram, tiktok
+        case name, bio, workingHours, district, language, instagram, tiktok
     }
 
     private let allNiches = [
@@ -124,6 +127,7 @@ struct EditProfileView: View {
         self.onSaved = onSaved
         _name = State(initialValue: profile.name)
         _bio = State(initialValue: profile.bio)
+        _workingHours = State(initialValue: profile.workingHours ?? "")
         _district = State(initialValue: profile.district ?? profile.locationDistrict ?? "")
         _instagramHandle = State(initialValue: profile.instagramHandle ?? "")
         _tiktokHandle = State(initialValue: profile.tiktokHandle ?? "")
@@ -196,6 +200,7 @@ struct EditProfileView: View {
             .onAppear {
                 initialName = name
                 initialBio = bio
+                initialWorkingHours = workingHours
                 initialDistrict = district
                 initialDistricts = selectedDistricts
                 initialInstagramHandle = instagramHandle
@@ -265,6 +270,12 @@ struct EditProfileView: View {
                         Text("\(bio.count)/150")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(.white.opacity(0.3))
+                    }
+                }
+
+                if profile.role == .business {
+                    editSection(title: "WORKING HOURS") {
+                        editTextField("Daily 12:00-02:00", text: $workingHours, maxLength: 120, focused: .workingHours)
                     }
                 }
 
@@ -521,6 +532,26 @@ struct EditProfileView: View {
                                     .padding(.vertical, 7)
                                     .background(Color.white.opacity(0.12), in: Capsule())
                             }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 16)
+                }
+
+                if profile.role == .business,
+                   !workingHours.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Working hours")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.5))
+                        HStack(spacing: 8) {
+                            Image(systemName: "clock.fill")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(MatchaTokens.Colors.accent)
+                            Text(workingHours)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.white)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -1129,7 +1160,10 @@ struct EditProfileView: View {
                     districts: districtsValue,
                     niches: profile.role == .blogger ? Array(selectedNiches).sorted() : [],
                     languages: languages,
-                    bio: bio.trimmingCharacters(in: .whitespacesAndNewlines)
+                    bio: bio.trimmingCharacters(in: .whitespacesAndNewlines),
+                    workingHours: profile.role == .business
+                        ? workingHours.trimmingCharacters(in: .whitespacesAndNewlines)
+                        : nil
                 )
 
                 // Always send full photo array — primary is always first slot

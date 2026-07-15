@@ -40,7 +40,7 @@ struct ChatConversationView: View {
             } else if store.isWaitingForPartnerFirstMessage {
                 firstMessageCallout(
                     title: "Waiting for \(store.chat.partner.name)",
-                    body: "In MATCHA the business sends the first message. You'll be able to reply as soon as they start the chat."
+                    body: "In tuju the business sends the first message. You'll be able to reply as soon as they start the chat."
                 )
             }
 

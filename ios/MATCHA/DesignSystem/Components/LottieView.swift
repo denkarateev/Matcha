@@ -101,7 +101,7 @@ struct LottieView: View {
         if lower.contains("load")    { return "arrow.2.circlepath" }
         if lower.contains("success") { return "checkmark.seal.fill" }
         if lower.contains("star")    { return "star.fill" }
-        if lower.contains("matcha")  { return "leaf.fill" }
+        if lower.contains("tuju")  { return "leaf.fill" }
         return "sparkles"
     }
 

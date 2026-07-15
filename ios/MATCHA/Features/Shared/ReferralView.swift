@@ -22,7 +22,7 @@ struct ReferralView: View {
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
 
-                    Text("Share MATCHA with friends and both of you get rewarded")
+                    Text("Share tuju with friends and both of you get rewarded")
                         .font(.subheadline)
                         .foregroundStyle(MatchaTokens.Colors.textSecondary)
                         .multilineTextAlignment(.center)
@@ -168,7 +168,7 @@ struct ReferralView: View {
     // MARK: - Referral Code
 
     /// Generates a deterministic referral code from the user ID.
-    /// Format: MATCHA-XXXXXX (6 alphanumeric chars derived from user ID hash).
+    /// Format: tuju-XXXXXX (6 alphanumeric chars derived from user ID hash).
     var referralCode: String {
         let hash = userId.utf8.reduce(0) { ($0 &+ UInt64($1)) &* 31 }
         let chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -179,13 +179,13 @@ struct ReferralView: View {
             code.append(chars[chars.index(chars.startIndex, offsetBy: index)])
             h /= UInt64(chars.count)
         }
-        return "MATCHA-\(code)"
+        return "tuju-\(code)"
     }
 
     // MARK: - Actions
 
     private func shareCode() {
-        let shareText = "Join me on MATCHA \u{2615} \u{2014} the collab app for influencers and businesses in Bali!\n\nUse my code: \(referralCode)\n\nmatcha.app/join"
+        let shareText = "Join me on tuju \u{2615} \u{2014} the collab app for influencers and businesses in Bali!\n\nUse my code: \(referralCode)\n\ntuju.app/join"
         let activityVC = UIActivityViewController(
             activityItems: [shareText],
             applicationActivities: nil
