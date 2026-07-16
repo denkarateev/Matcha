@@ -43,6 +43,10 @@ struct ValidationService {
             throw ValidationError.invalidEmail
         }
 
+        try validatePassword(password)
+    }
+
+    static func validatePassword(_ password: String) throws {
         guard password.count >= 8,
               password.range(of: "[A-Za-z]", options: .regularExpression) != nil,
               password.range(of: "[0-9]", options: .regularExpression) != nil else {

@@ -135,12 +135,12 @@ private struct OnboardingSlidesScreen: View {
             VStack {
                 Spacer()
 
-                VStack(spacing: 20) {
+                VStack(alignment: .leading, spacing: 20) {
                     // Page dots
                     HStack(spacing: 8) {
                         ForEach(0..<slides.count, id: \.self) { i in
                             Capsule()
-                                .fill(i == currentSlide ? MatchaTokens.Colors.accent : Color.gray.opacity(0.3))
+                                .fill(i == currentSlide ? MatchaTokens.Colors.accent : Color.white.opacity(0.15))
                                 .frame(width: i == currentSlide ? 24 : 8, height: 4)
                                 .animation(.spring(response: 0.3), value: currentSlide)
                         }
@@ -149,16 +149,16 @@ private struct OnboardingSlidesScreen: View {
                     // Title
                     Text(slides[currentSlide].title)
                         .font(.system(size: 26, weight: .bold, design: .rounded))
-                        .foregroundStyle(.black)
-                        .multilineTextAlignment(.center)
+                        .foregroundStyle(MatchaTokens.Colors.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .id(currentSlide) // force re-render for transition
                         .transition(.opacity)
 
                     // Subtitle
                     Text(slides[currentSlide].subtitle)
                         .font(.system(size: 15))
-                        .foregroundStyle(.black.opacity(0.5))
-                        .multilineTextAlignment(.center)
+                        .foregroundStyle(MatchaTokens.Colors.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .id("sub-\(currentSlide)")
                         .transition(.opacity)
 
@@ -174,10 +174,10 @@ private struct OnboardingSlidesScreen: View {
                     } label: {
                         Text(currentSlide < slides.count - 1 ? "Next" : "Get Started")
                             .font(.system(size: 17, weight: .bold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(MatchaTokens.Colors.background)
                             .frame(maxWidth: .infinity)
                             .frame(height: 54)
-                            .background(.black, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .background(MatchaTokens.Colors.accent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                 }
                 .padding(.horizontal, 28)
@@ -185,7 +185,7 @@ private struct OnboardingSlidesScreen: View {
                 .padding(.bottom, 40)
                 .background(
                     UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28)
-                        .fill(.white)
+                        .fill(MatchaTokens.Colors.surface)
                         .ignoresSafeArea(edges: .bottom)
                 )
             }
@@ -1326,6 +1326,13 @@ final class OnboardingStore {
         }
 
         if !isLoginMode {
+            do {
+                try ValidationService.validatePassword(password)
+            } catch {
+                passwordFieldState = .error("Add a letter and a number")
+                errorMessage = "Password must be at least 8 characters and include a letter and a number."
+                return
+            }
             guard password == confirmPassword else {
                 errorMessage = "Passwords don't match."
                 return
@@ -1372,33 +1379,20 @@ final class OnboardingStore {
             errorMessage = "Please select your gender."
             return
         }
-
-        withAnimation { step = 4 }
-    }
-
-    // Kept for reference — old advanceFromRegistration login branch
-    private func _unused_login_placeholder() async {
-        let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
-        if isLoginMode {
-            isLoading = true
-            defer { isLoading = false }
-
-            do {
-                let response = try await AuthService.shared.login(
-                    email: trimmedEmail,
-                    password: password
-                )
-                appState.completeAuthOnboarding(authResponse: response)
-                await appState.loadCurrentUser()
-            } catch let networkError as NetworkError {
-                errorMessage = networkError.errorDescription ?? "Could not log in. Please try again."
-            } catch {
-                errorMessage = "Unexpected error: \(error.localizedDescription)"
-            }
+        guard !selectedResidence.isEmpty else {
+            errorMessage = "Please select your country of residence."
+            return
+        }
+        guard !selectedDistrict.isEmpty else {
+            errorMessage = "Please select your district in Bali."
+            return
+        }
+        guard birthYear != nil, birthMonth != nil, birthDay != nil else {
+            errorMessage = "Please enter your full date of birth."
             return
         }
 
-        withAnimation { step = 3 }
+        withAnimation { step = 4 }
     }
 
     func submitProfile() async {

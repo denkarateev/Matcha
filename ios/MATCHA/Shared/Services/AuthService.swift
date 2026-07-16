@@ -45,6 +45,11 @@ private struct VerifyRequestBody: Encodable {
     let audienceSize: Int
 }
 
+private struct ChangePasswordRequestBody: Encodable {
+    let currentPassword: String
+    let newPassword: String
+}
+
 // MARK: - AuthService
 
 /// Handles login, registration, token management, and verification.
@@ -103,6 +108,19 @@ final class AuthService: Sendable {
         network.applySession(token: response.accessToken, userID: response.user.id, role: response.user.role)
         network.recordAuthenticatedEmail(response.user.email)
         return response
+    }
+
+    // MARK: - Change Password
+
+    @MainActor
+    func changePassword(current: String, new: String) async throws -> AuthUser {
+        do {
+            try ValidationService.validatePassword(new)
+        } catch let error as ValidationError {
+            throw NetworkError.domainError(code: "weak_password", message: error.localizedDescription)
+        }
+        let body = ChangePasswordRequestBody(currentPassword: current, newPassword: new)
+        return try await network.request(.POST, path: "/auth/change-password", body: body)
     }
 
     // MARK: - Fetch Current User

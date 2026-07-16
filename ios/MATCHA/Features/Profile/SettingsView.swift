@@ -38,12 +38,15 @@ struct SettingsDetailView: View {
 struct AccountSettingsView: View {
     var onSignOut: (() -> Void)?
 
-    @State private var email = "user@example.com"
-    @State private var phone = "+62 812 3456 7890"
+    @State private var email = NetworkService.shared.lastAuthenticatedEmail ?? ""
+    @State private var phone = ""
     @State private var showChangePassword = false
     @State private var currentPassword = ""
     @State private var newPassword = ""
     @State private var confirmPassword = ""
+    @State private var isChangingPassword = false
+    @State private var passwordChangeError: String?
+    @State private var passwordChangeSuccess = false
 
     // Language picker
     @AppStorage("app_language") private var selectedLanguage: AppLanguage = .english
@@ -74,8 +77,14 @@ struct AccountSettingsView: View {
                         icon: "phone.fill",
                         iconColor: MatchaTokens.Colors.success,
                         label: "Phone Number",
-                        value: $phone
+                        value: $phone,
+                        placeholder: "Not set"
                     )
+                }
+                .task {
+                    if let user = try? await AuthService.shared.fetchCurrentUser() {
+                        email = user.email
+                    }
                 }
 
                 // Language
@@ -145,14 +154,29 @@ struct AccountSettingsView: View {
                             secureField("New Password", text: $newPassword)
                             secureField("Confirm New Password", text: $confirmPassword)
 
-                            Button(action: {}) {
-                                Text("Update Password")
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(MatchaTokens.Colors.background)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 14)
-                                    .background(MatchaTokens.Colors.accent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            if let passwordChangeError {
+                                Text(passwordChangeError)
+                                    .font(.caption)
+                                    .foregroundStyle(MatchaTokens.Colors.danger)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                             }
+
+                            Button(action: { Task { await submitPasswordChange() } }) {
+                                HStack(spacing: 8) {
+                                    if isChangingPassword {
+                                        ProgressView()
+                                            .tint(MatchaTokens.Colors.background)
+                                    }
+                                    Text(isChangingPassword ? "Updating…" : "Update Password")
+                                        .font(.subheadline.weight(.semibold))
+                                }
+                                .foregroundStyle(MatchaTokens.Colors.background)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(MatchaTokens.Colors.accent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            }
+                            .disabled(isChangingPassword || currentPassword.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty)
+                            .opacity(currentPassword.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty ? 0.5 : 1)
                         }
                         .padding(.horizontal, MatchaTokens.Spacing.medium)
                         .padding(.bottom, 14)
@@ -196,6 +220,11 @@ struct AccountSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(MatchaTokens.Colors.background, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
+        .alert("Password Updated", isPresented: $passwordChangeSuccess) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Use your new password the next time you sign in.")
+        }
         // Step 1: Active deals warning
         .alert(
             "Active Deals Found",
@@ -306,6 +335,28 @@ struct AccountSettingsView: View {
 
     // MARK: - Delete Account Flow
 
+    private func submitPasswordChange() async {
+        guard !isChangingPassword else { return }
+        guard newPassword == confirmPassword else {
+            passwordChangeError = "New passwords don't match."
+            return
+        }
+        isChangingPassword = true
+        passwordChangeError = nil
+        defer { isChangingPassword = false }
+
+        do {
+            _ = try await AuthService.shared.changePassword(current: currentPassword, new: newPassword)
+            currentPassword = ""
+            newPassword = ""
+            confirmPassword = ""
+            showChangePassword = false
+            passwordChangeSuccess = true
+        } catch {
+            passwordChangeError = error.localizedDescription
+        }
+    }
+
     private func startDeleteFlow() {
         if hasActiveDeals {
             deleteStep = .activeDealsWarning
@@ -332,7 +383,7 @@ struct AccountSettingsView: View {
     }
 
     @ViewBuilder
-    private func settingsFieldRow(icon: String, iconColor: Color, label: String, value: Binding<String>) -> some View {
+    private func settingsFieldRow(icon: String, iconColor: Color, label: String, value: Binding<String>, placeholder: String? = nil) -> some View {
         HStack(spacing: 14) {
             ZStack {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -347,7 +398,7 @@ struct AccountSettingsView: View {
                 Text(label)
                     .font(.caption)
                     .foregroundStyle(MatchaTokens.Colors.textSecondary)
-                TextField(label, text: value)
+                TextField(placeholder ?? label, text: value)
                     .font(.subheadline)
                     .foregroundStyle(MatchaTokens.Colors.textPrimary)
             }
