@@ -333,6 +333,7 @@ private struct WelcomeScreen: View {
 
 private struct RegistrationScreen: View {
     @Bindable var store: OnboardingStore
+    @State private var legalDocument: LegalDocument?
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -395,10 +396,10 @@ private struct RegistrationScreen: View {
 
                 // Terms (signup)
                 if !store.isLoginMode {
-                    Button {
-                        withAnimation(.spring(response: 0.2)) { store.agreedToTerms.toggle() }
-                    } label: {
-                        HStack(alignment: .top, spacing: 10) {
+                    HStack(alignment: .top, spacing: 10) {
+                        Button {
+                            withAnimation(.spring(response: 0.2)) { store.agreedToTerms.toggle() }
+                        } label: {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 5, style: .continuous)
                                     .strokeBorder(store.agreedToTerms ? MatchaTokens.Colors.accent : .white.opacity(0.3), lineWidth: 1.5)
@@ -412,13 +413,32 @@ private struct RegistrationScreen: View {
                                         .foregroundStyle(.black)
                                 }
                             }
-                            Text("I agree to the **Terms of Service** and **Privacy Policy**")
+                        }
+                        .buttonStyle(.plain)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("I agree to the")
                                 .font(.system(size: 12))
                                 .foregroundStyle(.white.opacity(0.5))
-                                .multilineTextAlignment(.leading)
+                            HStack(spacing: 4) {
+                                Button { legalDocument = .terms } label: {
+                                    Text("Terms of Service")
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundStyle(MatchaTokens.Colors.accent)
+                                        .underline()
+                                }
+                                Text("and")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(.white.opacity(0.5))
+                                Button { legalDocument = .privacy } label: {
+                                    Text("Privacy Policy")
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundStyle(MatchaTokens.Colors.accent)
+                                        .underline()
+                                }
+                            }
                         }
                     }
-                    .buttonStyle(.plain)
                 }
 
                 // Error
@@ -460,6 +480,9 @@ private struct RegistrationScreen: View {
             .padding(.horizontal, 24)
         }
         .scrollBounceBehavior(.basedOnSize)
+        .sheet(item: $legalDocument) { document in
+            LegalDocumentView(document: document)
+        }
     }
 
     private func darkRoleTab(_ title: String, role: Role) -> some View {

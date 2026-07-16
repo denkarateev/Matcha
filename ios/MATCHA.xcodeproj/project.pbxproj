@@ -97,6 +97,7 @@
 		D9D6A299B1EAC0764A2FC3C8 /* MatchaTabShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 529C3E1A342A0AA20E71A615 /* MatchaTabShellView.swift */; };
 		DF4AD4E1F7FDDE50459DD693 /* DealCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 956D15869ADA88407783831C /* DealCardView.swift */; };
 		E0FE4FC865D30238833DA459 /* MockMatchaRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 352AF40D340AE7981D7A1DCE /* MockMatchaRepository.swift */; };
+		E2483E338A5F259E265EF1A1 /* LegalDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF59FA4B0080525CFC098623 /* LegalDocumentView.swift */; };
 		E94DA96365CFCC2CE4A230D0 /* OfferApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AAA822807C7B19D8917AF9D /* OfferApplication.swift */; };
 		EAEC75EACA23283168B8BED3 /* TypingIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B597290121FB36932991107C /* TypingIndicatorView.swift */; };
 		ED049D8A50E539EDB761B8AB /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6082827D8791797D4823ACBB /* UserProfile.swift */; };
@@ -201,6 +202,7 @@
 		B647AE383ADF8FDE0AE3EDCC /* MatchaToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchaToast.swift; sourceTree = "<group>"; };
 		BAB39F137115FA6322B167C2 /* ChatHome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatHome.swift; sourceTree = "<group>"; };
 		BE1D4FF0878EFBE231A88B25 /* MatchFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchFeedView.swift; sourceTree = "<group>"; };
+		BF59FA4B0080525CFC098623 /* LegalDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalDocumentView.swift; sourceTree = "<group>"; };
 		C10FE19D172F78AC66978C28 /* MockSeedDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSeedDataTests.swift; sourceTree = "<group>"; };
 		C41C73BA927CF0691656CF8E /* Deal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Deal.swift; sourceTree = "<group>"; };
 		C7BF70C285AB3645532D1F4A /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
@@ -320,6 +322,7 @@
 			isa = PBXGroup;
 			children = (
 				1C6C4BFCFA62B178A7FAB34B /* BlockReportView.swift */,
+				BF59FA4B0080525CFC098623 /* LegalDocumentView.swift */,
 				60994EBF876E7205EC06BEE1 /* ReferralView.swift */,
 				298CAF1CD216A5C0AF5C629C /* ReturnExperienceSheet.swift */,
 				89E2F38002195A75FF75543A /* ShareDealCard.swift */,
@@ -725,6 +728,7 @@
 				09150A15CC34258A4A18061C /* FeedFilterView.swift in Sources */,
 				91E47A3C17D4CE5492DAB9E4 /* GlassCard.swift in Sources */,
 				EEEAC2134646E13B2532B584 /* GooglePlacesService.swift in Sources */,
+				E2483E338A5F259E265EF1A1 /* LegalDocumentView.swift in Sources */,
 				B9A4A805465F9640C538CF81 /* LikesListView.swift in Sources */,
 				D23119FBC39D0AFF15BF67CC /* LikesView.swift in Sources */,
 				745A99750779A8AC7BD4CA15 /* LottieView.swift in Sources */,

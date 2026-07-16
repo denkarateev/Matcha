@@ -764,6 +764,7 @@ struct PrivacySettingsView: View {
 struct SupportView: View {
     private let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
     private let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+    @State private var legalDocument: LegalDocument?
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -848,7 +849,7 @@ struct SupportView: View {
                             iconColor: MatchaTokens.Colors.textSecondary,
                             title: "Terms of Service",
                             subtitle: nil,
-                            action: {}
+                            action: { legalDocument = .terms }
                         )
 
                         cardDivider
@@ -858,7 +859,7 @@ struct SupportView: View {
                             iconColor: MatchaTokens.Colors.textSecondary,
                             title: "Privacy Policy",
                             subtitle: nil,
-                            action: {}
+                            action: { legalDocument = .privacy }
                         )
                     }
                 }
@@ -890,6 +891,9 @@ struct SupportView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(MatchaTokens.Colors.background, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
+        .sheet(item: $legalDocument) { document in
+            LegalDocumentView(document: document)
+        }
     }
 
     private func supportRow(
