@@ -14,10 +14,8 @@ final class MatchFeedStore {
     var error: NetworkError?
     var matchCelebration: UserProfile?  // non-nil when a mutual match just happened
 
-    /// Count of profiles who liked current user (from API). Shadow pending likes use ShadowAccountManager.
-    var pendingLikes: Int = 0
+    /// Profiles who liked the current user (from API). Shadow pending likes use ShadowAccountManager.
     var likedByProfiles: [UserProfile] = []
-    var showActivationPrompt = false
     var hasLoaded = false
     var toastMessage: String?
 
@@ -145,7 +143,6 @@ final class MatchFeedStore {
                 activity.likes,
                 currentUserID: currentUserID
             )
-            pendingLikes = likedByProfiles.count
         } catch let networkError as NetworkError {
             summaryError = networkError
         } catch {
@@ -205,8 +202,6 @@ final class MatchFeedStore {
         // Shadow account: queue likes instead of calling API
         if !shadow.isVerified && (direction == .right || direction == .super) {
             shadow.queueLike(targetId: targetId, direction: direction.rawValue)
-            pendingLikes += 1
-            showActivationPrompt = pendingLikes >= 3
 
             toastMessage = "Like saved! Will be delivered after verification"
             toastDismissTask?.cancel()
@@ -220,12 +215,6 @@ final class MatchFeedStore {
                 showShadowActivationSheet = true
             }
             return
-        }
-
-        // Verified user: normal flow
-        if direction == .right || direction == .super {
-            pendingLikes += 1
-            showActivationPrompt = pendingLikes >= 3
         }
 
         // Fire the API call -- queue offline if network fails
@@ -268,7 +257,6 @@ final class MatchFeedStore {
 
         showShadowActivationSheet = false
         showShadowBlockedMessage = false
-        showActivationPrompt = false
 
         if toastMessage == "Like saved! Will be delivered after verification" {
             toastMessage = nil

@@ -31,6 +31,7 @@ struct MatchFeedView: View {
 
     // Match celebration animation state
     @State private var celebrationAppeared = false
+    @State private var myPhotoURL: URL?
 
     // Bumble scroll position — id of currently-visible profile in the feed.
     @State private var scrollPositionID: UUID? = nil
@@ -441,17 +442,16 @@ struct MatchFeedView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "leaf.fill")
-                .font(.system(size: 56))
-                .foregroundStyle(MatchaTokens.Colors.accent.opacity(0.3))
-            Text("You've finished your cup")
+        VStack(alignment: .leading, spacing: 16) {
+            Image(systemName: "circle.fill")
+                .font(.system(size: 40))
+                .foregroundStyle(MatchaTokens.Colors.accent.opacity(0.35))
+            Text("You're all caught up")
                 .font(.title3.weight(.bold))
                 .foregroundStyle(MatchaTokens.Colors.textPrimary)
             Text("Come back tomorrow for new Bali profiles\nor broaden your filters")
                 .font(.subheadline)
                 .foregroundStyle(MatchaTokens.Colors.textSecondary)
-                .multilineTextAlignment(.center)
 
             Button {
                 showPaywall = true
@@ -471,6 +471,8 @@ struct MatchFeedView: View {
             .buttonStyle(.plain)
             .padding(.top, 8)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, MatchaTokens.Spacing.large)
     }
 
     private func errorBanner(_ error: NetworkError) -> some View {
@@ -657,12 +659,18 @@ struct MatchFeedView: View {
                 ZStack {
                     // My photo — flies in from left
                     celebrationAvatar(
-                        photoURL: nil, // current user placeholder
+                        photoURL: myPhotoURL,
                         fallbackIcon: "person.fill",
                         borderColor: MatchaTokens.Colors.accent.opacity(0.6)
                     )
                     .offset(x: celebrationAppeared ? -32 : -300)
                     .scaleEffect(celebrationAppeared ? 1.0 : 0.5)
+                    .task {
+                        guard myPhotoURL == nil,
+                              let userId = NetworkService.shared.currentUserID,
+                              let mine = try? await repository.fetchProfile(userId: userId) else { return }
+                        myPhotoURL = URL(string: mine.primaryPhotoUrl)
+                    }
 
                     // Partner photo — flies in from right
                     celebrationAvatar(
@@ -677,7 +685,7 @@ struct MatchFeedView: View {
 
                 // Title text
                 VStack(spacing: 12) {
-                    Text("Fresh Match! \u{2615}")
+                    Text("It's a match!")
                         .font(.system(size: 34, weight: .bold, design: .rounded))
                         .foregroundStyle(MatchaTokens.Colors.accent)
                         .scaleEffect(celebrationAppeared ? 1.0 : 0.3)

@@ -14,7 +14,7 @@ struct ChatConversationView: View {
     @State private var showCancelDealConfirm = false
     @State private var showNoShowConfirm = false
     @State private var showContentProof = false
-    @State private var isDealPipelineCollapsed = false
+    @AppStorage("deal_pipeline_collapsed") private var isDealPipelineCollapsed = false
     @State private var expandedTranslations: Set<String> = []
     @State private var typingManager: TypingStateManager
     @FocusState private var isInputFocused: Bool

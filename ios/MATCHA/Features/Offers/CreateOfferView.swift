@@ -28,8 +28,9 @@ struct CreateOfferView: View {
     @State private var isPublishing = false
     @State private var publishError: String = ""
     @State private var showPublishError = false
+    @State private var showPaywall = false
 
-    let offerCredits: Int = 2
+    @State private var offerCredits: Int = 0
 
     private let allNiches = [
         "Food", "Travel", "Lifestyle", "Fashion", "Beauty",
@@ -93,12 +94,14 @@ struct CreateOfferView: View {
 
             Spacer()
 
-            Text("Get more")
-                .font(.caption.weight(.bold))
-                .foregroundStyle(MatchaTokens.Colors.background)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(MatchaTokens.Colors.accent, in: Capsule())
+            Button(action: { showPaywall = true }) {
+                Text("Get more")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(MatchaTokens.Colors.background)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(MatchaTokens.Colors.accent, in: Capsule())
+            }
         }
         .padding(.horizontal, MatchaTokens.Spacing.medium)
         .padding(.vertical, 14)
@@ -107,6 +110,14 @@ struct CreateOfferView: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .strokeBorder(MatchaTokens.Colors.accent.opacity(0.2), lineWidth: 1)
         )
+        .task {
+            if let user = try? await AuthService.shared.fetchCurrentUser() {
+                offerCredits = user.offerCredits
+            }
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(.offerCredits)
+        }
     }
 
     // MARK: - Photo

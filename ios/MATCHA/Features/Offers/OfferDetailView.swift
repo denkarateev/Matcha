@@ -705,7 +705,7 @@ struct OfferDetailView: View {
                 HStack(spacing: 10) {
                     Image(systemName: "cup.and.saucer.fill")
                         .font(.body.weight(.semibold))
-                    Text("Come back tomorrow ☕")
+                    Text("Come back tomorrow")
                         .font(.headline)
                 }
                 .foregroundStyle(MatchaTokens.Colors.textSecondary.opacity(0.4))

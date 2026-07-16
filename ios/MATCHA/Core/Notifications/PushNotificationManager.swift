@@ -62,7 +62,7 @@ final class PushNotificationManager: NSObject {
     /// Match notification (spec 13.2)
     func notifyMatch(partnerName: String) {
         scheduleLocal(
-            title: "Fresh Match! ☕",
+            title: "It's a match!",
             body: "\(partnerName) wants to connect",
             categoryID: "match"
         )
@@ -72,7 +72,7 @@ final class PushNotificationManager: NSObject {
     func notifyDealConfirmed(partnerName: String, date: String?) {
         let body = date != nil
             ? "Deal confirmed! See you on \(date!)!"
-            : "Your tuju collab is brewing ☕"
+            : "Your tuju collab is taking shape"
         scheduleLocal(title: "Deal Confirmed", body: body, categoryID: "deal")
     }
 
@@ -80,7 +80,7 @@ final class PushNotificationManager: NSObject {
     func notifyCheckInComplete(partnerName: String) {
         scheduleLocal(
             title: "Perfect blend!",
-            body: "Rate your experience with \(partnerName) ☕",
+            body: "Rate your experience with \(partnerName)",
             categoryID: "deal"
         )
     }
