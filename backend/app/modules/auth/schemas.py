@@ -21,6 +21,11 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=8)
 
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(min_length=8)
+    new_password: str = Field(min_length=8)
+
+
 class VerifyUserRequest(BaseModel):
     instagram_handle: str = Field(min_length=1)
     tiktok_handle: str | None = None

@@ -4,7 +4,7 @@ from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 
 from app.core.config import get_settings
@@ -38,12 +38,17 @@ router = APIRouter(tags=["admin"])
 # Admin auth dependency
 # ---------------------------------------------------------------------------
 
-async def verify_admin_token(authorization: str = Header(...)) -> str:
+async def verify_admin_token(request: Request, authorization: str = Header(...)) -> str:
     """Validate the admin bearer token from the Authorization header."""
     settings = get_settings()
     scheme, _, token = authorization.partition(" ")
     if scheme.lower() != "bearer" or token != settings.admin_token:
         raise HTTPException(status_code=403, detail="Invalid admin token.")
+    # The admin CRM may run as a separate app instance sharing the pickle
+    # store with the API; pick up snapshots persisted since our startup.
+    store = getattr(request.app.state.container, "store", None)
+    if store is not None:
+        store.refresh_from_disk_if_stale()
     return token
 
 

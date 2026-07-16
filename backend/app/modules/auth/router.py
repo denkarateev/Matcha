@@ -9,6 +9,7 @@ from app.core.dependencies import get_container, get_current_user_id
 from app.core.container import AppContainer
 from app.modules.auth.schemas import (
     AuthTokenRead,
+    ChangePasswordRequest,
     LoginRequest,
     PhotoUploadRead,
     RegisterRequest,
@@ -46,7 +47,7 @@ async def upload_signup_photo(
     base_url = str(request.base_url).rstrip("/")
 
     from app.core.storage import get_storage
-    storage = get_storage()
+    storage = get_storage(request.app.state.settings)
     url = await storage.upload(data, filename, file.content_type or "image/jpeg", base_url)
 
     return PhotoUploadRead(url=url)
@@ -76,6 +77,16 @@ def me(
     container: AppContainer = Depends(get_container),
 ) -> UserRead:
     return UserRead.model_validate(container.auth_service.get_user(current_user_id))
+
+
+@router.post("/change-password", response_model=UserRead)
+def change_password(
+    payload: ChangePasswordRequest,
+    current_user_id: str = Depends(get_current_user_id),
+    container: AppContainer = Depends(get_container),
+) -> UserRead:
+    user = container.auth_service.change_password(current_user_id, payload)
+    return UserRead.model_validate(user)
 
 
 @router.post("/verify", response_model=UserRead)

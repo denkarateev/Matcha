@@ -62,6 +62,7 @@ class InMemoryStore:
         """Remove non-pickleable fields."""
         state = self.__dict__.copy()
         state.pop("_lock", None)
+        state.pop("_disk_mtime", None)
         return state
 
     def __setstate__(self, state):
@@ -74,6 +75,7 @@ class InMemoryStore:
             with open(tmp, "wb") as f:
                 pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
             os.replace(tmp, STORE_PERSIST_PATH)
+            self._disk_mtime = os.path.getmtime(STORE_PERSIST_PATH)
         except Exception as e:
             import logging
             logging.getLogger(__name__).warning("Failed to persist store: %s", e)
@@ -86,11 +88,37 @@ class InMemoryStore:
                 with open(STORE_PERSIST_PATH, "rb") as f:
                     store = pickle.load(f)
                     if isinstance(store, InMemoryStore):
+                        store._disk_mtime = os.path.getmtime(STORE_PERSIST_PATH)
                         return store
         except Exception as e:
             import logging
             logging.getLogger(__name__).warning("Failed to load store: %s", e)
         return None
+
+    def refresh_from_disk_if_stale(self) -> None:
+        """Reload contents if another process persisted a newer snapshot.
+
+        The admin CRM runs as a separate app instance sharing the same
+        pickle; without this it only sees data loaded at its own startup.
+        """
+        try:
+            if not os.path.exists(STORE_PERSIST_PATH):
+                return
+            mtime = os.path.getmtime(STORE_PERSIST_PATH)
+            if mtime <= getattr(self, "_disk_mtime", 0.0):
+                return
+            fresh = InMemoryStore.load_from_disk()
+            if fresh is None:
+                return
+            for name in (
+                "users", "profiles", "swipes", "matches", "offers",
+                "offer_responses", "chats", "messages", "deals", "typing_state",
+            ):
+                setattr(self, name, getattr(fresh, name))
+            self._disk_mtime = mtime
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning("Failed to refresh store: %s", e)
 
 
 @dataclass
@@ -102,6 +130,8 @@ class AppContainer:
     offer_service: OfferService
     chat_service: ChatService
     deal_service: DealService
+    # Raw store when using in-memory repos; None with DB repos.
+    store: InMemoryStore | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -1588,6 +1618,7 @@ def build_container(settings: Settings) -> AppContainer:
 
         sf = get_sync_session_factory()
         _log.info("Building container with PostgreSQL DB repositories (sync)")
+        store = None
 
         auth_repo = SyncDBAuthRepository(sf)
         profile_repo = SyncDBProfileRepository(sf)
@@ -1657,4 +1688,5 @@ def build_container(settings: Settings) -> AppContainer:
         offer_service=offer_service,
         chat_service=chat_service,
         deal_service=deal_service,
+        store=store,
     )

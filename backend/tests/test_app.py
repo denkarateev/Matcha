@@ -495,3 +495,40 @@ def test_signup_photo_upload_returns_media_url(
 
     stored_files = list((media_root / "profile-photos").glob("*"))
     assert len(stored_files) == 1
+
+
+def test_change_password_flow(client: TestClient) -> None:
+    token, _ = _register_user(
+        client,
+        email="pwd@test.app",
+        role="blogger",
+        full_name="Pwd User",
+        primary_photo_url="https://example.com/p.jpg",
+    )
+    headers = {"Authorization": f"Bearer {token}"}
+
+    wrong = client.post(
+        "/api/v1/auth/change-password",
+        json={"current_password": "not-the-password", "new_password": "newsecret99"},
+        headers=headers,
+    )
+    assert wrong.status_code == 401
+
+    ok = client.post(
+        "/api/v1/auth/change-password",
+        json={"current_password": "supersecret", "new_password": "newsecret99"},
+        headers=headers,
+    )
+    assert ok.status_code == 200
+
+    old_login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "pwd@test.app", "password": "supersecret"},
+    )
+    assert old_login.status_code == 401
+
+    new_login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "pwd@test.app", "password": "newsecret99"},
+    )
+    assert new_login.status_code == 200

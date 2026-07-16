@@ -8,7 +8,12 @@ from app.core.security import create_access_token, hash_password, verify_passwor
 from app.core.time import utc_now
 from app.modules.auth.domain.models import PlanTier, User, VerificationLevel
 from app.modules.auth.repository import AuthRepository
-from app.modules.auth.schemas import LoginRequest, RegisterRequest, VerifyUserRequest
+from app.modules.auth.schemas import (
+    ChangePasswordRequest,
+    LoginRequest,
+    RegisterRequest,
+    VerifyUserRequest,
+)
 from app.modules.profile.domain.models import Profile
 from app.modules.profile.repository import ProfileRepository
 
@@ -52,6 +57,17 @@ class AuthService:
         if not user:
             raise NotFoundError("User not found.")
         return user
+
+    def change_password(self, user_id: str, payload: ChangePasswordRequest) -> User:
+        user = self.get_user(user_id)
+        if not verify_password(payload.current_password, user.password_hash):
+            raise UnauthorizedError("Current password is incorrect.")
+        updated = replace(
+            user,
+            password_hash=hash_password(payload.new_password),
+            updated_at=utc_now(),
+        )
+        return self.auth_repo.update(updated)
 
     def verify_user(self, user_id: str, payload: VerifyUserRequest) -> User:
         user = self.get_user(user_id)
