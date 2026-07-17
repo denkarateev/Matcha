@@ -18,6 +18,7 @@ protocol MatchaRepository {
     func createOffer(_ request: OfferCreateRequest) async throws -> Offer
     func closeOffer(offerId: String) async throws -> Offer
     func respondToOffer(offerId: String, message: String?) async throws -> OfferRespondResult
+    func fetchResponseQuota() async throws -> OfferResponseQuota
 
     // MARK: - Activity
     func fetchActivitySummary() async throws -> ActivitySummary

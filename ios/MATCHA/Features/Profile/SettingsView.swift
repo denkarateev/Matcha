@@ -54,7 +54,7 @@ struct AccountSettingsView: View {
     // Delete account flow
     @State private var deleteStep: DeleteAccountStep = .none
     @State private var deleteConfirmText = ""
-    @State private var hasActiveDeals = false // TODO: wire to real data
+    @State private var hasActiveDeals = false
     @State private var showDeleteSuccess = false
     @State private var isDeleting = false
     @State private var deleteError: String?
@@ -85,6 +85,7 @@ struct AccountSettingsView: View {
                     if let user = try? await AuthService.shared.fetchCurrentUser() {
                         email = user.email
                     }
+                    await refreshActiveDeals()
                 }
 
                 // Language
@@ -334,6 +335,19 @@ struct AccountSettingsView: View {
     }
 
     // MARK: - Delete Account Flow
+
+    private struct DealStatusProbe: Decodable {
+        let status: String
+    }
+
+    /// The delete-account warning should reflect real deals, not a hardcoded flag.
+    private func refreshActiveDeals() async {
+        guard let deals: [DealStatusProbe] = try? await NetworkService.shared.request(
+            .GET, path: "/deals"
+        ) else { return }
+        let active: Set<String> = ["draft", "confirmed", "visited"]
+        hasActiveDeals = deals.contains { active.contains($0.status) }
+    }
 
     private func submitPasswordChange() async {
         guard !isChangingPassword else { return }

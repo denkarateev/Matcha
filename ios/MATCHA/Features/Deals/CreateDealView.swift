@@ -23,16 +23,19 @@ struct CreateDealView: View {
         let receive: String
     }
 
-    // Role-based templates
+    // Role-based templates: "offer" is always what the current user gives.
     private var templates: [DealTemplate] {
-        // TODO: detect role from AppState; for now show both
-        return [
+        let venueSide = [
             DealTemplate(emoji: "🍽", title: "Dinner collab", offer: "Dinner for 2 + drinks", receive: "1 Reel + 3 Stories"),
             DealTemplate(emoji: "🏨", title: "Hotel stay", offer: "2-night stay + spa", receive: "Video review + 5 Stories"),
             DealTemplate(emoji: "☕️", title: "Cafe visit", offer: "Brunch for 2", receive: "3 Stories + 1 post"),
             DealTemplate(emoji: "🎉", title: "Event coverage", offer: "VIP pass + table", receive: "Live Stories + Reel"),
             DealTemplate(emoji: "💆", title: "Spa experience", offer: "Full spa day", receive: "1 Reel + review"),
         ]
+        guard NetworkService.shared.currentUserRole == .blogger else { return venueSide }
+        return venueSide.map {
+            DealTemplate(emoji: $0.emoji, title: $0.title, offer: $0.receive, receive: $0.offer)
+        }
     }
     @State private var placeName: String = ""
     @State private var guests: DealGuests = .solo

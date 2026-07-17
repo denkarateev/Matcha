@@ -25,3 +25,9 @@ struct OfferRespondResult: Hashable, Sendable {
     let response: OfferResponse
     let remainingResponses: Int
 }
+
+/// The blogger's daily response quota, from `GET /offers/response-quota`.
+struct OfferResponseQuota: Decodable, Hashable, Sendable {
+    let remainingResponses: Int
+    let dailyLimit: Int
+}

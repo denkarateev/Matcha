@@ -345,5 +345,7 @@ struct ProfileUpdateRequest: Encodable {
     var description: String?
     var whatWeOffer: String?
     var workingHours: String?
+    var contactName: String?
+    var contactPosition: String?
     var collabType: String?
 }

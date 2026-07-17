@@ -68,7 +68,7 @@ private struct OnboardingSlidesScreen: View {
         (
             "https://images.unsplash.com/photo-1611042553484-d61f9d9bf757?w=800&h=1200&fit=crop",
             "Grow your brand\nwith real collabs",
-            "Connect with top businesses in Bali for authentic partnerships"
+            "Trade content for real experiences with Bali venues. No cold DMs, no chasing."
         ),
         (
             "https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=800&h=1200&fit=crop",
@@ -1289,7 +1289,7 @@ final class OnboardingStore {
     var birthDay: Int?
 
     var name: String = ""
-    var selectedCategory: BusinessCategory = .restaurantCafe
+    var selectedCategory: BusinessCategory?
     var businessName: String = ""
     var businessAddress: String = ""
     var businessDistrict: String = ""
@@ -1455,6 +1455,10 @@ final class OnboardingStore {
 
     func submitCategory() async {
         errorMessage = nil
+        guard selectedCategory != nil else {
+            errorMessage = "Please choose your business category."
+            return
+        }
         await performRegistration()
     }
 
@@ -1485,7 +1489,7 @@ final class OnboardingStore {
                     role: selectedRole,
                     fullName: trimmedName,
                     primaryPhotoUrl: upload.url,
-                    category: selectedRole == .business ? selectedCategory.rawValue : nil
+                    category: selectedRole == .business ? selectedCategory?.rawValue : nil
                 )
             } catch {
                 let errMsg = (error as? NetworkError)?.errorDescription ?? error.localizedDescription
@@ -1499,6 +1503,8 @@ final class OnboardingStore {
                 }
             }
 
+            await submitPersonalDetails()
+
             appState.completeAuthOnboarding(authResponse: response)
             await appState.loadCurrentUser()
 
@@ -1506,6 +1512,42 @@ final class OnboardingStore {
             errorMessage = networkError.errorDescription ?? "Something went wrong. Please try again."
         } catch {
             errorMessage = "Unexpected error: \(error.localizedDescription)"
+        }
+    }
+
+    /// Pushes onboarding-collected personal details to the profile right after
+    /// registration. Best-effort: a failure here must not block account creation —
+    /// the same fields remain editable from the profile later.
+    private func submitPersonalDetails() async {
+        var update = ProfileUpdateRequest()
+        if !selectedNationality.isEmpty { update.nationality = selectedNationality }
+        if !selectedResidence.isEmpty { update.residence = selectedResidence }
+        if !selectedDistrict.isEmpty { update.district = selectedDistrict }
+        if !selectedGender.isEmpty { update.gender = selectedGender }
+        if let y = birthYear, let m = birthMonth, let d = birthDay {
+            update.birthday = String(format: "%04d-%02d-%02d", y, m, d)
+        }
+        if selectedRole == .business {
+            let contact = [contactFirstName, contactLastName]
+                .filter { !$0.isEmpty }
+                .joined(separator: " ")
+            if !contact.isEmpty { update.contactName = contact }
+            if !contactPosition.isEmpty { update.contactPosition = contactPosition }
+        }
+
+        let hasAnything = update.nationality != nil || update.residence != nil
+            || update.district != nil || update.gender != nil || update.birthday != nil
+            || update.contactName != nil || update.contactPosition != nil
+        guard hasAnything else { return }
+
+        do {
+            let _: ProfileRead = try await NetworkService.shared.request(
+                .PUT, path: "/profiles/me", body: update
+            )
+        } catch {
+            #if DEBUG
+            print("[onboarding] personal details push failed: \(error.localizedDescription)")
+            #endif
         }
     }
 

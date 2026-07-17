@@ -84,6 +84,10 @@ final class APIMatchaRepository: MatchaRepository {
         return dto.toDomain()
     }
 
+    func fetchResponseQuota() async throws -> OfferResponseQuota {
+        try await network.request(.GET, path: "/offers/response-quota")
+    }
+
     func respondToOffer(offerId: String, message: String?) async throws -> OfferRespondResult {
         let trimmed = message?.trimmingCharacters(in: .whitespacesAndNewlines)
         let body = OfferRespondBody(message: (trimmed?.isEmpty ?? true) ? nil : trimmed)

@@ -105,6 +105,11 @@ final class MockMatchaRepository: MatchaRepository {
         return MockSeedData.offers.first { $0.id == offerId } ?? MockSeedData.offers[0]
     }
 
+    func fetchResponseQuota() async throws -> OfferResponseQuota {
+        try await Task.sleep(for: .milliseconds(80))
+        return OfferResponseQuota(remainingResponses: 2, dailyLimit: 3)
+    }
+
     func respondToOffer(offerId: String, message: String?) async throws -> OfferRespondResult {
         try await Task.sleep(for: .milliseconds(150))
         let offer = MockSeedData.offers.first { $0.id == offerId }

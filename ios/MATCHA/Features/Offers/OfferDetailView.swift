@@ -18,7 +18,7 @@ struct OfferDetailView: View {
     var userFollowersCount: Int? = nil
 
     @State private var responseState: OfferResponseState = .idle
-    @State private var responsesUsedToday: Int = 1
+    @State private var responsesUsedToday: Int = 0
     @State private var dailyResponseLimit: Int = 3
     @State private var optionalMessage: String = ""
     @State private var showResponseSheet = false
@@ -134,7 +134,11 @@ struct OfferDetailView: View {
                 }
             }
         }
-        .onAppear {
+        .task {
+            if !isBusiness, let quota = try? await repository.fetchResponseQuota() {
+                dailyResponseLimit = quota.dailyLimit
+                responsesUsedToday = max(0, quota.dailyLimit - quota.remainingResponses)
+            }
             if isAtDailyLimit { responseState = .limitReached }
         }
     }
