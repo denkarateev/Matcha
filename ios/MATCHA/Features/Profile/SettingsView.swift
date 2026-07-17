@@ -37,6 +37,7 @@ struct SettingsDetailView: View {
 
 struct AccountSettingsView: View {
     var onSignOut: (() -> Void)?
+    var repository: any MatchaRepository = APIMatchaRepository()
 
     @State private var email = NetworkService.shared.lastAuthenticatedEmail ?? ""
     @State private var phone = ""
@@ -54,7 +55,8 @@ struct AccountSettingsView: View {
     // Delete account flow
     @State private var deleteStep: DeleteAccountStep = .none
     @State private var deleteConfirmText = ""
-    @State private var hasActiveDeals = false
+    // nil = check failed/unfinished; the delete flow then warns anyway (fail-safe).
+    @State private var hasActiveDeals: Bool?
     @State private var showDeleteSuccess = false
     @State private var isDeleting = false
     @State private var deleteError: String?
@@ -336,17 +338,10 @@ struct AccountSettingsView: View {
 
     // MARK: - Delete Account Flow
 
-    private struct DealStatusProbe: Decodable {
-        let status: String
-    }
-
-    /// The delete-account warning should reflect real deals, not a hardcoded flag.
+    /// The delete-account warning reflects real deals, not a hardcoded flag.
     private func refreshActiveDeals() async {
-        guard let deals: [DealStatusProbe] = try? await NetworkService.shared.request(
-            .GET, path: "/deals"
-        ) else { return }
-        let active: Set<String> = ["draft", "confirmed", "visited"]
-        hasActiveDeals = deals.contains { active.contains($0.status) }
+        guard let deals = try? await repository.fetchDeals() else { return }
+        hasActiveDeals = deals.contains { $0.status.isActive }
     }
 
     private func submitPasswordChange() async {
@@ -372,7 +367,9 @@ struct AccountSettingsView: View {
     }
 
     private func startDeleteFlow() {
-        if hasActiveDeals {
+        // Unknown (nil) warns too: on a destructive path a spare warning
+        // beats a silently skipped one.
+        if hasActiveDeals != false {
             deleteStep = .activeDealsWarning
         } else {
             deleteStep = .confirmDialog

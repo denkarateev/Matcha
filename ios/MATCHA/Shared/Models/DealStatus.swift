@@ -10,6 +10,14 @@ enum DealStatus: String, CaseIterable, Codable, Identifiable, Hashable {
 
     var id: String { rawValue }
 
+    /// Non-terminal statuses — the deal still needs action from either side.
+    var isActive: Bool {
+        switch self {
+        case .draft, .confirmed, .visited: true
+        case .reviewed, .cancelled, .noShow: false
+        }
+    }
+
     var title: String {
         switch self {
         case .draft:      "Draft"

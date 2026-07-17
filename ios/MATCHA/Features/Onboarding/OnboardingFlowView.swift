@@ -1516,38 +1516,43 @@ final class OnboardingStore {
     }
 
     /// Pushes onboarding-collected personal details to the profile right after
-    /// registration. Best-effort: a failure here must not block account creation —
-    /// the same fields remain editable from the profile later.
+    /// registration. Best-effort with one retry: a failure must not block
+    /// account creation — the same fields remain editable from the profile.
     private func submitPersonalDetails() async {
+        func nonEmpty(_ value: String) -> String? { value.isEmpty ? nil : value }
+
         var update = ProfileUpdateRequest()
-        if !selectedNationality.isEmpty { update.nationality = selectedNationality }
-        if !selectedResidence.isEmpty { update.residence = selectedResidence }
-        if !selectedDistrict.isEmpty { update.district = selectedDistrict }
-        if !selectedGender.isEmpty { update.gender = selectedGender }
+        update.nationality = nonEmpty(selectedNationality)
+        update.residence = nonEmpty(selectedResidence)
+        update.district = nonEmpty(selectedDistrict)
+        update.gender = nonEmpty(selectedGender)
         if let y = birthYear, let m = birthMonth, let d = birthDay {
             update.birthday = String(format: "%04d-%02d-%02d", y, m, d)
         }
         if selectedRole == .business {
-            let contact = [contactFirstName, contactLastName]
-                .filter { !$0.isEmpty }
-                .joined(separator: " ")
-            if !contact.isEmpty { update.contactName = contact }
-            if !contactPosition.isEmpty { update.contactPosition = contactPosition }
-        }
-
-        let hasAnything = update.nationality != nil || update.residence != nil
-            || update.district != nil || update.gender != nil || update.birthday != nil
-            || update.contactName != nil || update.contactPosition != nil
-        guard hasAnything else { return }
-
-        do {
-            let _: ProfileRead = try await NetworkService.shared.request(
-                .PUT, path: "/profiles/me", body: update
+            update.contactName = nonEmpty(
+                [contactFirstName, contactLastName].filter { !$0.isEmpty }.joined(separator: " ")
             )
-        } catch {
-            #if DEBUG
-            print("[onboarding] personal details push failed: \(error.localizedDescription)")
-            #endif
+            update.contactPosition = nonEmpty(contactPosition)
+        }
+        // Login shortcut path collects none of these — nothing to push.
+        guard update.nationality != nil || update.gender != nil || update.birthday != nil else { return }
+
+        for attempt in 1...2 {
+            do {
+                let _: ProfileRead = try await NetworkService.shared.request(
+                    .PUT, path: "/profiles/me", body: update
+                )
+                return
+            } catch {
+                if attempt == 1 {
+                    try? await Task.sleep(for: .milliseconds(600))
+                } else {
+                    #if DEBUG
+                    print("[onboarding] personal details push failed: \(error.localizedDescription)")
+                    #endif
+                }
+            }
         }
     }
 

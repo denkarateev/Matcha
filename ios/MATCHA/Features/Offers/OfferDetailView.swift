@@ -18,8 +18,7 @@ struct OfferDetailView: View {
     var userFollowersCount: Int? = nil
 
     @State private var responseState: OfferResponseState = .idle
-    @State private var responsesUsedToday: Int = 0
-    @State private var dailyResponseLimit: Int = 3
+    @State private var quota: OfferResponseQuota?
     @State private var optionalMessage: String = ""
     @State private var showResponseSheet = false
     @State private var isSendingResponse = false
@@ -38,9 +37,8 @@ struct OfferDetailView: View {
         offer.slotsRemaining <= 2 ? MatchaTokens.Colors.danger : MatchaTokens.Colors.textSecondary
     }
 
-    private var responsesLeft: Int {
-        max(0, dailyResponseLimit - responsesUsedToday)
-    }
+    private var responsesLeft: Int { quota?.remainingResponses ?? 0 }
+    private var dailyResponseLimit: Int { quota?.dailyLimit ?? 3 }
 
     /// Sends the blogger's response to the backend. The server is the source of
     /// truth for the remaining daily quota, so we reconcile against its answer
@@ -56,7 +54,10 @@ struct OfferDetailView: View {
                 offerId: offer.id,
                 message: optionalMessage
             )
-            responsesUsedToday = max(0, dailyResponseLimit - result.remainingResponses)
+            quota = OfferResponseQuota(
+                remainingResponses: result.remainingResponses,
+                dailyLimit: dailyResponseLimit
+            )
             showResponseSheet = false
             withAnimation(MatchaTokens.Animations.cardAppear) {
                 responseState = result.remainingResponses <= 0 ? .limitReached : .sent
@@ -66,9 +67,7 @@ struct OfferDetailView: View {
         }
     }
 
-    private var isAtDailyLimit: Bool {
-        responsesUsedToday >= dailyResponseLimit
-    }
+    private var isAtDailyLimit: Bool { (quota?.remainingResponses ?? 1) <= 0 }
 
     private var minimumFollowersRequired: Int? {
         switch offer.audienceTier {
@@ -135,9 +134,8 @@ struct OfferDetailView: View {
             }
         }
         .task {
-            if !isBusiness, let quota = try? await repository.fetchResponseQuota() {
-                dailyResponseLimit = quota.dailyLimit
-                responsesUsedToday = max(0, quota.dailyLimit - quota.remainingResponses)
+            if !isBusiness {
+                quota = try? await repository.fetchResponseQuota()
             }
             if isAtDailyLimit { responseState = .limitReached }
         }
