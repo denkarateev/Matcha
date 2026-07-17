@@ -73,9 +73,15 @@ struct ChatsView: View {
                             .frame(maxWidth: .infinity)
                             .frame(height: 38)
                             .background(
-                                isSelected ? MatchaTokens.Colors.accent : Color.white.opacity(0.08),
+                                isSelected ? AnyShapeStyle(MatchaTokens.Colors.accent) : AnyShapeStyle(.ultraThinMaterial),
                                 in: RoundedRectangle(cornerRadius: 10, style: .continuous)
                             )
+                            .overlay {
+                                if !isSelected {
+                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        .strokeBorder(MatchaTokens.Colors.glassBorder, lineWidth: 0.5)
+                                }
+                            }
                     }
                     .buttonStyle(.plain)
                 }

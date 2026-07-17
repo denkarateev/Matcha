@@ -159,7 +159,7 @@ struct MatchCelebrationParticles: View {
     }
 
     private func spawnAndAnimate() {
-        let accentColor = MatchaTokens.Colors.accent // #B8FF43
+        let accentColor = MatchaTokens.Colors.accent // tuju lime
         let colors: [Color] = [
             accentColor,
             accentColor.opacity(0.8),

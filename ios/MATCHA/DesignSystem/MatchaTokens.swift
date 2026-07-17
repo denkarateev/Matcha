@@ -2,13 +2,14 @@ import SwiftUI
 
 enum MatchaTokens {
     enum Colors {
-        // Original MATCHA — clean dark + lime green
-        static let background = Color(hex: 0x050505)
+        // tuju v2 — resolved with the design system: landing values,
+        // #0A0A0A keeps the elevated-surface ramp legible on OLED.
+        static let background = Color(hex: 0x0A0A0A)
         static let surface = Color(hex: 0x101314)
         static let surfaceSoft = Color(hex: 0x141918)
         static let elevated = Color(hex: 0x171C1B)
         static let elevatedSoft = Color(hex: 0x1C2321)
-        static let accent = Color(hex: 0xB8FF43)       // matcha lime
+        static let accent = Color(hex: 0xC5FF3D)       // tuju lime
         static let accentMuted = Color(hex: 0x6F8F31)
         static let accentGlow = Color(hex: 0xD8FF8F)
         static let textPrimary = Color.white

@@ -67,7 +67,7 @@ struct ChatConversationView: View {
                         }
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
-                        .background(MatchaTokens.Colors.surface)
+                        .liquidGlass(cornerRadius: 0)
                         .overlay(alignment: .bottom) {
                             Divider().background(MatchaTokens.Colors.outline)
                         }
@@ -607,7 +607,7 @@ struct ChatConversationView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
         }
-        .background(MatchaTokens.Colors.surface)
+        .liquidGlass(cornerRadius: 0)
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 
