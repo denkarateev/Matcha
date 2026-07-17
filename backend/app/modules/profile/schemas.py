@@ -32,6 +32,8 @@ class ProfileUpdateRequest(BaseModel):
     description: str | None = Field(default=None, max_length=200)
     what_we_offer: str | None = Field(default=None, max_length=200)
     working_hours: str | None = Field(default=None, max_length=120)
+    contact_name: str | None = Field(default=None, max_length=100)
+    contact_position: str | None = Field(default=None, max_length=100)
     nationality: str | None = None
     residence: str | None = None
     gender: str | None = None
@@ -56,6 +58,20 @@ class ProfileUpdateRequest(BaseModel):
             self.district = self.districts[0] if self.districts else None
         elif self.district is not None and self.districts is None:
             self.districts = [self.district]
+        # Server-side age gate: birthday must parse and imply age 13..120.
+        if self.birthday is not None:
+            from datetime import date
+
+            try:
+                born = date.fromisoformat(self.birthday)
+            except ValueError as exc:
+                raise ValueError("birthday must be an ISO date (YYYY-MM-DD).") from exc
+            today = date.today()
+            age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+            if age < 13:
+                raise ValueError("You must be at least 13 years old.")
+            if age > 120:
+                raise ValueError("birthday is out of range.")
         return self
 
 
@@ -79,6 +95,8 @@ class ProfileRead(BaseModel):
     description: str | None = None
     what_we_offer: str | None = None
     working_hours: str | None = None
+    contact_name: str | None = None
+    contact_position: str | None = None
     nationality: str | None = None
     residence: str | None = None
     gender: str | None = None

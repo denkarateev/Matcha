@@ -144,6 +144,8 @@ class Profile(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     what_we_offer: Mapped[str | None] = mapped_column(Text, nullable=True)
     working_hours: Mapped[str | None] = mapped_column(Text, nullable=True)
+    contact_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    contact_position: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Photos stored as comma-separated URLs; use ARRAY on Postgres.
     photo_urls: Mapped[list[str]] = mapped_column(

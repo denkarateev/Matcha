@@ -532,3 +532,104 @@ def test_change_password_flow(client: TestClient) -> None:
         json={"email": "pwd@test.app", "password": "newsecret99"},
     )
     assert new_login.status_code == 200
+
+
+def test_profile_contact_fields_and_age_gate(client: TestClient) -> None:
+    token, user_id = _register_user(
+        client,
+        email="contact@test.app",
+        role="business",
+        full_name="Contact Venue",
+        primary_photo_url="https://example.com/v.jpg",
+        category="Restaurant/Cafe",
+    )
+    headers = {"Authorization": f"Bearer {token}"}
+
+    update = client.put(
+        "/api/v1/profiles/me",
+        headers=headers,
+        json={
+            "contact_name": "Made Wirawan",
+            "contact_position": "Marketing Manager",
+            "birthday": "1990-04-12",
+        },
+    )
+    assert update.status_code == 200
+    body = update.json()
+    assert body["contact_name"] == "Made Wirawan"
+    assert body["contact_position"] == "Marketing Manager"
+    assert body["birthday"] == "1990-04-12"
+
+    public = client.get(f"/api/v1/profiles/{user_id}")
+    assert public.status_code == 200
+    assert public.json()["contact_name"] == "Made Wirawan"
+
+    underage = client.put(
+        "/api/v1/profiles/me",
+        headers=headers,
+        json={"birthday": "2020-01-01"},
+    )
+    assert underage.status_code == 422
+
+    garbage = client.put(
+        "/api/v1/profiles/me",
+        headers=headers,
+        json={"birthday": "12/04/1990"},
+    )
+    assert garbage.status_code == 422
+
+
+def test_blue_check_granted_after_three_reviewed_deals(client: TestClient) -> None:
+    business_token, business_id = _register_and_verify_user(
+        client,
+        email="bluecheck-biz@test.app",
+        role="business",
+        full_name="Blue Venue",
+        primary_photo_url="https://example.com/b.jpg",
+        category="Restaurant/Cafe",
+        instagram_handle="@bluevenue",
+        audience_size=20_000,
+    )
+    blogger_token, blogger_id = _register_and_verify_user(
+        client,
+        email="bluecheck-blog@test.app",
+        role="blogger",
+        full_name="Blue Blogger",
+        primary_photo_url="https://example.com/bb.jpg",
+        instagram_handle="@blueblogger",
+        audience_size=15_000,
+    )
+    biz = {"Authorization": f"Bearer {business_token}"}
+    blog = {"Authorization": f"Bearer {blogger_token}"}
+
+    def run_deal_cycle() -> None:
+        created = client.post(
+            "/api/v1/deals",
+            headers=biz,
+            json={
+                "partner_id": blogger_id,
+                "title": "Dinner collab",
+                "type": "barter",
+                "you_offer": "Dinner for 2",
+                "you_receive": "3 stories",
+            },
+        )
+        assert created.status_code in (200, 201), created.text
+        deal_id = created.json()["id"]
+        assert client.post(f"/api/v1/deals/{deal_id}/accept", headers=blog).status_code == 200
+        assert client.post(f"/api/v1/deals/{deal_id}/check-in", headers=biz).status_code == 200
+        assert client.post(f"/api/v1/deals/{deal_id}/check-in", headers=blog).status_code == 200
+        review = {"punctuality": 5, "offer_match": 5, "communication": 5}
+        assert client.post(f"/api/v1/deals/{deal_id}/rate", headers=biz, json=review).status_code == 200
+        assert client.post(f"/api/v1/deals/{deal_id}/rate", headers=blog, json=review).status_code == 200
+
+    for i in range(3):
+        run_deal_cycle()
+        me = client.get("/api/v1/auth/me", headers=blog).json()
+        if i < 2:
+            assert me["verification_level"] == 1, f"cycle {i}: {me['verification_level']}"
+
+    me_blog = client.get("/api/v1/auth/me", headers=blog).json()
+    me_biz = client.get("/api/v1/auth/me", headers=biz).json()
+    assert me_blog["verification_level"] == 2
+    assert me_biz["verification_level"] == 2

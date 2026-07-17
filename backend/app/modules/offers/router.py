@@ -31,6 +31,7 @@ from app.modules.offers.schemas import (
     OfferFilterParams,
     OfferRead,
     OfferRespondRequest,
+    OfferQuotaRead,
     OfferRespondResult,
     OfferResponseRead,
 )
@@ -129,6 +130,16 @@ def decline_response_legacy(
 # ---------------------------------------------------------------------------
 # Offer detail  GET /offers/{offer_id}
 # ---------------------------------------------------------------------------
+
+@router.get("/response-quota", response_model=OfferQuotaRead)
+def get_response_quota(
+    current_user_id: str = Depends(get_current_user_id),
+    container: AppContainer = Depends(get_container),
+) -> OfferQuotaRead:
+    """Blogger's remaining daily response quota (registered before /{offer_id})."""
+    remaining, limit = container.offer_service.get_response_quota(current_user_id)
+    return OfferQuotaRead(remaining_responses=remaining, daily_limit=limit)
+
 
 @router.get("/{offer_id}", response_model=OfferDetailRead)
 def get_offer(

@@ -201,8 +201,9 @@ class DealService:
         if scores:
             self.profile_repo.apply_review_score(reviewee_id, mean(scores))
 
+        was_no_show = deal.status == DealStatus.NO_SHOW
         became_reviewed = False
-        if deal.status == DealStatus.NO_SHOW or len(deal.reviews) >= 2:
+        if was_no_show or len(deal.reviews) >= 2:
             deal.status = DealStatus.REVIEWED
             became_reviewed = True
 
@@ -212,7 +213,36 @@ class DealService:
                 updated.chat_id,
                 "\u2b50 Deal completed! Reviews submitted",
             )
+            if not was_no_show:
+                for participant_id in updated.participant_ids:
+                    self._maybe_grant_blue_check(participant_id)
         return updated
+
+    BLUE_CHECK_COMPLETED_DEALS = 3
+
+    def _completed_deal_count(self, user_id: str) -> int:
+        """Deals that went through the full lifecycle: both sides reviewed."""
+        return sum(
+            1
+            for deal in self.deal_repo.list_for_user(user_id)
+            if deal.status == DealStatus.REVIEWED and len(deal.reviews) >= 2
+        )
+
+    def _maybe_grant_blue_check(self, user_id: str) -> None:
+        from dataclasses import replace
+
+        from app.modules.auth.domain.models import VerificationLevel
+
+        user = self.auth_repo.get_by_id(user_id)
+        if user is None or user.verification_level >= VerificationLevel.BLUE_CHECK:
+            return
+        if user.verification_level < VerificationLevel.VERIFIED:
+            return
+        if self._completed_deal_count(user_id) < self.BLUE_CHECK_COMPLETED_DEALS:
+            return
+        self.auth_repo.update(
+            replace(user, verification_level=VerificationLevel.BLUE_CHECK, updated_at=utc_now())
+        )
 
     def cancel_deal(
         self,

@@ -25,6 +25,8 @@ class Profile:
     description: str | None = None
     what_we_offer: str | None = None
     working_hours: str | None = None
+    contact_name: str | None = None
+    contact_position: str | None = None
     nationality: str | None = None
     residence: str | None = None
     gender: str | None = None

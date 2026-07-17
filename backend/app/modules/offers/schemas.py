@@ -77,6 +77,12 @@ class OfferResponseRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class OfferQuotaRead(BaseModel):
+    """Blogger's remaining daily offer-response quota."""
+    remaining_responses: int
+    daily_limit: int
+
+
 class OfferRespondResult(BaseModel):
     """Returned after a blogger responds to an offer."""
     response: OfferResponseRead

@@ -136,7 +136,7 @@ class OfferService:
 
         today = local_date(self.timezone_name)
         response_count = self.offer_repo.count_blogger_responses_on_date(actor_id, today)
-        if response_count >= 3:
+        if response_count >= self.DAILY_RESPONSE_LIMIT:
             raise ConflictError("Daily offer response limit reached.")
 
         response = OfferResponse(
@@ -147,8 +147,16 @@ class OfferService:
             message=payload.message,
         )
         saved = self.offer_repo.add_response(response)
-        remaining = max(0, 3 - response_count - 1)  # responses left after this one
+        remaining = max(0, self.DAILY_RESPONSE_LIMIT - response_count - 1)  # responses left after this one
         return saved, remaining
+
+    DAILY_RESPONSE_LIMIT = 3
+
+    def get_response_quota(self, actor_id: str) -> tuple[int, int]:
+        """Returns (remaining_today, daily_limit) for a blogger."""
+        today = local_date(self.timezone_name)
+        used = self.offer_repo.count_blogger_responses_on_date(actor_id, today)
+        return max(0, self.DAILY_RESPONSE_LIMIT - used), self.DAILY_RESPONSE_LIMIT
 
     def accept_response(self, actor_id: str, response_id: str) -> OfferResponse:
         response = self._get_response(response_id)
