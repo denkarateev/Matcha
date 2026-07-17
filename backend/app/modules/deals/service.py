@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from statistics import mean
 from uuid import uuid4
 
 from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError
 from app.core.time import utc_now
-from app.modules.auth.domain.models import PlanTier, UserRole
+from app.modules.auth.domain.models import PlanTier, UserRole, VerificationLevel
 from app.modules.auth.repository import AuthRepository
 from app.modules.chats.service import ChatService
 from app.modules.deals.domain.models import (
@@ -26,6 +27,8 @@ from app.modules.profile.repository import ProfileRepository
 
 
 class DealService:
+    BLUE_CHECK_COMPLETED_DEALS = 3
+
     def __init__(
         self,
         deal_repo: DealRepository,
@@ -215,10 +218,8 @@ class DealService:
             )
             if not was_no_show:
                 for participant_id in updated.participant_ids:
-                    self._maybe_grant_blue_check(participant_id)
+                    self.reevaluate_blue_check(participant_id)
         return updated
-
-    BLUE_CHECK_COMPLETED_DEALS = 3
 
     def _completed_deal_count(self, user_id: str) -> int:
         """Deals that went through the full lifecycle: both sides reviewed."""
@@ -228,15 +229,14 @@ class DealService:
             if deal.status == DealStatus.REVIEWED and len(deal.reviews) >= 2
         )
 
-    def _maybe_grant_blue_check(self, user_id: str) -> None:
-        from dataclasses import replace
+    def reevaluate_blue_check(self, user_id: str) -> None:
+        """Grant Blue Check once a VERIFIED user has enough completed deals.
 
-        from app.modules.auth.domain.models import VerificationLevel
-
+        Called on deal completion AND on verification, so deals completed
+        before verifying still count.
+        """
         user = self.auth_repo.get_by_id(user_id)
-        if user is None or user.verification_level >= VerificationLevel.BLUE_CHECK:
-            return
-        if user.verification_level < VerificationLevel.VERIFIED:
+        if user is None or user.verification_level != VerificationLevel.VERIFIED:
             return
         if self._completed_deal_count(user_id) < self.BLUE_CHECK_COMPLETED_DEALS:
             return

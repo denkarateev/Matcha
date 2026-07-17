@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
 
 class ProfileUpdateRequest(BaseModel):
@@ -58,21 +58,25 @@ class ProfileUpdateRequest(BaseModel):
             self.district = self.districts[0] if self.districts else None
         elif self.district is not None and self.districts is None:
             self.districts = [self.district]
-        # Server-side age gate: birthday must parse and imply age 13..120.
-        if self.birthday is not None:
-            from datetime import date
-
-            try:
-                born = date.fromisoformat(self.birthday)
-            except ValueError as exc:
-                raise ValueError("birthday must be an ISO date (YYYY-MM-DD).") from exc
-            today = date.today()
-            age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
-            if age < 13:
-                raise ValueError("You must be at least 13 years old.")
-            if age > 120:
-                raise ValueError("birthday is out of range.")
         return self
+
+    @field_validator("birthday")
+    @classmethod
+    def _validate_birthday(cls, value: str | None) -> str | None:
+        """Server-side age gate: ISO date implying age 13..120."""
+        if value is None:
+            return None
+        try:
+            born = date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError("birthday must be an ISO date (YYYY-MM-DD).") from exc
+        today = date.today()
+        age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+        if age < 13:
+            raise ValueError("You must be at least 13 years old.")
+        if age > 120:
+            raise ValueError("birthday is out of range.")
+        return value
 
 
 class ProfileRead(BaseModel):

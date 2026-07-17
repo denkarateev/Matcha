@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import pickle
 import threading
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
@@ -110,11 +110,8 @@ class InMemoryStore:
             fresh = InMemoryStore.load_from_disk()
             if fresh is None:
                 return
-            for name in (
-                "users", "profiles", "swipes", "matches", "offers",
-                "offer_responses", "chats", "messages", "deals", "typing_state",
-            ):
-                setattr(self, name, getattr(fresh, name))
+            for f in fields(self):
+                setattr(self, f.name, getattr(fresh, f.name))
             self._disk_mtime = mtime
         except Exception as e:
             import logging

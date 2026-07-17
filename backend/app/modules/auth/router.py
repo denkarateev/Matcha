@@ -97,7 +97,9 @@ def verify(
 ) -> UserRead:
     user = container.auth_service.verify_user(current_user_id, payload)
     container.match_service.activate_pending_likes(current_user_id)
-    return UserRead.model_validate(user)
+    # Deals completed before verifying count toward Blue Check.
+    container.deal_service.reevaluate_blue_check(current_user_id)
+    return UserRead.model_validate(container.auth_service.get_user(current_user_id))
 
 
 @router.delete("/me", status_code=204)

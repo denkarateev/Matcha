@@ -24,6 +24,8 @@ from app.modules.offers.schemas import (
 
 
 class OfferService:
+    DAILY_RESPONSE_LIMIT = 3
+
     def __init__(
         self,
         offer_repo: OfferRepository,
@@ -147,10 +149,8 @@ class OfferService:
             message=payload.message,
         )
         saved = self.offer_repo.add_response(response)
-        remaining = max(0, self.DAILY_RESPONSE_LIMIT - response_count - 1)  # responses left after this one
+        remaining, _ = self.get_response_quota(actor_id)
         return saved, remaining
-
-    DAILY_RESPONSE_LIMIT = 3
 
     def get_response_quota(self, actor_id: str) -> tuple[int, int]:
         """Returns (remaining_today, daily_limit) for a blogger."""

@@ -633,3 +633,60 @@ def test_blue_check_granted_after_three_reviewed_deals(client: TestClient) -> No
     me_biz = client.get("/api/v1/auth/me", headers=biz).json()
     assert me_blog["verification_level"] == 2
     assert me_biz["verification_level"] == 2
+
+
+def test_blue_check_reevaluated_on_verification_change(client: TestClient) -> None:
+    """Deals completed before (re)verification still count toward Blue Check."""
+    business_token, business_id = _register_and_verify_user(
+        client,
+        email="reeval-biz@test.app",
+        role="business",
+        full_name="Reeval Venue",
+        primary_photo_url="https://example.com/rv.jpg",
+        category="Restaurant/Cafe",
+        instagram_handle="@reevalvenue",
+        audience_size=20_000,
+    )
+    blogger_token, blogger_id = _register_and_verify_user(
+        client,
+        email="reeval-blog@test.app",
+        role="blogger",
+        full_name="Reeval Blogger",
+        primary_photo_url="https://example.com/rb.jpg",
+        instagram_handle="@reevalblogger",
+        audience_size=15_000,
+    )
+    biz = {"Authorization": f"Bearer {business_token}"}
+    blog = {"Authorization": f"Bearer {blogger_token}"}
+
+    for _ in range(3):
+        created = client.post(
+            "/api/v1/deals",
+            headers=biz,
+            json={
+                "partner_id": blogger_id,
+                "title": "Collab",
+                "type": "barter",
+                "you_offer": "Dinner",
+                "you_receive": "Stories",
+            },
+        )
+        assert created.status_code in (200, 201), created.text
+        deal_id = created.json()["id"]
+        assert client.post(f"/api/v1/deals/{deal_id}/accept", headers=blog).status_code == 200
+        assert client.post(f"/api/v1/deals/{deal_id}/check-in", headers=biz).status_code == 200
+        assert client.post(f"/api/v1/deals/{deal_id}/check-in", headers=blog).status_code == 200
+        review = {"punctuality": 5, "offer_match": 5, "communication": 5}
+        assert client.post(f"/api/v1/deals/{deal_id}/rate", headers=biz, json=review).status_code == 200
+        assert client.post(f"/api/v1/deals/{deal_id}/rate", headers=blog, json=review).status_code == 200
+
+    admin = {"Authorization": "Bearer matcha-admin-2026"}
+    # Admin resets the blogger to VERIFIED; the chained reevaluation must
+    # immediately re-grant BLUE_CHECK from the already-completed deals.
+    reset = client.post(
+        f"/api/v1/admin/users/{blogger_id}/verify",
+        headers=admin,
+        json={"verification_level": 1},
+    )
+    assert reset.status_code == 200, reset.text
+    assert reset.json()["verification_level"] == 2

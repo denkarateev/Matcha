@@ -268,8 +268,9 @@ async def set_verification(
     )
     store.users[user_id] = updated
     _sync_to_container(container, store)
+    container.deal_service.reevaluate_blue_check(user_id)
     profile = store.profiles.get(user_id)
-    return _user_to_admin_read(updated, profile)
+    return _user_to_admin_read(store.users[user_id], profile)
 
 
 @router.post("/admin/users/{user_id}/set-audience", response_model=AdminUserRead)
@@ -424,6 +425,7 @@ async def approve_verification(
     )
     store.users[user_id] = updated
     _sync_to_container(container, store)
+    container.deal_service.reevaluate_blue_check(user_id)
 
     if verification_id in _verification_queue:
         _verification_queue[verification_id]["status"] = "approved"
