@@ -107,7 +107,7 @@ struct OfferDetailView: View {
             )
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
-            .presentationBackground(MatchaTokens.Colors.background)
+            .presentationBackground(.ultraThinMaterial)
             // Attached to the sheet, not the parent: an alert on the covered
             // parent would never surface while the sheet is up.
             .alert(

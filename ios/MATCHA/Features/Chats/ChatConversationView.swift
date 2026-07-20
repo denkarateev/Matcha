@@ -620,7 +620,7 @@ struct ChatConversationView: View {
                 lockedInputBar
                     .padding(.horizontal, MatchaTokens.Spacing.medium)
                     .padding(.vertical, 12)
-                    .background(MatchaTokens.Colors.background)
+                    .liquidGlass(cornerRadius: 0)
                     .padding(.bottom, 8)
             } else {
                 HStack(spacing: 10) {
@@ -679,7 +679,7 @@ struct ChatConversationView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(MatchaTokens.Colors.background)
+                .liquidGlass(cornerRadius: 0)
             }
         }
     }
