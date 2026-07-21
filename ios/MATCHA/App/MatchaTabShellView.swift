@@ -29,9 +29,7 @@ struct MatchaTabShellView: View {
                         repository: environment.repository
                     )
                 }
-                .tabItem {
-                    Label("Discover", systemImage: "tag.fill")
-                }
+                .toolbarVisibility(.hidden, for: .tabBar)
                 .tag(AppTab.offers)
 
                 // Tab 2: Activity (Likes + deals activity)
@@ -41,27 +39,21 @@ struct MatchaTabShellView: View {
                         repository: environment.repository
                     )
                 }
-                .tabItem {
-                    Label("Likes", systemImage: "heart.fill")
-                }
-                .tag(AppTab.notifications)
+                .toolbarVisibility(.hidden, for: .tabBar)
+                .tag(AppTab.likes)
 
                 // Tab 3: Match Feed (center)
                 NavigationStack {
                     MatchFeedView(repository: environment.repository)
                 }
-                .tabItem {
-                    Label("Match", systemImage: "leaf.fill")
-                }
+                .toolbarVisibility(.hidden, for: .tabBar)
                 .tag(AppTab.match)
 
                 // Tab 4: Chats
                 NavigationStack {
                     ChatsView(repository: environment.repository, currentUser: appState.currentUser)
                 }
-                .tabItem {
-                    Label("Chats", systemImage: "bubble.fill")
-                }
+                .toolbarVisibility(.hidden, for: .tabBar)
                 .tag(AppTab.chats)
 
                 // Tab 5: Profile
@@ -76,15 +68,16 @@ struct MatchaTabShellView: View {
                     )
                     .id(appState.currentUser)
                 }
-                .tabItem {
-                    Label("Profile", systemImage: "person.fill")
-                }
+                .toolbarVisibility(.hidden, for: .tabBar)
                 .tag(AppTab.profile)
             }
             .tint(MatchaTokens.Colors.accent)
-            .toolbarBackground(.visible, for: .tabBar)
-            .toolbarBackground(.ultraThinMaterial, for: .tabBar)
-            .toolbarColorScheme(.dark, for: .tabBar)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                TujuTabBar(
+                    selection: $appState.selectedTab,
+                    avatarURL: appState.currentUser.photoURL
+                )
+            }
         }
         .animation(.easeInOut(duration: 0.3), value: showOfflineBanner)
         .onChange(of: networkMonitor.isConnected) { _, connected in

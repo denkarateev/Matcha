@@ -10,6 +10,7 @@
 		0061D9AEBD86996199D0AA56 /* TranslationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CC87FEB698A272ABDAF023 /* TranslationService.swift */; };
 		038D5BCB5F4F850F2DD3C06C /* ConversationMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 500D5178448F2AB1976E5418 /* ConversationMessage.swift */; };
 		03AE155E5EC60588149EA952 /* VerificationFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89B4CBA2CCBA7540516E146 /* VerificationFlowView.swift */; };
+		03C141AFDA21D3121CB392C1 /* TujuTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91D85E33CF2C11813CBAC603 /* TujuTabBar.swift */; };
 		07ACB1DE07E3FD2161204EDF /* OffersAndDealsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF517CE3F2CAE64E8DDD8EFB /* OffersAndDealsView.swift */; };
 		09150A15CC34258A4A18061C /* FeedFilterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E229F1C0C84B54635CBA6C1 /* FeedFilterView.swift */; };
 		0973C7CE11976075C5587621 /* DealPipelineMiniView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FF66A67B9F84A3B641CE941 /* DealPipelineMiniView.swift */; };
@@ -185,6 +186,7 @@
 		8C0F4DBA375ADA012A3205EA /* FlowTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowTest.swift; sourceTree = "<group>"; };
 		8DFE4520EEF374792F3767A3 /* MockSeedData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSeedData.swift; sourceTree = "<group>"; };
 		8E439ED376AD23E0E3D6063A /* Offer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Offer.swift; sourceTree = "<group>"; };
+		91D85E33CF2C11813CBAC603 /* TujuTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TujuTabBar.swift; sourceTree = "<group>"; };
 		94CC87FEB698A272ABDAF023 /* TranslationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationService.swift; sourceTree = "<group>"; };
 		956D15869ADA88407783831C /* DealCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DealCardView.swift; sourceTree = "<group>"; };
 		9787B635A8DD036BA84B73BB /* SubscriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionView.swift; sourceTree = "<group>"; };
@@ -436,6 +438,7 @@
 				4904D7D3DBF78429451B0F40 /* ServerErrorView.swift */,
 				FA1C705E2670E0B18CC97F0A /* SkeletonView.swift */,
 				D320B8D3E8800416418E1E2C /* TagChip.swift */,
+				91D85E33CF2C11813CBAC603 /* TujuTabBar.swift */,
 				B597290121FB36932991107C /* TypingIndicatorView.swift */,
 				FFCFDBD33C616F41B8E32C91 /* UGCGalleryView.swift */,
 			);
@@ -783,6 +786,7 @@
 				3CFD033637444A01B24A8308 /* SubscriptionView.swift in Sources */,
 				33E99708411AB71FBFB39E7F /* TagChip.swift in Sources */,
 				0061D9AEBD86996199D0AA56 /* TranslationService.swift in Sources */,
+				03C141AFDA21D3121CB392C1 /* TujuTabBar.swift in Sources */,
 				EAEC75EACA23283168B8BED3 /* TypingIndicatorView.swift in Sources */,
 				252B854609E726EAA692E0C0 /* UGCGalleryView.swift in Sources */,
 				26F88E1CDFC44B46F699933F /* UGCPost.swift in Sources */,

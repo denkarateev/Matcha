@@ -25,7 +25,7 @@ enum AppTab: Int, CaseIterable, Identifiable {
         switch self {
         case .offers:  "tag.fill"
         case .likes:   "heart.fill"
-        case .match:   "leaf.fill"
+        case .match:   "circle.fill"
         case .chats:   "bubble.fill"
         case .profile: "person.fill"
         }
