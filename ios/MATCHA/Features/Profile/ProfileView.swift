@@ -402,13 +402,9 @@ struct ProfileView: View {
                 .tracking(0.5)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
+        .padding(.vertical, 14)
         .padding(.horizontal, 10)
-        .background(MatchaTokens.Colors.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-        }
+        .liquidGlass(cornerRadius: 18)
     }
 
     // MARK: - Action Row (Edit Profile + Go Pro)
@@ -420,12 +416,8 @@ struct ProfileView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background(MatchaTokens.Colors.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
-                    }
+                    .frame(height: 46)
+                    .liquidGlass(cornerRadius: 16)
             }
 
             Button { showPaywall = true } label: {
@@ -435,17 +427,14 @@ struct ProfileView: View {
                     Text("Go Pro")
                         .font(.system(size: 14, weight: .bold))
                 }
-                .foregroundStyle(.black)
-                .padding(.horizontal, 18)
-                .frame(height: 44)
+                .foregroundStyle(MatchaTokens.Colors.background)
+                .padding(.horizontal, 20)
+                .frame(height: 46)
                 .background(
-                    LinearGradient(
-                        colors: [MatchaTokens.Colors.accent, Color(hex: 0x9BE62E)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    MatchaTokens.Colors.accent,
+                    in: RoundedRectangle(cornerRadius: 16, style: .continuous)
                 )
+                .shadow(color: MatchaTokens.Colors.accent.opacity(0.28), radius: 12, y: 4)
             }
         }
         .padding(.horizontal, 24)
@@ -467,8 +456,10 @@ struct ProfileView: View {
                 .lineSpacing(4)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 20)
-        .padding(.vertical, 18)
+        .padding(18)
+        .liquidGlass(cornerRadius: 20)
+        .padding(.horizontal, 24)
+        .padding(.top, 14)
     }
 
     @ViewBuilder
