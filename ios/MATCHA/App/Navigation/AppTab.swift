@@ -13,7 +13,7 @@ enum AppTab: Int, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .offers:  "Offers"
+        case .offers:  "Discover"
         case .likes:   "Likes"
         case .match:   "Match"
         case .chats:   "Chats"

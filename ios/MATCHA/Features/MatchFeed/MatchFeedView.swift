@@ -73,13 +73,16 @@ struct MatchFeedView: View {
                     Spacer()
                 }
 
-                // Action buttons — on gradient, above system tab bar
+                // Action buttons. This container ignores the TOP safe area, so its
+                // frame overhangs the bottom by that same amount — pad it back or
+                // the row lands underneath the tab bar.
                 if !store.isLoading && store.currentProfile != nil {
                     VStack {
                         Spacer()
                         actionButtonsRow
-                            .padding(.bottom, 12)
+                            .padding(.bottom, topInset + 12)
                     }
+                    .zIndex(5)
                 }
 
                 // Error toast

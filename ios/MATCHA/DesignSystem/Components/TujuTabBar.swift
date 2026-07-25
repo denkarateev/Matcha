@@ -1,27 +1,35 @@
 import SwiftUI
 
-/// Instagram-style tab bar: icons only, outline → fill on selection,
+/// tuju tab bar: icon + label per tab, outline → fill on selection,
 /// the tuju dot in the center and the user's avatar as the Profile tab.
-/// Sits over content via `.safeAreaInset(edge: .bottom)`.
+/// Attached via `.safeAreaInset(edge: .bottom)`; `safeAreaPadding` makes the
+/// reserved height cover the home-indicator strip too, so screen content
+/// never slides underneath the glass.
 struct TujuTabBar: View {
     @Binding var selection: AppTab
     var avatarURL: URL?
 
+    private let iconSize: CGFloat = 22
+
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(alignment: .top, spacing: 0) {
             symbolTab(.offers, outline: "tag", filled: "tag.fill")
             symbolTab(.likes, outline: "heart", filled: "heart.fill")
             dotTab
             symbolTab(.chats, outline: "bubble.left", filled: "bubble.left.fill")
             avatarTab
         }
-        .frame(height: 54)
+        .padding(.top, 9)
+        .frame(height: 52, alignment: .top)
+        .safeAreaPadding(.bottom)
         .background {
             Rectangle()
                 .fill(.ultraThinMaterial)
-                .overlay(Color.black.opacity(0.35))
+                .overlay(Color.black.opacity(0.32))
                 .overlay(alignment: .top) {
-                    Divider().background(MatchaTokens.Colors.outline.opacity(0.5))
+                    Rectangle()
+                        .fill(MatchaTokens.Colors.outline.opacity(0.6))
+                        .frame(height: 0.5)
                 }
                 .ignoresSafeArea(edges: .bottom)
         }
@@ -31,8 +39,8 @@ struct TujuTabBar: View {
     private func symbolTab(_ tab: AppTab, outline: String, filled: String) -> some View {
         tabButton(tab) { selected in
             Image(systemName: selected ? filled : outline)
-                .font(.system(size: 23, weight: .regular))
-                .foregroundStyle(selected ? .white : MatchaTokens.Colors.textMuted)
+                .font(.system(size: iconSize, weight: .regular))
+                .frame(height: iconSize + 2)
                 .symbolEffect(.bounce, value: selected)
         }
     }
@@ -44,17 +52,18 @@ struct TujuTabBar: View {
                 if selected {
                     Circle()
                         .fill(MatchaTokens.Colors.accent)
-                        .frame(width: 22, height: 22)
+                        .frame(width: 21, height: 21)
                         .shadow(color: MatchaTokens.Colors.accentGlow.opacity(0.7), radius: 8)
                 } else {
                     Circle()
-                        .strokeBorder(MatchaTokens.Colors.textMuted, lineWidth: 2.5)
-                        .frame(width: 22, height: 22)
+                        .strokeBorder(MatchaTokens.Colors.textMuted, lineWidth: 2.2)
+                        .frame(width: 21, height: 21)
                     Circle()
                         .fill(MatchaTokens.Colors.textMuted)
                         .frame(width: 6, height: 6)
                 }
             }
+            .frame(height: iconSize + 2)
             .animation(.spring(response: 0.35, dampingFraction: 0.6), value: selected)
         }
     }
@@ -74,14 +83,12 @@ struct TujuTabBar: View {
                     avatarFallback
                 }
             }
-            .frame(width: 26, height: 26)
+            .frame(width: 23, height: 23)
             .clipShape(Circle())
             .overlay {
-                Circle().strokeBorder(
-                    selected ? Color.white : Color.clear,
-                    lineWidth: 1.5
-                )
+                Circle().strokeBorder(selected ? Color.white : .clear, lineWidth: 1.5)
             }
+            .frame(height: iconSize + 2)
         }
     }
 
@@ -89,18 +96,26 @@ struct TujuTabBar: View {
         ZStack {
             Circle().fill(MatchaTokens.Colors.elevated)
             Image(systemName: "person.fill")
-                .font(.system(size: 13))
+                .font(.system(size: 12))
                 .foregroundStyle(MatchaTokens.Colors.textMuted)
         }
     }
 
     private func tabButton(_ tab: AppTab, @ViewBuilder icon: @escaping (Bool) -> some View) -> some View {
-        Button {
+        let selected = selection == tab
+        return Button {
             selection = tab
         } label: {
-            icon(selection == tab)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .contentShape(Rectangle())
+            VStack(spacing: 3) {
+                icon(selected)
+                Text(tab.title)
+                    .font(.system(size: 10, weight: selected ? .semibold : .regular))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+            }
+            .foregroundStyle(selected ? Color.white : MatchaTokens.Colors.textMuted)
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(tab.title)
