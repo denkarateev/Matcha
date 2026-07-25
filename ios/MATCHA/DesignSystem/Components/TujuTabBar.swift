@@ -19,20 +19,31 @@ struct TujuTabBar: View {
             symbolTab(.chats, outline: "bubble.left", filled: "bubble.left.fill")
             avatarTab
         }
-        .padding(.top, 9)
-        .frame(height: 52, alignment: .top)
-        .safeAreaPadding(.bottom)
+        .padding(.top, 10)
+        .padding(.bottom, 8)
+        .frame(height: 62, alignment: .top)
         .background {
-            Rectangle()
+            // Floating liquid glass: translucent, rounded, no edge-to-edge slab.
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
                 .fill(.ultraThinMaterial)
-                .overlay(Color.black.opacity(0.32))
-                .overlay(alignment: .top) {
-                    Rectangle()
-                        .fill(MatchaTokens.Colors.outline.opacity(0.6))
-                        .frame(height: 0.5)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 30, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [MatchaTokens.Colors.glassHighlight, .clear],
+                                startPoint: .top,
+                                endPoint: .center
+                            )
+                        )
                 }
-                .ignoresSafeArea(edges: .bottom)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 30, style: .continuous)
+                        .strokeBorder(MatchaTokens.Colors.glassBorder, lineWidth: 0.5)
+                }
+                .shadow(color: .black.opacity(0.45), radius: 18, y: 8)
         }
+        .padding(.horizontal, 14)
+        .padding(.bottom, 6)
         .sensoryFeedback(.impact(flexibility: .soft), trigger: selection)
     }
 

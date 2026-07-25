@@ -80,7 +80,7 @@ struct MatchFeedView: View {
                     VStack {
                         Spacer()
                         actionButtonsRow
-                            .padding(.bottom, topInset + 12)
+                            .padding(.bottom, topInset + 22)
                     }
                     .zIndex(5)
                 }
