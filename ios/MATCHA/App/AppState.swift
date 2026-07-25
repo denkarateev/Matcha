@@ -79,7 +79,12 @@ final class AppState {
         guard useLiveServices else {
             // UI Test mode: auto-complete onboarding with mock user
             if ProcessInfo.processInfo.arguments.contains("-UITest") {
-                completeOnboarding(role: .blogger, name: "Test User", category: nil)
+                let role = Role(rawValue: ProcessInfo.processInfo.environment["MATCHA_ROLE"] ?? "blogger") ?? .blogger
+                completeOnboarding(
+                    role: role,
+                    name: role == .business ? "Test Venue" : "Test User",
+                    category: role == .business ? .restaurantCafe : nil
+                )
                 return
             }
             guard isAuthenticated else { return }

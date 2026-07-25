@@ -36,6 +36,9 @@ struct MatchFeedView: View {
     @State private var celebrationTextShown = false
     @State private var myPhotoURL: URL?
 
+    /// Icon name of the action button currently playing its pop.
+    @State private var poppedAction: String?
+
     // Bumble scroll position — id of currently-visible profile in the feed.
     @State private var scrollPositionID: UUID? = nil
 
@@ -422,10 +425,23 @@ struct MatchFeedView: View {
         fg: Color,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
+        Button {
+            // Pop the glyph, then run the action (motion spec: like pop, 450ms spring)
+            withAnimation(.spring(response: 0.28, dampingFraction: 0.45)) {
+                poppedAction = icon
+            }
+            action()
+            Task {
+                try? await Task.sleep(for: .milliseconds(260))
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    if poppedAction == icon { poppedAction = nil }
+                }
+            }
+        } label: {
             Image(systemName: icon)
                 .font(.system(size: size * 0.38, weight: .bold))
                 .foregroundStyle(fg)
+                .scaleEffect(poppedAction == icon ? 1.35 : 1.0)
                 .frame(width: size, height: size)
                 .background {
                     if bg != .clear {
@@ -666,7 +682,7 @@ struct MatchFeedView: View {
                 .ignoresSafeArea()
 
             // Particle burst — centered
-            MatchCelebrationParticles(particleCount: 28)
+            MatchCelebrationParticles(delay: 0.55, particleCount: 28)
                 .frame(width: 300, height: 300)
                 .offset(y: -40)
 

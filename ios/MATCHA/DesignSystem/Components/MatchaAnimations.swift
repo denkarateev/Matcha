@@ -130,12 +130,15 @@ private struct SteamParticle: View {
 // MARK: - Match Celebration Particles (Matcha Green Burst)
 
 struct MatchCelebrationParticles: View {
+    /// Seconds to wait before bursting — lets the burst land on the dot pop.
+    var delay: Double = 0
     let particleCount: Int
 
     @State private var particles: [CelebrationParticle] = []
     @State private var animationPhase: Bool = false
 
-    init(particleCount: Int = 28) {
+    init(delay: Double = 0, particleCount: Int = 28) {
+        self.delay = delay
         self.particleCount = particleCount
     }
 
@@ -153,7 +156,13 @@ struct MatchCelebrationParticles: View {
                     )
             }
         }
-        .onAppear { spawnAndAnimate() }
+        .onAppear {
+            guard delay > 0 else { return spawnAndAnimate() }
+            Task {
+                try? await Task.sleep(for: .seconds(delay))
+                spawnAndAnimate()
+            }
+        }
     }
 
     private func spawnAndAnimate() {
@@ -163,7 +172,7 @@ struct MatchCelebrationParticles: View {
             accentColor.opacity(0.8),
             accentColor.opacity(0.6),
             MatchaTokens.Colors.accentGlow,
-            .white.opacity(0.9)
+            MatchaTokens.Colors.accentGlow.opacity(0.7)
         ]
 
         for i in 0..<particleCount {

@@ -75,7 +75,7 @@ private struct OnboardingSlidesScreen: View {
 
     private let slides: [Slide] = [
         Slide(
-            image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=900&h=1400&fit=crop",
+            image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&h=1740&fit=crop&crop=entropy",
             title: "Grow your brand\nwith real collabs",
             subtitle: "Trade content for real experiences with Bali venues. No cold DMs, no chasing.",
             highlights: [
@@ -85,7 +85,7 @@ private struct OnboardingSlidesScreen: View {
             ]
         ),
         Slide(
-            image: "https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?w=900&h=1400&fit=crop",
+            image: "https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?w=800&h=1740&fit=crop&crop=entropy",
             title: "Barter deals,\nno cash needed",
             subtitle: "Dinners, villa stays, spa days and events — exchanged for Reels, Stories and posts.",
             highlights: [
@@ -95,7 +95,7 @@ private struct OnboardingSlidesScreen: View {
             ]
         ),
         Slide(
-            image: "https://images.unsplash.com/photo-1516685018646-549198525c1b?w=900&h=1400&fit=crop",
+            image: "https://images.unsplash.com/photo-1516685018646-549198525c1b?w=800&h=1740&fit=crop&crop=entropy",
             title: "Track every step\nof your collab",
             subtitle: "Draft → Confirmed → Visited → Reviewed. Everyone knows whose move it is.",
             highlights: [
@@ -117,6 +117,8 @@ private struct OnboardingSlidesScreen: View {
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                                .clipped()
                                 .ignoresSafeArea()
                         default:
                             LinearGradient(
@@ -257,31 +259,33 @@ private struct WelcomeScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            HStack {
-                Color.clear.frame(width: 36, height: 36)
-                Spacer()
-                VStack(spacing: 4) {
-                    Text("Welcome !")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundStyle(.white)
-                    Text("Sign up as")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.45))
-                }
-                Spacer()
-                Color.clear.frame(width: 36, height: 36)
+            // Header — leading aligned per the global rule
+            VStack(alignment: .leading, spacing: 10) {
+                TujuLogoReveal(fontSize: 30)
+
+                Text("Which side are you on?")
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(MatchaTokens.Colors.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Pick the role that matches you. It decides what you see in the feed — you can't switch later.")
+                    .font(.system(size: 14))
+                    .foregroundStyle(MatchaTokens.Colors.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.top, 20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 16)
+            .padding(.bottom, 22)
             .padding(.horizontal, 24)
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 24) {
                     // Influencer section
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Influencer")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.5))
+                        Text("I CREATE CONTENT")
+                            .font(.system(size: 11, weight: .bold))
+                            .tracking(0.8)
+                            .foregroundStyle(MatchaTokens.Colors.textMuted)
                             .padding(.leading, 4)
 
                         roleCard(
@@ -294,9 +298,10 @@ private struct WelcomeScreen: View {
 
                     // Business section
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Business")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.5))
+                        Text("I HAVE A VENUE")
+                            .font(.system(size: 11, weight: .bold))
+                            .tracking(0.8)
+                            .foregroundStyle(MatchaTokens.Colors.textMuted)
                             .padding(.leading, 4)
 
                         roleCard(
