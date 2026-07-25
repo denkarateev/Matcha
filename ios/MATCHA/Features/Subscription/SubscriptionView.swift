@@ -317,7 +317,7 @@ struct SubscriptionView: View {
 
     private var planIcon: String {
         switch currentPlan {
-        case .free: "leaf.fill"
+        case .free: "circle.fill"
         case .pro: "crown.fill"
         case .black: "star.circle.fill"
         }

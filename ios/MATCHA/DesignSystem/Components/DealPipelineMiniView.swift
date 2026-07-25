@@ -26,7 +26,7 @@ struct DealPipelineMiniView: View {
     }
 
     var body: some View {
-        HStack(spacing: 10) {
+        VStack(alignment: .trailing, spacing: 5) {
             VStack(spacing: 6) {
                 pipelineRow
                 stageLabelsRow

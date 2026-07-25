@@ -1,3 +1,5 @@
+import Foundation
+
 enum AppTab: Int, CaseIterable, Identifiable {
     case offers
     case likes
@@ -10,6 +12,18 @@ enum AppTab: Int, CaseIterable, Identifiable {
     static let notifications: AppTab = .likes
 
     var id: Int { rawValue }
+
+    /// Debug-only: lets a screenshot pass open a specific tab (MATCHA_TAB=chats).
+    static var debugInitialTab: AppTab? {
+        switch ProcessInfo.processInfo.environment["MATCHA_TAB"] {
+        case "offers": .offers
+        case "likes": .likes
+        case "match": .match
+        case "chats": .chats
+        case "profile": .profile
+        default: nil
+        }
+    }
 
     var title: String {
         switch self {

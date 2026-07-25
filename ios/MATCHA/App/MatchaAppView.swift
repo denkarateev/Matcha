@@ -9,14 +9,9 @@ struct MatchaAppView: View {
         Group {
             if appState.isBootstrapping {
                 // Splash / loading screen while auth bootstrap is in progress
-                VStack(spacing: 16) {
+                VStack(spacing: 22) {
                     Spacer()
-                    Image(systemName: "leaf.fill")
-                        .font(.system(size: 48))
-                        .foregroundStyle(MatchaTokens.Colors.accent)
-                    Text("tuju")
-                        .font(.title.bold())
-                        .foregroundStyle(.white)
+                    TujuLogoReveal(fontSize: 52)
                     ProgressView()
                         .tint(MatchaTokens.Colors.accent)
                     Spacer()

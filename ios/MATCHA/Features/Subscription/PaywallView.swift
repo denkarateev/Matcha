@@ -185,7 +185,7 @@ struct PaywallView: View {
 
     private var currentPlanBadge: some View {
         HStack(spacing: 8) {
-            Image(systemName: store.currentPlan == .free ? "leaf.fill" : "crown.fill")
+            Image(systemName: store.currentPlan == .free ? "circle.fill" : "crown.fill")
                 .font(.caption.weight(.bold))
                 .foregroundStyle(
                     store.currentPlan == .free

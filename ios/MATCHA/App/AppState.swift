@@ -205,7 +205,7 @@ final class AppState {
         isAuthenticated = true
         onboardingComplete = true
         _onboardingCompleteFlag = true
-        selectedTab = .match
+        selectedTab = AppTab.debugInitialTab ?? .match
     }
 
     /// Legacy path for mock/preview only — kept for previews and simulator testing.
@@ -214,7 +214,7 @@ final class AppState {
         isAuthenticated = true
         onboardingComplete = true
         _onboardingCompleteFlag = true
-        selectedTab = .match
+        selectedTab = AppTab.debugInitialTab ?? .match
     }
 
     // MARK: - Sync StoreKit Subscription
@@ -244,7 +244,7 @@ final class AppState {
         dealsBadgeCount = 0
         chatBadgeCount = 0
         offersBadgeCount = 0
-        selectedTab = .match
+        selectedTab = AppTab.debugInitialTab ?? .match
         ShadowAccountManager.shared.reset()
     }
 }

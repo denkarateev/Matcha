@@ -6,7 +6,6 @@ struct MatchaBrewingAnimation: View {
     @State private var cupScale: CGFloat = 0.8
     @State private var steamPhase: CGFloat = 0
     @State private var liquidLevel: CGFloat = 0
-    @State private var leafRotation: Double = 0
     @State private var pulseOpacity: Double = 0.3
 
     var body: some View {
@@ -57,11 +56,11 @@ struct MatchaBrewingAnimation: View {
             }
             .scaleEffect(cupScale)
 
-            // Floating leaf
-            Image(systemName: "leaf.fill")
-                .font(.system(size: 14))
-                .foregroundStyle(MatchaTokens.Colors.accent)
-                .rotationEffect(.degrees(leafRotation))
+            // Floating tuju dot
+            Circle()
+                .fill(MatchaTokens.Colors.accent)
+                .frame(width: 10, height: 10)
+                .shadow(color: MatchaTokens.Colors.accentGlow.opacity(0.7), radius: 6)
                 .offset(x: 0, y: -4)
                 .opacity(liquidLevel > 0.5 ? 1 : 0)
         }
@@ -83,7 +82,6 @@ struct MatchaBrewingAnimation: View {
 
             // Leaf rotation
             withAnimation(.easeInOut(duration: 3.0).repeatForever(autoreverses: true)) {
-                leafRotation = 15
             }
 
             // Pulse

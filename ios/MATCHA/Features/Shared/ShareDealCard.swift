@@ -18,9 +18,9 @@ struct ShareDealCard: View {
                     .foregroundStyle(MatchaTokens.Colors.accent)
                     .tracking(2)
                 Spacer()
-                Image(systemName: "leaf.fill")
-                    .font(.system(size: 12))
-                    .foregroundStyle(MatchaTokens.Colors.accent.opacity(0.6))
+                Circle()
+                    .fill(MatchaTokens.Colors.accent.opacity(0.6))
+                    .frame(width: 8, height: 8)
             }
             .padding(.horizontal, 20)
             .padding(.top, 20)

@@ -44,6 +44,9 @@ struct TujuTabBar: View {
         }
         .padding(.horizontal, 14)
         .padding(.bottom, 6)
+        // The panel floats above the home indicator, but the inset it reserves
+        // must still cover that strip — otherwise screen content rests under it.
+        .safeAreaPadding(.bottom)
         .sensoryFeedback(.impact(flexibility: .soft), trigger: selection)
     }
 

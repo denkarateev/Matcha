@@ -63,22 +63,46 @@ struct OnboardingFlowView: View {
 private struct OnboardingSlidesScreen: View {
     @Bindable var store: OnboardingStore
     @State private var currentSlide = 0
+    @State private var highlightsShown = false
 
-    private let slides: [(image: String, title: String, subtitle: String)] = [
-        (
-            "https://images.unsplash.com/photo-1611042553484-d61f9d9bf757?w=800&h=1200&fit=crop",
-            "Grow your brand\nwith real collabs",
-            "Trade content for real experiences with Bali venues. No cold DMs, no chasing."
+    private struct Slide {
+        let image: String
+        let title: String
+        let subtitle: String
+        /// Three short proof points shown as glass chips under the copy.
+        let highlights: [(icon: String, text: String)]
+    }
+
+    private let slides: [Slide] = [
+        Slide(
+            image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=900&h=1400&fit=crop",
+            title: "Grow your brand\nwith real collabs",
+            subtitle: "Trade content for real experiences with Bali venues. No cold DMs, no chasing.",
+            highlights: [
+                ("mappin.and.ellipse", "Canggu · Ubud · Uluwatu · Seminyak"),
+                ("checkmark.seal.fill", "Every venue verified before it appears"),
+                ("bolt.fill", "Match today, shoot this week")
+            ]
         ),
-        (
-            "https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=800&h=1200&fit=crop",
-            "Barter deals,\nno cash needed",
-            "Exchange content for experiences — dinners, stays, events"
+        Slide(
+            image: "https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?w=900&h=1400&fit=crop",
+            title: "Barter deals,\nno cash needed",
+            subtitle: "Dinners, villa stays, spa days and events — exchanged for Reels, Stories and posts.",
+            highlights: [
+                ("arrow.left.arrow.right", "You give content, they give the experience"),
+                ("tag.fill", "Both sides agree the terms up front"),
+                ("hand.raised.fill", "No hidden fees, no commission on barter")
+            ]
         ),
-        (
-            "https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?w=800&h=1200&fit=crop",
-            "Track every step\nof your collab",
-            "From first match to published content — all in one place"
+        Slide(
+            image: "https://images.unsplash.com/photo-1516685018646-549198525c1b?w=900&h=1400&fit=crop",
+            title: "Track every step\nof your collab",
+            subtitle: "Draft → Confirmed → Visited → Reviewed. Everyone knows whose move it is.",
+            highlights: [
+                ("point.topleft.down.to.point.bottomright.curvepath", "A pipeline instead of a lost DM thread"),
+                ("checkmark.circle.fill", "Double check-in confirms the visit"),
+                ("star.fill", "Reviews build the rating that unlocks Blue Check")
+            ]
         ),
     ]
 
@@ -165,6 +189,30 @@ private struct OnboardingSlidesScreen: View {
                         .id("sub-\(currentSlide)")
                         .transition(.opacity)
 
+                    // Proof points — what the slide actually promises
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(Array(slides[currentSlide].highlights.enumerated()), id: \.offset) { index, item in
+                            HStack(spacing: 10) {
+                                Image(systemName: item.icon)
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(MatchaTokens.Colors.accent)
+                                    .frame(width: 18)
+                                Text(item.text)
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(MatchaTokens.Colors.textSecondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Spacer(minLength: 0)
+                            }
+                            .opacity(highlightsShown ? 1 : 0)
+                            .offset(y: highlightsShown ? 0 : 8)
+                            .animation(
+                                .smooth(duration: 0.35).delay(0.1 + Double(index) * 0.07),
+                                value: highlightsShown
+                            )
+                        }
+                    }
+                    .id("hl-\(currentSlide)")
+
                     // CTA
                     Button {
                         if currentSlide < slides.count - 1 {
@@ -194,6 +242,11 @@ private struct OnboardingSlidesScreen: View {
             }
         }
         .animation(.easeInOut(duration: 0.3), value: currentSlide)
+        .task { highlightsShown = true }
+        .onChange(of: currentSlide) { _, _ in
+            highlightsShown = false
+            highlightsShown = true
+        }
     }
 }
 
