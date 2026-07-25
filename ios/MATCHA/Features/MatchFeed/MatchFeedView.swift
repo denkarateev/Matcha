@@ -31,6 +31,9 @@ struct MatchFeedView: View {
 
     // Match celebration animation state
     @State private var celebrationAppeared = false
+    @State private var celebrationDotPopped = false
+    @State private var celebrationRipple = false
+    @State private var celebrationTextShown = false
     @State private var myPhotoURL: URL?
 
     // Bumble scroll position — id of currently-visible profile in the feed.
@@ -126,12 +129,24 @@ struct MatchFeedView: View {
                         .onAppear {
                             MatchaHaptic.success()
                             celebrationAppeared = false
+                            celebrationDotPopped = false
+                            celebrationRipple = false
+                            celebrationTextShown = false
                             withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
                                 celebrationAppeared = true
                             }
+                            // Delays live on each element's animation; flip the flags now.
+                            celebrationDotPopped = true
+                            celebrationRipple = true
+                            celebrationTextShown = true
                             UINotificationFeedbackGenerator().notificationOccurred(.success)
                         }
-                        .onDisappear { celebrationAppeared = false }
+                        .onDisappear {
+                            celebrationAppeared = false
+                            celebrationDotPopped = false
+                            celebrationRipple = false
+                            celebrationTextShown = false
+                        }
                 }
             }
             .frame(width: geo.size.width, height: geo.size.height)
@@ -680,22 +695,47 @@ struct MatchFeedView: View {
                     )
                     .offset(x: celebrationAppeared ? 32 : 300)
                     .scaleEffect(celebrationAppeared ? 1.0 : 0.5)
+
+                    // The tuju dot pops where the two sides meet, with two ripples
+                    ForEach(0..<2, id: \.self) { index in
+                        Circle()
+                            .stroke(MatchaTokens.Colors.accent, lineWidth: 2)
+                            .frame(width: 18, height: 18)
+                            .scaleEffect(celebrationRipple ? 9 : 1)
+                            .opacity(celebrationRipple ? 0 : 0.8)
+                            .animation(
+                                .easeOut(duration: 1.0).delay(0.7 + Double(index) * 0.35),
+                                value: celebrationRipple
+                            )
+                    }
+                    Circle()
+                        .fill(MatchaTokens.Colors.accent)
+                        .frame(width: 18, height: 18)
+                        .shadow(color: MatchaTokens.Colors.accentGlow.opacity(0.8), radius: 10)
+                        .scaleEffect(celebrationDotPopped ? 1.0 : 0.01)
+                        .animation(
+                            .spring(response: 0.45, dampingFraction: 0.6).delay(0.55),
+                            value: celebrationDotPopped
+                        )
                 }
                 .frame(height: 120)
 
-                // Title text
+                // Title text — rises after the dot lands
                 VStack(spacing: 12) {
-                    Text("It's a match!")
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                    Text("Same destination.")
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
                         .foregroundStyle(MatchaTokens.Colors.accent)
-                        .scaleEffect(celebrationAppeared ? 1.0 : 0.3)
-                        .opacity(celebrationAppeared ? 1.0 : 0)
+                        .offset(y: celebrationTextShown ? 0 : 14)
+                        .opacity(celebrationTextShown ? 1.0 : 0)
+                        .animation(.smooth(duration: 0.45).delay(0.85), value: celebrationTextShown)
 
-                    Text("You and **\(profile.name)** want to collaborate")
+                    Text("You and **\(profile.name)** want this collab.")
                         .font(.subheadline)
                         .foregroundStyle(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
-                        .opacity(celebrationAppeared ? 1.0 : 0)
+                        .offset(y: celebrationTextShown ? 0 : 14)
+                        .opacity(celebrationTextShown ? 1.0 : 0)
+                        .animation(.smooth(duration: 0.45).delay(1.0), value: celebrationTextShown)
                 }
 
                 Spacer()

@@ -136,6 +136,9 @@ private struct OnboardingSlidesScreen: View {
                 Spacer()
 
                 VStack(alignment: .leading, spacing: 20) {
+                    // Wordmark — the dot lands once, on first launch
+                    TujuLogoReveal(fontSize: 34)
+
                     // Page dots
                     HStack(spacing: 8) {
                         ForEach(0..<slides.count, id: \.self) { i in

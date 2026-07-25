@@ -93,6 +93,7 @@
 		D2E66E85EDDD3B76EFD1A9C4 /* ChatConversationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526EB2E4CDA01E9A5AB2FC4D /* ChatConversationStore.swift */; };
 		D34DF8FED9D0D2B0A1EF87DE /* MatchaTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB780332D23EC651A73B8CDD /* MatchaTextField.swift */; };
 		D3700A5CE7AEFC511FE6C96B /* MATCHAApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193B3E311CA9F853961C7F76 /* MATCHAApp.swift */; };
+		D5C5E1E96A5FBC232DD91123 /* TujuLogoReveal.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7EB1A49741592CFB8E84501 /* TujuLogoReveal.swift */; };
 		D6B5716CF3FBCA434EA4536B /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A73EE10E1F44ADEA4C6DBB0A /* NetworkMonitor.swift */; };
 		D9CB7587C27DB1648FA8FFF8 /* ContentProofView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A73BC274A898B7BFDB1DF4 /* ContentProofView.swift */; };
 		D9D6A299B1EAC0764A2FC3C8 /* MatchaTabShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 529C3E1A342A0AA20E71A615 /* MatchaTabShellView.swift */; };
@@ -231,6 +232,7 @@
 		F5B9CBF092EF571B57CDAA6E /* MatchaButtonStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchaButtonStyles.swift; sourceTree = "<group>"; };
 		F6710CC582A0C15193DDC5D5 /* DealDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DealDetailView.swift; sourceTree = "<group>"; };
 		F6943AC74CBA48BA3D026234 /* ChatConversationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatConversationView.swift; sourceTree = "<group>"; };
+		F7EB1A49741592CFB8E84501 /* TujuLogoReveal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TujuLogoReveal.swift; sourceTree = "<group>"; };
 		FA1C705E2670E0B18CC97F0A /* SkeletonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonView.swift; sourceTree = "<group>"; };
 		FB5BEB8F57BEB337012119F1 /* DealPipelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DealPipelineView.swift; sourceTree = "<group>"; };
 		FE2A5F9984DE59F279ACDB46 /* ChatPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatPreview.swift; sourceTree = "<group>"; };
@@ -438,6 +440,7 @@
 				4904D7D3DBF78429451B0F40 /* ServerErrorView.swift */,
 				FA1C705E2670E0B18CC97F0A /* SkeletonView.swift */,
 				D320B8D3E8800416418E1E2C /* TagChip.swift */,
+				F7EB1A49741592CFB8E84501 /* TujuLogoReveal.swift */,
 				91D85E33CF2C11813CBAC603 /* TujuTabBar.swift */,
 				B597290121FB36932991107C /* TypingIndicatorView.swift */,
 				FFCFDBD33C616F41B8E32C91 /* UGCGalleryView.swift */,
@@ -786,6 +789,7 @@
 				3CFD033637444A01B24A8308 /* SubscriptionView.swift in Sources */,
 				33E99708411AB71FBFB39E7F /* TagChip.swift in Sources */,
 				0061D9AEBD86996199D0AA56 /* TranslationService.swift in Sources */,
+				D5C5E1E96A5FBC232DD91123 /* TujuLogoReveal.swift in Sources */,
 				03C141AFDA21D3121CB392C1 /* TujuTabBar.swift in Sources */,
 				EAEC75EACA23283168B8BED3 /* TypingIndicatorView.swift in Sources */,
 				252B854609E726EAA692E0C0 /* UGCGalleryView.swift in Sources */,

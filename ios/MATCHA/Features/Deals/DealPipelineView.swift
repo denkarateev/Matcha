@@ -169,9 +169,19 @@ struct DealPipelineView: View {
                     let xEnd = circleSize * CGFloat(i + 1) + spacing * CGFloat(i + 1) + circleSize / 2
                     let isCompleted = i < currentIndex
 
+                    // Track + accent fill that grows left-to-right as the deal advances
                     Rectangle()
-                        .fill(isCompleted ? MatchaTokens.Colors.accent : MatchaTokens.Colors.outline)
+                        .fill(MatchaTokens.Colors.outline)
                         .frame(width: xEnd - xStart, height: lineHeight)
+                        .overlay(alignment: .leading) {
+                            Rectangle()
+                                .fill(MatchaTokens.Colors.accent)
+                                .scaleEffect(x: isCompleted ? 1 : 0, anchor: .leading)
+                                .animation(
+                                    .smooth(duration: 0.6).delay(Double(i) * 0.08),
+                                    value: isCompleted
+                                )
+                        }
                         .position(x: (xStart + xEnd) / 2, y: circleSize / 2)
                 }
 
@@ -180,6 +190,7 @@ struct DealPipelineView: View {
                     let xPos = circleSize * CGFloat(i) + spacing * CGFloat(i) + circleSize / 2
 
                     stageCircle(index: i)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.65), value: currentIndex)
                         .position(x: xPos, y: circleSize / 2)
                 }
             }
