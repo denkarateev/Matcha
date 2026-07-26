@@ -902,6 +902,9 @@ struct OfferReadDTO: Decodable, Sendable {
 
         let expiryText: String = {
             guard let date = expiresAt else { return "No limit" }
+            // A past date used to render as "Ends 2 months ago" — the "Ends"
+            // prefix only makes sense while the deadline is still ahead.
+            guard date > Date() else { return "Expired" }
             let formatter = RelativeDateTimeFormatter()
             formatter.unitsStyle = .full
             return "Ends " + formatter.localizedString(for: date, relativeTo: Date())

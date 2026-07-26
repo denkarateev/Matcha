@@ -93,6 +93,22 @@ struct OfferDetailView: View {
         }
         .background { MatchaTokens.backgroundGradient.ignoresSafeArea() }
         .ignoresSafeArea(edges: .top)
+        // The hero is full-bleed, so scrolled content passes under the status
+        // bar and collided with the back button. This scrim fades it out.
+        .overlay(alignment: .top) {
+            LinearGradient(
+                colors: [
+                    MatchaTokens.Colors.background.opacity(0.85),
+                    MatchaTokens.Colors.background.opacity(0.45),
+                    .clear
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 118)
+            .allowsHitTesting(false)
+            .ignoresSafeArea(edges: .top)
+        }
         .overlay(alignment: .bottom) {
             if !isBusiness {
                 bottomCTA
