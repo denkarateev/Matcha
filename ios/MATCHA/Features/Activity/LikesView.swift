@@ -66,13 +66,15 @@ struct LikesView: View {
 
                     // 2-column grid — первая карточка видна, остальные blurred (для free)
                     LazyVGrid(columns: [
-                        GridItem(.flexible(), spacing: 12),
-                        GridItem(.flexible(), spacing: 12),
-                    ], spacing: 12) {
+                        GridItem(.flexible(), spacing: 14),
+                        GridItem(.flexible(), spacing: 14),
+                    ], spacing: 16) {
                         ForEach(Array(store.likes.enumerated()), id: \.element.id) { index, profile in
                             likeGridCard(profile: profile, index: index)
+                                .transition(.scale(scale: 0.94).combined(with: .opacity))
                         }
                     }
+                    .animation(.smooth(duration: 0.35), value: store.likes.count)
                     .padding(.horizontal, 24)
 
                     // Upgrade card (только для free пользователей)
@@ -126,8 +128,8 @@ struct LikesView: View {
                 // Bottom gradient
                 LinearGradient(
                     stops: [
-                        .init(color: .clear, location: 0.5),
-                        .init(color: .black.opacity(0.85), location: 1.0),
+                        .init(color: .clear, location: 0.42),
+                        .init(color: .black.opacity(0.9), location: 1.0),
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -172,10 +174,12 @@ struct LikesView: View {
                         .foregroundStyle(.white.opacity(0.7))
                         .lineLimit(1)
                 }
-                .padding(10)
+                .padding(.horizontal, 14)
+                .padding(.bottom, 14)
+                .padding(.top, 10)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .aspectRatio(3.0/4.0, contentMode: .fit)
+            .aspectRatio(0.72, contentMode: .fit)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -272,7 +276,7 @@ struct LikesView: View {
 
     private func errorBanner(_ error: NetworkError) -> some View {
         HStack(spacing: 8) {
-            Image(systemName: "wifi.exclamationmark")
+            Image(systemName: error.iconName)
                 .font(.body.weight(.medium))
             Text(error.errorDescription ?? "Connection error")
                 .font(.subheadline)

@@ -261,14 +261,29 @@ private struct WelcomeScreen: View {
         VStack(spacing: 0) {
             // Header — leading aligned per the global rule
             VStack(alignment: .leading, spacing: 10) {
-                TujuLogoReveal(fontSize: 30)
+                HStack(alignment: .top) {
+                    TujuLogoReveal(fontSize: 30)
+                    Spacer()
+                    Button {
+                        store.switchAuthMode(to: true)
+                        withAnimation { store.step = 2 }
+                    } label: {
+                        Text("Sign in")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(MatchaTokens.Colors.accent)
+                            .padding(.horizontal, 15)
+                            .padding(.vertical, 8)
+                            .liquidGlassPill()
+                    }
+                    .accessibilityLabel("Sign in to an existing account")
+                }
 
                 Text("Which side are you on?")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(MatchaTokens.Colors.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("Pick the role that matches you. It decides what you see in the feed — you can't switch later.")
+                Text("This sets what you see in the feed — and it's permanent, so pick the one that's really you.")
                     .font(.system(size: 14))
                     .foregroundStyle(MatchaTokens.Colors.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -280,37 +295,19 @@ private struct WelcomeScreen: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 24) {
-                    // Influencer section
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("I CREATE CONTENT")
-                            .font(.system(size: 11, weight: .bold))
-                            .tracking(0.8)
-                            .foregroundStyle(MatchaTokens.Colors.textMuted)
-                            .padding(.leading, 4)
+                    roleCard(
+                        icon: "person.crop.rectangle.stack",
+                        title: "I create content",
+                        subtitle: "Get hosted by Bali venues in exchange for Reels & Stories",
+                        role: .blogger
+                    )
 
-                        roleCard(
-                            icon: "person.crop.rectangle.stack",
-                            title: "Influencer",
-                            subtitle: "You create content on social media",
-                            role: .blogger
-                        )
-                    }
-
-                    // Business section
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("I HAVE A VENUE")
-                            .font(.system(size: 11, weight: .bold))
-                            .tracking(0.8)
-                            .foregroundStyle(MatchaTokens.Colors.textMuted)
-                            .padding(.leading, 4)
-
-                        roleCard(
-                            icon: "storefront",
-                            title: "Venue",
-                            subtitle: "You are the representative of a business",
-                            role: .business
-                        )
-                    }
+                    roleCard(
+                        icon: "storefront",
+                        title: "I have a venue",
+                        subtitle: "Invite creators and pay in experiences, not cash",
+                        role: .business
+                    )
 
                     Spacer().frame(height: 20)
                 }
@@ -324,23 +321,40 @@ private struct WelcomeScreen: View {
                     store.switchAuthMode(to: false)
                     withAnimation { store.step = 2 }
                 } label: {
-                    Text("Continue")
+                    Text(store.selectedRole == .business ? "Continue as venue" : "Continue as creator")
                         .font(.system(size: 17, weight: .bold))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(MatchaTokens.Colors.background)
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
-                        .background(MatchaTokens.Colors.accent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .background(MatchaTokens.Colors.accent, in: RoundedRectangle(cornerRadius: 17, style: .continuous))
+                        .shadow(color: MatchaTokens.Colors.accent.opacity(0.3), radius: 14, y: 5)
                 }
+
+                HStack(spacing: 12) {
+                    Rectangle().fill(MatchaTokens.Colors.outline).frame(height: 0.5)
+                    Text("ALREADY WITH US?")
+                        .font(.system(size: 11, weight: .semibold))
+                        .tracking(1)
+                        .foregroundStyle(MatchaTokens.Colors.textMuted)
+                    Rectangle().fill(MatchaTokens.Colors.outline).frame(height: 0.5)
+                }
+                .padding(.vertical, 4)
 
                 Button {
                     store.switchAuthMode(to: true)
                     withAnimation { store.step = 2 }
                 } label: {
-                    Text("I already have an account")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.4))
+                    HStack(spacing: 7) {
+                        Text("Sign in to your account")
+                            .font(.system(size: 15, weight: .bold))
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 12, weight: .bold))
+                    }
+                    .foregroundStyle(MatchaTokens.Colors.accent)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .liquidGlass(cornerRadius: 17)
                 }
-                .padding(.top, 2)
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 40)
@@ -371,6 +385,21 @@ private struct WelcomeScreen: View {
                 }
 
                 Spacer()
+
+                ZStack {
+                    Circle()
+                        .strokeBorder(
+                            selected ? MatchaTokens.Colors.accent : Color.white.opacity(0.28),
+                            lineWidth: 1.6
+                        )
+                        .frame(width: 22, height: 22)
+                    if selected {
+                        Circle().fill(MatchaTokens.Colors.accent).frame(width: 22, height: 22)
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 11, weight: .black))
+                            .foregroundStyle(MatchaTokens.Colors.background)
+                    }
+                }
             }
             .padding(.horizontal, 18)
             .padding(.vertical, 20)

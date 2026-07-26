@@ -94,15 +94,19 @@ struct ChatsView: View {
                 // Error banner
                 if let error = store.error, store.home.conversations.isEmpty, store.home.newMatches.isEmpty {
                     HStack(spacing: 8) {
-                        Image(systemName: "wifi.exclamationmark")
+                        Image(systemName: error.iconName)
                             .font(.body.weight(.medium))
                         Text(error.errorDescription ?? "Connection error")
                             .font(.subheadline)
                             .lineLimit(3)
                         Spacer()
-                        Button("Retry") { Task { await store.load() } }
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(MatchaTokens.Colors.accent)
+                        // Retrying an expired session just fails again — the
+                        // app signs out and routes to login on its own.
+                        if error.isRetryable {
+                            Button("Retry") { Task { await store.load() } }
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(MatchaTokens.Colors.accent)
+                        }
                     }
                     .foregroundStyle(.white)
                     .listRowBackground(Color.clear)

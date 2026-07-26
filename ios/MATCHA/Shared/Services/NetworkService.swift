@@ -16,6 +16,33 @@ enum NetworkError: LocalizedError {
     case invalidURL                                 // Bad URL construction
     case domainError(code: String, message: String) // API business errors
 
+    /// Icon that actually matches the failure. Only a genuine connectivity
+    /// problem may show the Wi-Fi symbol — everything else was reading as
+    /// "no internet" to users.
+    var iconName: String {
+        switch self {
+        case .networkError:   "wifi.exclamationmark"
+        case .unauthorized:   "person.crop.circle.badge.exclamationmark"
+        case .forbidden:      "lock.fill"
+        case .notFound:       "questionmark.circle"
+        case .rateLimited:    "hourglass"
+        case .serverError:    "exclamationmark.icloud"
+        case .conflict, .decodingError, .invalidURL, .domainError:
+            "exclamationmark.triangle.fill"
+        }
+    }
+
+    /// A retry can only help when the request itself might succeed next time.
+    /// Retrying an expired session just fails again.
+    var isRetryable: Bool {
+        switch self {
+        case .unauthorized, .forbidden, .notFound, .conflict, .domainError, .invalidURL:
+            false
+        case .networkError, .serverError, .rateLimited, .decodingError:
+            true
+        }
+    }
+
     var errorDescription: String? {
         switch self {
         case .unauthorized:
@@ -379,6 +406,10 @@ final class NetworkService {
         case 200...299:
             return // Success, no body expected
         case 401:
+            // Expired/invalid token: clear it and let AppState route to sign-in.
+            // Without this the user sat on an error screen with a Retry button
+            // that could never succeed.
+            logout(notifySessionInvalidated: true)
             throw NetworkError.unauthorized
         case 403:
             throw NetworkError.forbidden
@@ -491,6 +522,7 @@ final class NetworkService {
             }
 
         case 401:
+            logout(notifySessionInvalidated: true)
             throw NetworkError.unauthorized
 
         case 403:

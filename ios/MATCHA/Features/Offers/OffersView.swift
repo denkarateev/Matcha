@@ -177,11 +177,12 @@ struct OffersView: View {
             // Vertical list of split cards (убрал horizontal carousel для
             // единообразия с "All Offers" — один дизайн везде).
             LazyVStack(spacing: 12) {
-                ForEach(lastMinuteOffers) { offer in
+                ForEach(Array(lastMinuteOffers.enumerated()), id: \.element.id) { index, offer in
                     NavigationLink(value: offer) {
                         allOfferCard(offer)
                     }
                     .buttonStyle(.plain)
+                    .offerEntrance(index: index, isLoaded: store.hasLoaded)
                 }
             }
             .padding(.horizontal, 20)
@@ -275,11 +276,12 @@ struct OffersView: View {
             .padding(.horizontal, 20)
 
             LazyVStack(spacing: 12) {
-                ForEach(allRegularOffers) { offer in
+                ForEach(Array(allRegularOffers.enumerated()), id: \.element.id) { index, offer in
                     NavigationLink(value: offer) {
                         allOfferCard(offer)
                     }
                     .buttonStyle(.plain)
+                    .offerEntrance(index: index, isLoaded: store.hasLoaded)
                 }
             }
             .padding(.horizontal, 20)
@@ -306,11 +308,14 @@ struct OffersView: View {
                 // для офферов которые скоро закончатся (isEndingSoon).
                 // Обычные офферы без таймера чтобы не создавать лишнюю срочность.
                 if isEndingSoon(offer) {
+                    let hasCountdown = (offer.expiryDate?.timeIntervalSinceNow ?? 0) > 0
                     VStack(alignment: .trailing, spacing: 6) {
                         if offer.isLastMinute {
-                            lastMinuteBadge(offer)
+                            // With a live countdown below, the badge drops its
+                            // own deadline text — together they overflowed the card.
+                            lastMinuteBadge(offer, showsDeadline: !hasCountdown)
                         }
-                        if let expiry = offer.expiryDate, expiry.timeIntervalSinceNow > 0 {
+                        if let expiry = offer.expiryDate, hasCountdown {
                             CountdownPill(deadline: expiry)
                         }
                     }
@@ -479,17 +484,18 @@ struct OffersView: View {
     }
 
     @ViewBuilder
-    private func lastMinuteBadge(_ offer: Offer) -> some View {
+    private func lastMinuteBadge(_ offer: Offer, showsDeadline: Bool = true) -> some View {
         HStack(spacing: 4) {
             Text("LAST MINUTE")
                 .font(.system(size: 10, weight: .bold))
                 .tracking(0.6)
-            if !offer.expiryText.isEmpty {
+            if showsDeadline, !offer.expiryText.isEmpty {
                 Text("·")
                 Text(offer.expiryText)
                     .font(.system(size: 11, weight: .semibold))
             }
         }
+        .lineLimit(1)
         .foregroundStyle(MatchaTokens.Colors.warning)
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
@@ -631,14 +637,17 @@ struct OffersView: View {
 
     private var errorBanner: some View {
         HStack(spacing: 8) {
-            Image(systemName: "wifi.exclamationmark")
+            Image(systemName: store.error?.iconName ?? "exclamationmark.triangle.fill")
                 .font(.system(size: 13))
-            Text("Connection error")
+            Text(store.error?.errorDescription ?? "Connection error")
                 .font(.system(size: 14, weight: .medium))
+                .lineLimit(3)
             Spacer()
-            Button("Retry") { Task { await store.load() } }
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(MatchaTokens.Colors.accent)
+            if store.error?.isRetryable ?? true {
+                Button("Retry") { Task { await store.load() } }
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(MatchaTokens.Colors.accent)
+            }
         }
         .foregroundStyle(.white)
         .padding(14)
@@ -753,4 +762,20 @@ private struct CountdownPill: View {
         OffersView(repository: MockMatchaRepository())
     }
     .preferredColorScheme(.dark)
+}
+
+// MARK: - Entrance animation
+
+private extension View {
+    /// Offer cards rise and fade in as the list resolves, staggered per row
+    /// (capped so a long list doesn't drift into a slow cascade).
+    func offerEntrance(index: Int, isLoaded: Bool) -> some View {
+        self
+            .opacity(isLoaded ? 1 : 0)
+            .offset(y: isLoaded ? 0 : 16)
+            .animation(
+                .smooth(duration: 0.4).delay(min(Double(index), 5) * 0.06),
+                value: isLoaded
+            )
+    }
 }

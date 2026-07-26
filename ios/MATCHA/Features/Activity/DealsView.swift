@@ -249,7 +249,7 @@ struct DealsView: View {
 
     private func errorBanner(_ error: NetworkError) -> some View {
         HStack(spacing: 8) {
-            Image(systemName: "wifi.exclamationmark")
+            Image(systemName: error.iconName)
                 .font(.body.weight(.medium))
             Text(error.errorDescription ?? "Connection error")
                 .font(.subheadline)

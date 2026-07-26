@@ -511,7 +511,7 @@ struct MatchFeedView: View {
 
     private func errorBanner(_ error: NetworkError) -> some View {
         HStack(spacing: 8) {
-            Image(systemName: "wifi.exclamationmark")
+            Image(systemName: error.iconName)
                 .font(.subheadline)
             Text(error.errorDescription ?? "Something went wrong")
                 .font(.subheadline)
